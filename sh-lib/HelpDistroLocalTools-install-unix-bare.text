@@ -1,0 +1,34 @@
+  This unility facilitates myx.distro workspace (directory) creation and allows installation of 
+  `myx.distro-remote`, `myx.distro-deploy` or `myx.distro-source` applications in any myx.distro
+  workspace.
+
+
+  Installation (variant: unix, bare):
+
+    Following steps should be performed in the shell:
+
+        1. make sure you have `git` and `bash` installed and working;
+
+        2. create empty root directory for your workspace (eg. '/Volumes/disk2/hobby-set');
+
+        3. change to that directory (eg. 'cd /Volumes/disk2/hobby-set');
+
+        4. clone git repository for `git@github.com:myx/myx.distro-.local.git` into
+           `source/myx/myx.distro-.local` directory with command:
+
+              mkdir -p .local/myx/ ; ( cd .local/myx ; git clone git@github.com:myx/myx.distro-.local.git )
+
+           to get initial installer scripts in your workspace;
+
+        5. run installer script using one of the following commands (based on which system you want to use):
+
+              bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.sh --init-distro-workspace
+
+              bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.sh --install-distro-remote
+
+              bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.sh --install-distro-deploy
+
+              bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.sh --install-distro-source
+
+           
+

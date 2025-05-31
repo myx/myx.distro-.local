@@ -1,0 +1,4 @@
+Name: myx.distro-local
+Title: Common (distro-*) tools installer
+Augments: developer-sdk:recommended
+Provides: myx/myx.distro-local
