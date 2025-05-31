@@ -4,4 +4,6 @@
 
 cd "$MMDAPP"
 export MMDAPP
-bash --rcfile "$MMDAPP/source/myx/myx.distro-source/sh-lib/console-source-bashrc.rc" -i "$@"
+
+echo "Not yet!"
+exit 1
