@@ -19,21 +19,21 @@ syntax: DistroLocalTools.sh --{system|custom}-config-option --show-all
 			Sets the workspace environment parameter. 'system' is common for workspace and
 			'custom' is for current workspace user.
 
-			Following operations are supported:
+			Following operations (arguments) are supported:
 
-				--set <option> <value> [<if-value>]
+				--select <option-name> [<default-value>]
+					Reads one or all variables. If value is not set, default-value is returned.
+
+				--select --all
+					Reads all variables. 
+
+				--upsert <option-name> <value> [<if-value>]
 					Sets a variable. Optionally, sets variable only if it's current value
 					is set to given value.
 
-				--get <option> [<default-value>]
-					Sets a variable. If value is not set, default-value is returned.
-
-				--delete <option> [<if-value>]
+				--delete <option-name> [<if-value>]
 					Deletes a variable. Optionally, deletes the variable only if it's value
 					is set to given value.
-
-				--show all
-					Sets a variable.
 
 			Following options are defined (list of basic ones, option names are not limited
 			to this list, but these options are actively used by scripts of this package):
