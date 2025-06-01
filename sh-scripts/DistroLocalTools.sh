@@ -9,7 +9,7 @@ if [ -z "$MMDAPP" ] ; then
 	set -e
 	export MMDAPP="$( cd $(dirname "$0")/../../../.. ; pwd )"
 	echo "$0: Working in: $MMDAPP"  >&2
-	[ -d "$MMDAPP/source" ] || ( echo "ERROR: expecting 'source' directory." >&2 && exit 1 )
+	[ -d "$MMDAPP/.local" ] || ( echo "ERROR: expecting '.local' directory." >&2 && exit 1 )
 fi
 
 ##
@@ -117,6 +117,13 @@ DistroLocalTools(){
 			GitClonePull "$MMDAPP/.local/source/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" &
 
 			wait
+
+			return 0
+		;;
+		--install-distro-.local)
+
+			echo "ERROR: $MDSC_CMD: not yet! $@" >&2
+			set +e ; return 1
 
 			return 0
 		;;
