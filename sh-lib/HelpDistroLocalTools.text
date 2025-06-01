@@ -14,6 +14,9 @@ syntax: DistroLocalTools.sh --{system|custom}-config-option --show-all
 			Installs basic system tools into designated workspace directory that allows
 			to enter workspace console or otherwise work with workspace data and commands.
 
+		--install-distro-.local
+			Upgrades local .local packages with latest `master` version.
+
 		--system-config-option <arguments...>
 		--custom-config-option <arguments...>
 			Sets the workspace environment parameter. 'system' is common for workspace and
@@ -21,27 +24,31 @@ syntax: DistroLocalTools.sh --{system|custom}-config-option --show-all
 
 			Following operations (arguments) are supported:
 
-				--select <option-name> [<default-value>]
+				--select <option-name>
+				--select-default <option-name> <default-value>
 					Reads one or all variables. If value is not set, default-value is returned.
 
 				--select --all
+				--select-all
 					Reads all variables. 
 
-				--upsert <option-name> <value> [<if-value>]
+				--upsert <option-name> <value>
+				--upsert-if <option-name> <value> <if-value>
 					Sets a variable. Optionally, sets variable only if it's current value
 					is set to given value.
 
-				--delete <option-name> [<if-value>]
+				--delete <option-name>
+				--delete-if <option-name> <if-value>
 					Deletes a variable. Optionally, deletes the variable only if it's value
 					is set to given value.
 
 			Following options are defined (list of basic ones, option names are not limited
 			to this list, but these options are actively used by scripts of this package):
 
-				MDIT_CONSOLE_RC_SCRIPT
+				MDLT_CONSOLE_RC_SCRIPT
 					Shell script to include in console start. Allows to setup extra commands 
 					or settings.
 
-				MDIT_ACTIONS_SH_WRAP
+				MDLT_ACTIONS_SH_WRAP
 					Shell command to wrap shell actions to execute. Allows to run actions on
 					remote runner machine or add extra logging/notification, etc...

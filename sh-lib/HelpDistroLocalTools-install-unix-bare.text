@@ -7,11 +7,15 @@
 
     Following steps should be performed in the shell:
 
-        1. make sure you have `git` and `bash` installed and working;
+		1. Open your shell terminal, and:
 
-        2. create empty root directory for your workspace (eg. '/Volumes/disk2/hobby-set');
+			1. Make sure it is bash, by running `bash` command over.
+    	    2. make sure you have `git` installed and working;
 
-        3. change to that directory (eg. 'cd /Volumes/disk2/hobby-set');
+        2. Create empty workspace folder and change current working directory into it:
+
+			1. create empty root directory for your workspace (eg. '/Volumes/disk2/hobby-set');
+        	2. change to that directory (eg. 'cd /Volumes/disk2/hobby-set');
 
         4. clone git repository for `git@github.com:myx/myx.distro-.local.git` into
            `source/myx/myx.distro-.local` directory with command:
@@ -22,13 +26,17 @@
 
         5. run installer script using one of the following commands (based on which system you want to use):
 
+			For empty workspace (to be configured later):
               bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.sh --init-distro-workspace
 
+			For `remote` workspace tools (easy connections to source and deploy machines running on remote 
+			machines or local vm(s)):
               bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.sh --install-distro-remote
 
+			For `deploy` workspace tools (deployment runner machines or admin terminal servers):
               bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.sh --install-distro-deploy
 
+			For `source` workspace tools (build system runner machines or local source for developers):
               bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.sh --install-distro-source
 
            
-
