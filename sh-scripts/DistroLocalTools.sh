@@ -121,9 +121,12 @@ DistroLocalTools(){
 			return 0
 		;;
 		--install-distro-.local)
+			shift
 
-			echo "ERROR: $MDSC_CMD: not yet! $@" >&2
-			set +e ; return 1
+			GitClonePull "$MMDAPP/.local/source/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &
+			GitClonePull "$MMDAPP/.local/source/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &
+
+			wait
 
 			return 0
 		;;
