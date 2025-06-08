@@ -113,10 +113,6 @@ DistroLocalTools(){
 							mkdir -p "$MMDAPP/.local"
 						;;
 						'')
-							if [ -z "$pullCommands" ] ; then
-								echo "ERROR: $MDSC_CMD: nothing to install, check arguments" >&2
-								set +e ; return 1
-							fi
 							break
 						;;
 						*)
@@ -127,8 +123,13 @@ DistroLocalTools(){
 				done
 			)"
 
+			if [ -z "$pullCommands" ] ; then
+				echo "ERROR: $MDSC_CMD: nothing to install, check arguments" >&2
+				set +e ; return 1
+			fi
 			eval "$( echo "$pullCommands" | awk '!seen[$0]++' )"
 			wait
+			
 			DistroLocalTools --make-console-command
 
 			return 0
