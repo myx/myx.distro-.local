@@ -18,7 +18,7 @@
         	2. change to that directory (eg. 'cd /Volumes/disk2/hobby-set');
 
         4. clone git repository for `git@github.com:myx/myx.distro-.local.git` into
-           `source/myx/myx.distro-.local` directory with command:
+           `.local/myx/myx.distro-.local` directory with command:
 
               mkdir -p .local/myx/ ; ( cd .local/myx ; git clone git@github.com:myx/myx.distro-.local.git )
 
