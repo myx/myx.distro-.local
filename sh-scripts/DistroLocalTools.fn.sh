@@ -88,6 +88,8 @@ DistroLocalTools(){
 		--install-distro-*)
 			local cmds
 			cmds+="$(
+				echo 'set -e'
+				echo 'set -x'
 				echo 'GitClonePull "$MMDAPP/.local/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &'
 				echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &'
 			)"
@@ -123,6 +125,10 @@ DistroLocalTools(){
 						)"
 					;;
 					'')
+						if [ -z "$cmds" ] ; then
+							echo "ERROR: $MDSC_CMD: nothing to install, check arguments" >&2
+							set +e ; return 1
+						fi
 						break
 					;;
 					*)
@@ -132,12 +138,7 @@ DistroLocalTools(){
 				esac
 			done
 
-			if [ -z "$cmds" ] ; then
-				echo "ERROR: $MDSC_CMD: nothing to install, check arguments" >&2
-				set +e ; return 1
-			fi
-			eval "$( echo "$cmds" | awk '!seen[$0]++' )"
-			wait
+			( eval "$( echo "$cmds" | awk '!seen[$0]++' )" ; wait )
 
 			DistroLocalTools --make-console-command
 
