@@ -10,7 +10,7 @@ case "$1" in
 
 		if [ "$1" != "--quiet" ] ; then
 			printf \
-				"\nNote: DistroConsole.sh created, now you can run:\n\t\t%s\n\n" \
+				"\nNote: DistroConsole.sh created, now you can run:\n\t%s\n\n" \
 				"$MMDAPP/DistroConsole.sh" \
 			>&2
 		fi
