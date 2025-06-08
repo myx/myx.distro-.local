@@ -17,7 +17,7 @@ DistroLocalCatMarkdown() {
 	fi
 	
   # detect “real” TTY
-  if    [ -t 0 ] && [ -t 1 ] \
+  if    [ -t 1 ] \
      && [ -n "${TERM-}" ] && [ "$TERM" != dumb ] \
      && [ -z "${NO_COLOR-}" ] \
      && tput colors >/dev/null 2>&1 \
