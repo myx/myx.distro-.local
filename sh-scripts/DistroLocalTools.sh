@@ -147,7 +147,8 @@ DistroLocalTools(){
 			set +e ; return 1
 		;;
 		--help-install-unix-bare)
-			cat "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/HelpDistroLocalTools-unix-bare.text" >&2
+			. "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/DistroLocalCatMarkdown.include"
+			DistroLocalCatMarkdown "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/HelpDistroLocalTools-unix-bare.md" >&2
 			exit 1;
 		;;
 		*)
