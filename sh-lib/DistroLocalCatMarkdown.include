@@ -17,16 +17,14 @@ DistroLocalCatMarkdown() {
 	fi
 	
   # detect “real” TTY
-  if \
-  	[ -t 1 ] \
-	&& [ -n "${TERM-}" ] \
-	&& [ "$TERM" != dumb ] \
-	&& [ -z "${NO_COLOR-}" ] \
-	&& [ "$(tput colors 2>/dev/null)" -ge 8 ] \
+  if    [ -t 0 ] && [ -t 1 ] \
+     && [ -n "${TERM-}" ] && [ "$TERM" != dumb ] \
+     && [ -z "${NO_COLOR-}" ] \
+     && tput colors >/dev/null 2>&1 \
+     && [ "$(tput colors)" -ge 8 ] \
   ; then
     USE_COLOR=1
   fi
-
 
   if [ "${USE_COLOR-}" ]; then
 	# ANSI codes
@@ -39,7 +37,7 @@ DistroLocalCatMarkdown() {
 	bullet_on="${esc}[32m" bullet_off="${reset}"
 	hdr1_on="${esc}[95m"  hdr2_on="${esc}[94m"  hdr3_on="${esc}[92m"
 	hdr_off="${reset}"
-	
+
     sed -E \
       -e "s/^###### (.*)/${hdr1_on}\1${hdr_off}/" \
       -e "s/^##### (.*)/${hdr1_on}\1${hdr_off}/" \
