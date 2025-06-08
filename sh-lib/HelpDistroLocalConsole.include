@@ -2,6 +2,19 @@ echo >&2
 echo "This is DistroLocalConsole. It runs in DistroLocal context and provides following commands:" >&2
 echo >&2
 
+if type ConsoleSource >/dev/null 2>&1 ; then
+	echo "syntax: ConsoleSource [<options>]" >&2
+	echo >&2
+fi
+if type ConsoleDeploy >/dev/null 2>&1 ; then
+	echo "syntax: ConsoleDeploy [<options>]" >&2
+	echo >&2
+fi
+if type ConsoleRemote >/dev/null 2>&1 ; then
+	echo "syntax: ConsoleRemote [<options>]" >&2
+	echo >&2
+fi
+
 if type Require >/dev/null 2>&1 ; then
 	Require --help
 fi
