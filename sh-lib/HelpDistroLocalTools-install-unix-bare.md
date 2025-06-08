@@ -12,7 +12,7 @@ Following steps should be performed in the shell:
 1. **Open your shell terminal**, and:  
    1. Ensure you are using **bash** by running:  
       bash  
-   2. Verify that `git` is installed and working:  
+   2. Verify that **git** is installed and working:  
       git --version
 
 2. **Create an empty workspace folder and change into it**:  
