@@ -3,10 +3,14 @@
 
 DistroLocalCatMarkdown() {
 	local fromFile="$1"
-	if [ -f "$fromFile" ] ; then
-		shift
-		cat "$fromFile" | DistroLocalCatMarkdown
-		return 0
+	if [ ! -z "$fromFile" ] ; then
+		if [ -f "$fromFile" ] ; then
+			shift
+			cat "$fromFile" | DistroLocalCatMarkdown
+			return 0
+		fi
+		echo "ERROR: DistroLocalCatMarkdown: file not found: $fromFile" >&2
+		set +e ; return 1
 	fi
 	
   # detect “real” TTY
