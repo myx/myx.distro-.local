@@ -7,6 +7,11 @@ case "$1" in
 		DistroLocalTools --completion-all | grep -e '\.fn\.sh$' | sort -u | sed 's:\.fn\.sh$::' 
 		return 0
 	;;
+	--completion-.local)
+		shift
+		DistroLocalTools --completion-all | grep -e '^DistroLocal' -e '\.fn\.sh$' | sort -u | sed 's:\.fn\.sh$::' 
+		return 0
+	;;
 	--completion-all)
 		shift
 		( 
