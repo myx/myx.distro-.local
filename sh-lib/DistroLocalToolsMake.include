@@ -5,13 +5,13 @@ case "$1" in
 	--make-console-command)
 		shift
 		set -e
-		DistroLocalTools --make-console-script > $MMDAPP/DistroConsole.sh
-		chmod 770 $MMDAPP/DistroConsole.sh
+		DistroLocalTools --make-console-script > $MMDAPP/DistroLocalConsole.sh
+		chmod 770 $MMDAPP/DistroLocalConsole.sh
 
 		if [ "$1" != "--quiet" ] ; then
 			printf \
-				"\nNote: DistroConsole.sh created, now you can run:\n\t%s\n\n" \
-				"$MMDAPP/DistroConsole.sh" \
+				"\nNote: DistroLocalConsole.sh created, now you can run:\n\t%s\n\n" \
+				"$MMDAPP/DistroLocalConsole.sh" \
 			>&2
 		fi
 
