@@ -177,6 +177,7 @@ case "$0" in
 		if [ -z "$1" ] || [ "$1" = "--help" ] ; then
 			echo "syntax: DistroLocalTools.fn.sh --install-distro-source" >&2
 			echo "syntax: DistroLocalTools.fn.sh --install-distro-deploy" >&2
+			echo "syntax: DistroLocalTools.fn.sh --install-distro-remote" >&2
 		fi
 
 		set -e
