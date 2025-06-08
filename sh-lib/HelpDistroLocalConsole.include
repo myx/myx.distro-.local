@@ -1,0 +1,6 @@
+if ! type Require >/dev/null 2>&1 ; then
+	Require --help
+fi
+if ! type DistroLocal >/dev/null 2>&1 ; then
+	DistroLocal --help
+fi

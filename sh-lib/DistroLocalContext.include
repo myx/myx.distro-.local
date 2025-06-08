@@ -79,6 +79,11 @@ if ! type DistroLocalContext >/dev/null 2>&1 ; then
 		fi
 		"${distroCommand%.fn.sh}" "$@"
 	}
+
+	if ! type Help >/dev/null 2>&1 ; then
+		( . "$MDLC_BIN/myx/myx.distro-source/sh-lib/HelpDistroLocalConsole.include" )
+		set +e ; return 1
+	fi
 fi
 
 while true ; do
