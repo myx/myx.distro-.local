@@ -82,7 +82,7 @@ if ! type DistroLocalContext >/dev/null 2>&1 ; then
 
 	if ! type Help >/dev/null 2>&1 ; then
 		Help(){
-			eval "$( cat "$MDLC_BIN/myx/myx.distro-.local/sh-lib/HelpDistroLocalConsole.include" )"
+			( . "$MDLC_BIN/myx/myx.distro-.local/sh-lib/HelpDistroLocalConsole.include" )
 			set +e ; return 1
 		}
 	fi
