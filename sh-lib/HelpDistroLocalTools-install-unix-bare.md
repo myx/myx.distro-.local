@@ -50,35 +50,3 @@ Following steps should be performed in the shell:
 This utility facilitates **myx.distro** workspace (directory) creation and allows installation of  
 `myx.distro-remote`, `myx.distro-deploy` or `myx.distro-source` applications in any **myx.distro** workspace.
 
----
-
-## Installation (Variant: Unix, Bare)
-
-Following steps should be performed in the shell:
-
-1. **Open your shell terminal**, and:
-   1. Ensure it is **bash** by running:
-      ```bash
-      bash
-      ```
-   2. Verify that `git` is installed and working:
-      ```bash
-      git --version
-      ```
-
-2. **Create an empty workspace folder and change into it**:
-   1. Create a root directory for your workspace (e.g., `/Volumes/disk2/hobby-set`):
-      ```bash
-      mkdir -p /Volumes/disk2/hobby-set
-      ```
-   2. Change into that directory:
-      ```bash
-      cd /Volumes/disk2/hobby-set
-      ```
-
-3. **Clone the Git repository** for `git@github.com:myx/myx.distro-.local.git` into  
-   `.local/myx/myx.distro-.local`:
-   ```bash
-   mkdir -p .local/myx/
-   ( cd .local/myx && git clone git@github.com:myx/myx.distro-.local.git )
-
