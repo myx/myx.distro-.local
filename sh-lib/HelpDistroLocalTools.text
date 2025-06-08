@@ -1,7 +1,7 @@
-syntax: DistroLocalTools.sh --{system|custom}-config-option --set <option> <value>
-syntax: DistroLocalTools.sh --{system|custom}-config-option --get <option> [<default-value>]
-syntax: DistroLocalTools.sh --{system|custom}-config-option --delete <option> [<if-value>]
-syntax: DistroLocalTools.sh --{system|custom}-config-option --show-all
+syntax: DistroLocalTools.fn.sh --{system|custom}-config-option --set <option> <value>
+syntax: DistroLocalTools.fn.sh --{system|custom}-config-option --get <option> [<default-value>]
+syntax: DistroLocalTools.fn.sh --{system|custom}-config-option --delete <option> [<if-value>]
+syntax: DistroLocalTools.fn.sh --{system|custom}-config-option --show-all
 
   Options:
 

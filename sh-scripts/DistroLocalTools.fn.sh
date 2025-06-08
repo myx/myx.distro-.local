@@ -165,12 +165,12 @@ DistroLocalTools(){
 
 
 case "$0" in
-	*/myx/myx.distro-.local/sh-scripts/DistroLocalTools.sh)
+	*/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh)
 
 		if [ -z "$1" ] || [ "$1" = "--help" ] ; then
-			echo "syntax: DistroLocalTools.sh --install-distro-source" >&2
-			echo "syntax: DistroLocalTools.sh --install-distro-deploy" >&2
-			echo "syntax: DistroLocalTools.sh [--help]" >&2
+			echo "syntax: DistroLocalTools.fn.sh --install-distro-source" >&2
+			echo "syntax: DistroLocalTools.fn.sh --install-distro-deploy" >&2
+			echo "syntax: DistroLocalTools.fn.sh [--help]" >&2
 			if [ "$1" = "--help" ] ; then
 				cat "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/HelpDistroLocalTools.text" >&2
 			fi
