@@ -120,7 +120,7 @@ DistroLocalTools(){
 							echo "ERROR: $MDSC_CMD: nothing to install, check arguments" >&2
 							set +e ; return 1
 						fi
-						eval "$pullCommands"
+						eval "$( echo "$pullCommands" )"
 						wait
 						DistroLocalTools --make-console-command
 
