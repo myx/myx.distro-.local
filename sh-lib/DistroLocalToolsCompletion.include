@@ -4,12 +4,19 @@
 case "$1" in
 	--completion-require)
 		shift
-		DistroLocalTools --completion-all | grep -e '\.fn\.sh$' | sort -u | sed 's:\.fn\.sh$::' 
+		DistroLocalTools --completion-all \
+		| grep -e '\.fn\.sh$' \
+		| sort -u \
+		| sed 's:\.fn\.sh$::' 
 		return 0
 	;;
 	--completion-.local)
 		shift
-		DistroLocalTools --completion-all | grep -e '^DistroLocal' -e '\.fn\.sh$' | sort -u | sed 's:\.fn\.sh$::' 
+		DistroLocalTools --completion-all \
+		| grep -e '^DistroLocal' -e '^Local' \
+		| grep -e '\.fn\.sh$' \
+		| sort -u \
+		| sed 's:\.fn\.sh$::' 
 		return 0
 	;;
 	--completion-all)
