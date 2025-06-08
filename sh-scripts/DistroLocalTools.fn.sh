@@ -163,6 +163,7 @@ DistroLocalTools(){
 			if [ "$1" = "--help" ] ; then
 				cat "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/HelpDistroLocalTools.text" >&2
 			fi
+			set +e ; return 1
 			exit 1
 		;;
 		*)
@@ -172,10 +173,10 @@ DistroLocalTools(){
 	esac
 }
 
-
 case "$0" in
 	*/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh)
 
+		set -e
 		DistroLocalTools "$@"
 	;;
 esac
