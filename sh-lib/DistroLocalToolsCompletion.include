@@ -19,7 +19,7 @@ case "$1" in
 			done
 
 			find $MDPATH -type 'f' -name '*.sh' \
-			| sed "s:^$MDLC_BIN/myx/myx.distro-(.local,system,deploy,source,remote)/sh-scripts/::g" \
+			| sed "s:^$MDLC_BIN/myx/myx.distro-(.local|system|deploy|source|remote)/sh-scripts/::g" \
 			| sed "s:^$FILTER::g" \
 			| sort
 		)
