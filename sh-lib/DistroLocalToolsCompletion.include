@@ -10,7 +10,6 @@ case "$1" in
 	--completion-all)
 		shift
 		( 
-			FILTER="$1" ; shift
 			MDPATH=""
 			for ITEM in ".local" "system" "deploy" "source" "remote" ; do
 				if [ -d "$MDLC_BIN/myx/myx.distro-$ITEM/sh-scripts" ] ; then
@@ -19,8 +18,7 @@ case "$1" in
 			done
 
 			find $MDPATH -type 'f' -name '*.sh' \
-			| sed "s:^$MDLC_BIN/myx/myx.distro-(.local|system|deploy|source|remote)/sh-scripts/::g" \
-			| sed "s:^$FILTER::g" \
+			| sed "s:^$MDLC_BIN/myx/myx.distro-(\\.local|system|deploy|source|remote)/sh-scripts/::g" \
 			| sort
 		)
 		return 0
