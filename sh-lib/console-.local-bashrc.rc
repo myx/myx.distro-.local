@@ -4,14 +4,11 @@ echo "Working in $MMDAPP" >&2
 export MDLC_BIN="$MMDAPP/.local"
 # search: 1) previous path; 2) distro {.local|deploy|source} scripts.
 
-export PATH="\
-	$PATH:\
-	$MDLC_BIN/myx/myx.distro-.local/sh-scripts:\
-	$MDLC_BIN/myx/myx.distro-system/sh-scripts:\
-	$MDLC_BIN/myx/myx.distro-deploy/sh-scripts:\
-	$MDLC_BIN/myx/myx.distro-source/sh-scripts:\
-	$MDLC_BIN/myx/myx.distro-remote/sh-scripts:\
-"
+export PATH+=":$MDLC_BIN/myx/myx.distro-.local/sh-scripts"
+export PATH+=":$MDLC_BIN/myx/myx.distro-system/sh-scripts"
+export PATH+=":$MDLC_BIN/myx/myx.distro-deploy/sh-scripts"
+export PATH+=":$MDLC_BIN/myx/myx.distro-source/sh-scripts"
+export PATH+=":$MDLC_BIN/myx/myx.distro-remote/sh-scripts"
 
 # . "$MDLC_BIN/myx/myx.distro-.local/sh-lib/DistroShellContext.include"
 
