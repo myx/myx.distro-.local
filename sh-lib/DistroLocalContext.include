@@ -1,0 +1,86 @@
+[ -z "$MMDAPP" ] && echo 'ERROR: $MMDAPP is not set!' >&2 && exit 1
+
+if ! type DistroLocalContext >/dev/null 2>&1 ; then
+
+	MDLC_BIN="${MDLC_BIN:-$MMDAPP/.local}"
+
+	# DistroLocalContext
+	DistroLocalContext(){
+		case "$1" in
+			--uncache)
+				echo "DistroLocalContext: clear cache" >&2
+			;;
+			--is-spec-option)
+				case "$2" in
+					--run-from-source|--run-from-.local)
+						return 0
+					;;
+				esac
+				set +e ; return 1
+			;;
+			*)
+				if DistroLocalContext --is-spec-option "$1" ; then
+					local previousSpec="$MDSC_OPTION"
+					local adpcChangeSpec="true"
+			
+					[ -z "$MDSC_DETAIL" ] || echo "DistroLocalContext: input spec: $1" >&2
+					. "$MDLC_BIN/myx/myx.distro-.local/sh-lib/DistroLocalContextSetInputSpec.include"		
+					return 0
+				fi
+			;;
+		esac
+	}
+
+	if ! type Require >/dev/null 2>&1 ; then
+		Require(){
+			local distroCommand="$1" ; shift
+			if [ -z "$distroCommand" ] ; then
+				( . "$MDLC_BIN/myx/myx.distro-source/sh-lib/HelpRequire.include" )
+				set +e ; return 1
+			fi
+			if type "${distroCommand%.fn.sh}" >/dev/null 2>&1 ; then
+				return 0
+			fi
+			
+			if [ -f "$MDLC_BIN/myx/myx.distro-source/sh-scripts/${distroCommand%.fn.sh}.fn.sh" ] ; then
+				. "$MDLC_BIN/myx/myx.distro-source/sh-scripts/${distroCommand%.fn.sh}.fn.sh"
+				return 0
+			fi
+			if [ -f "$MDLC_BIN/myx/myx.distro-deploy/sh-scripts/${distroCommand%.fn.sh}.fn.sh" ] ; then
+				. "$MDLC_BIN/myx/myx.distro-deploy/sh-scripts/${distroCommand%.fn.sh}.fn.sh"
+				return 0
+			fi
+			source "${distroCommand%.fn.sh}.fn.sh"
+			return 0
+		}
+	fi
+	
+	
+	DistroLocal(){
+		local distroCommand="$1" ; shift
+		if [ -z "$distroCommand" ] ; then
+			( . "$MDLC_BIN/myx/myx.distro-source/sh-lib/HelpDistroLocal.include" )
+			set +e ; return 1
+		fi
+		if ! type "${distroCommand%.fn.sh}" >/dev/null 2>&1 ; then
+			. "${distroCommand%.fn.sh}.fn.sh"
+		fi
+		"${distroCommand%.fn.sh}" "$@"
+	}
+fi
+
+while true ; do
+	if [ "--verbose" = "$1" ] ; then
+		export MDSC_DETAIL="true"
+		shift
+		continue
+	fi 
+	if DistroLocalContext --is-spec-option "$1" ; then
+		[ -z "$MDSC_DETAIL" ] || echo "DistroLocalContext: input spec: $1" >&2
+		. "$MDSC_ORIGIN/DistroLocalContextSetInputSpec.include"
+		shift
+		continue
+	fi
+	break
+done
+
