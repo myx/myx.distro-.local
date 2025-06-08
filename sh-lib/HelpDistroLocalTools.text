@@ -53,3 +53,6 @@ syntax: DistroLocalTools.fn.sh --{system|custom}-config-option <operation>
 
 		--make-console-script
 			Re-Creates DistroConsole.sh script.
+
+	Examples:
+		DistroLocalTools.fn.sh --install-distro-source --install-distro-deploy

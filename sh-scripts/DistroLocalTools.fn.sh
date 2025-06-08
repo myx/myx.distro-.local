@@ -87,28 +87,28 @@ DistroLocalTools(){
 		;;
 		--install-distro-*)
 			local pullCommands=""
-			pullCommands+='GitClonePull "$MMDAPP/.local/myx/myx.common/" "git@github.com:myx/os-myx.common.git" & \n'
-			pullCommands+='GitClonePull "$MMDAPP/.local/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" & \n'
+			pullCommands+="GitClonePull \"$MMDAPP/.local/myx/myx.common/\" \"git@github.com:myx/os-myx.common.git\" & \n"
+			pullCommands+="GitClonePull \"$MMDAPP/.local/myx/myx.distro-.local/\" \"git@github.com:myx/myx.distro-.local.git\" & \n"
 			while true ; do
 				case "$1" in
 					--install-distro-remote)
 						shift
 
-						pullCommands+='GitClonePull "$MMDAPP/.local/myx/myx.distro-remote/" "git@github.com:myx/myx.distro-remote.git" & \n'
+						pullCommands+="GitClonePull \"$MMDAPP/.local/myx/myx.distro-remote/\" \"git@github.com:myx/myx.distro-remote.git\" & \n"
 					;;
 					--install-distro-deploy)
 						shift
 
-						pullCommands+='GitClonePull "$MMDAPP/.local/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" & \n'
-						pullCommands+='GitClonePull "$MMDAPP/.local/myx/myx.distro-deploy/" "git@github.com:myx/myx.distro-deploy.git" & \n'
+						pullCommands+="GitClonePull \"$MMDAPP/.local/myx/myx.distro-system/\" \"git@github.com:myx/myx.distro-system.git\" & \n"
+						pullCommands+="GitClonePull \"$MMDAPP/.local/myx/myx.distro-deploy/\" \"git@github.com:myx/myx.distro-deploy.git\" & \n"
 
 						mkdir -p "$MMDAPP/distro"
 					;;
 					--install-distro-source)
 						shift
 
-						pullCommands+='GitClonePull "$MMDAPP/.local/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" & \n'
-						pullCommands+='GitClonePull "$MMDAPP/.local/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" & \n'
+						pullCommands+="GitClonePull \"$MMDAPP/.local/myx/myx.distro-system/\" \"git@github.com:myx/myx.distro-system.git\" & \n"
+						pullCommands+="GitClonePull \"$MMDAPP/.local/myx/myx.distro-source/\" \"git@github.com:myx/myx.distro-source.git\" & \n"
 
 						mkdir -p "$MMDAPP/source"
 					;;
