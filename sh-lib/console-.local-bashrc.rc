@@ -21,6 +21,7 @@ if [ -d "$MDLC_BIN/myx/myx.distro-deploy/sh-scripts" ] ; then
 	echo "LocalConsole: Type 'ConsoleDeploy' to start Deploy Console." >&2
 
 	ConsoleDeploy(){
+		$MDLC_BIN/myx/myx.distro-deploy/actions/distro/deploy-tools/deploy-console.sh
 		return 0
 	}
 fi
@@ -31,6 +32,7 @@ if [ -d "$MDLC_BIN/myx/myx.distro-source/sh-scripts" ] ; then
 	echo "LocalConsole: Type 'ConsoleSource' to start Source Console." >&2
 
 	ConsoleSource(){
+		$MDLC_BIN/myx/myx.distro-source/actions/distro/source-tools/source-console.sh
 		return 0
 	}
 fi
@@ -41,6 +43,7 @@ if [ -d "$MDLC_BIN/myx/myx.distro-remote/sh-scripts" ] ; then
 	echo "LocalConsole: Type 'ConsoleRemote' to start Remote Console." >&2
 
 	ConsoleRemote(){
+		$MDLC_BIN/myx/myx.distro-remote/actions/distro/remote-tools/remote-console.sh
 		return 0
 	}
 fi
