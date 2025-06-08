@@ -49,6 +49,10 @@ if [ -d "$MDLC_BIN/myx/myx.distro-remote/sh-scripts" ] ; then
 fi
 
 . "$MDLC_BIN/myx/myx.distro-.local/sh-lib/DistroLocalContext.include"
+DistroLocalContext --run-from-.local
+
+Require DistroLocalTools
+complete -W "\` DistroLocalTools --completion-all \`" "Require"
 
 consolePromptState(){
 	if [ ! -z "$MDSC_INT_CD" ] ; then
