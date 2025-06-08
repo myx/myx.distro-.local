@@ -4,7 +4,7 @@
 case "$1" in
 	--completion-require)
 		shift
-		DistroLocalTools --completion-all | sort -u | sed 's:\.fn\.sh$::' 
+		DistroLocalTools --completion-all | grep -e '\.fn\.sh$' | sort -u | sed 's:\.fn\.sh$::' 
 		return 0
 	;;
 	--completion-all)
@@ -18,7 +18,7 @@ case "$1" in
 			done
 
 			find $MDPATH -type 'f' -name '*.sh' \
-			| sed "s:^$MDLC_BIN/myx/myx.distro-(\\.local|system|deploy|source|remote)/sh-scripts/::g" \
+			| sed "s:^$MDLC_BIN/myx/myx.distro-(\.local|system|deploy|source|remote)/sh-scripts/::g" \
 			| sort
 		)
 		return 0
