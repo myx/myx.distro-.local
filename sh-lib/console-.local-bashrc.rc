@@ -52,7 +52,11 @@ fi
 DistroLocalContext --run-from-.local
 
 Require DistroLocalTools
-complete -W "\` DistroLocalTools --completion-all \`" "Require"
+
+complete -W "\` DistroLocalTools --completion-all \`" "."
+complete -W "\` DistroLocalTools --completion-all \`" "*"
+complete -W "\` DistroLocalTools --completion-all \`" "which"
+complete -W "\` DistroLocalTools --completion-require \`" "Require"
 
 consolePromptState(){
 	if [ ! -z "$MDSC_INT_CD" ] ; then

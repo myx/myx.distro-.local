@@ -2,6 +2,12 @@
 # ^^^ for syntax checking in the editor only
 
 case "$1" in
+	--completion-require)
+		shift
+		DistroLocalTools --completion-all | sort -u | sed 's:\.fn\.sh$::' 
+		return 0
+		;;
+	;;
 	--completion-all)
 		shift
 		( 
@@ -15,7 +21,7 @@ case "$1" in
 			find $MDPATH -type 'f' -name '*.sh' \
 			| sed "s:^$FILTER::g" \
 			| sort
-		) | sort -u | sed 's:\.fn\.sh$::' 
+		)
 		return 0
 		;;
 	*)
