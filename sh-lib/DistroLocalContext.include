@@ -35,19 +35,31 @@ if ! type DistroLocalContext >/dev/null 2>&1 ; then
 		Require(){
 			local distroCommand="$1" ; shift
 			if [ -z "$distroCommand" ] ; then
-				( . "$MDLC_BIN/myx/myx.distro-source/sh-lib/HelpRequire.include" )
+				( . "$MDLC_BIN/myx/myx.distro-.local/sh-lib/HelpRequire.include" )
 				set +e ; return 1
 			fi
 			if type "${distroCommand%.fn.sh}" >/dev/null 2>&1 ; then
 				return 0
 			fi
 			
+			if [ -f "$MDLC_BIN/myx/myx.distro-.local/sh-scripts/${distroCommand%.fn.sh}.fn.sh" ] ; then
+				. "$MDLC_BIN/myx/myx.distro-.local/sh-scripts/${distroCommand%.fn.sh}.fn.sh"
+				return 0
+			fi
+			if [ -f "$MDLC_BIN/myx/myx.distro-system/sh-scripts/${distroCommand%.fn.sh}.fn.sh" ] ; then
+				. "$MDLC_BIN/myx/myx.distro-system/sh-scripts/${distroCommand%.fn.sh}.fn.sh"
+				return 0
+			fi
 			if [ -f "$MDLC_BIN/myx/myx.distro-source/sh-scripts/${distroCommand%.fn.sh}.fn.sh" ] ; then
 				. "$MDLC_BIN/myx/myx.distro-source/sh-scripts/${distroCommand%.fn.sh}.fn.sh"
 				return 0
 			fi
 			if [ -f "$MDLC_BIN/myx/myx.distro-deploy/sh-scripts/${distroCommand%.fn.sh}.fn.sh" ] ; then
 				. "$MDLC_BIN/myx/myx.distro-deploy/sh-scripts/${distroCommand%.fn.sh}.fn.sh"
+				return 0
+			fi
+			if [ -f "$MDLC_BIN/myx/myx.distro-remote/sh-scripts/${distroCommand%.fn.sh}.fn.sh" ] ; then
+				. "$MDLC_BIN/myx/myx.distro-remote/sh-scripts/${distroCommand%.fn.sh}.fn.sh"
 				return 0
 			fi
 			source "${distroCommand%.fn.sh}.fn.sh"
