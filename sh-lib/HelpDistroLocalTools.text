@@ -1,6 +1,6 @@
 syntax: DistroLocalTools.fn.sh --{system|custom}-config-option <operation>
 
-  Options:
+	Options:
 
 		--help-install-unix-bare
 			Displays instructions for barest unix install.
