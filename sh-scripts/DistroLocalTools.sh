@@ -90,37 +90,37 @@ DistroLocalTools(){
 				--install-distro-remote)
 					shift
 
-					GitClonePull "$MMDAPP/.local/source/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &
-					GitClonePull "$MMDAPP/.local/source/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &
-					GitClonePull "$MMDAPP/.local/source/myx/myx.distro-remote/" "git@github.com:myx/myx.distro-remote.git" &
+					GitClonePull "$MMDAPP/.local/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &
+					GitClonePull "$MMDAPP/.local/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &
+					GitClonePull "$MMDAPP/.local/myx/myx.distro-remote/" "git@github.com:myx/myx.distro-remote.git" &
 
 					wait
 				;;
 				--install-distro-deploy)
 					shift
 
-					GitClonePull "$MMDAPP/.local/source/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &
-					GitClonePull "$MMDAPP/.local/source/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &
-					GitClonePull "$MMDAPP/.local/source/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &
-					GitClonePull "$MMDAPP/.local/source/myx/myx.distro-deploy/" "git@github.com:myx/myx.distro-deploy.git" &
+					GitClonePull "$MMDAPP/.local/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &
+					GitClonePull "$MMDAPP/.local/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &
+					GitClonePull "$MMDAPP/.local/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &
+					GitClonePull "$MMDAPP/.local/myx/myx.distro-deploy/" "git@github.com:myx/myx.distro-deploy.git" &
 
 					wait
 				;;
 				--install-distro-source)
 					shift
 
-					GitClonePull "$MMDAPP/.local/source/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &
-					GitClonePull "$MMDAPP/.local/source/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &
-					GitClonePull "$MMDAPP/.local/source/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &
-					GitClonePull "$MMDAPP/.local/source/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" &
+					GitClonePull "$MMDAPP/.local/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &
+					GitClonePull "$MMDAPP/.local/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &
+					GitClonePull "$MMDAPP/.local/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &
+					GitClonePull "$MMDAPP/.local/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" &
 
 					wait
 				;;
 				--install-distro-.local)
 					shift
 
-					GitClonePull "$MMDAPP/.local/source/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &
-					GitClonePull "$MMDAPP/.local/source/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &
+					GitClonePull "$MMDAPP/.local/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &
+					GitClonePull "$MMDAPP/.local/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &
 
 					wait
 				;;
@@ -135,15 +135,15 @@ DistroLocalTools(){
 			return 0
 		;;
 		--make-*)
-			. "$MMDAPP/source/myx/myx.distro-.local/sh-lib/DistroLocalToolsMake.include"
+			. "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/DistroLocalToolsMake.include"
 			set +e ; return 1
 		;;
 		--system-config-option|--custom-config-option)
-			. "$MMDAPP/source/myx/myx.distro-.local/sh-lib/DistroLocalToolsConfig.include"
+			. "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/DistroLocalToolsConfig.include"
 			set +e ; return 1
 		;;
 		--help-install-unix-bare)
-			cat "$MMDAPP/source/myx/myx.distro-.local/sh-lib/HelpDistroLocalTools-unix-bare.text" >&2
+			cat "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/HelpDistroLocalTools-unix-bare.text" >&2
 			exit 1;
 		;;
 		*)
@@ -162,7 +162,7 @@ case "$0" in
 			echo "syntax: DistroLocalTools.sh --install-distro-deploy" >&2
 			echo "syntax: DistroLocalTools.sh [--help]" >&2
 			if [ "$1" = "--help" ] ; then
-				cat "$MMDAPP/source/myx/myx.distro-.local/sh-lib/HelpDistroLocalTools.text" >&2
+				cat "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/HelpDistroLocalTools.text" >&2
 			fi
 			exit 1
 		fi
