@@ -2,6 +2,9 @@
 # ^^^ for syntax checking in the editor only
 
 DistroLocalCatMarkdown() {
+
+	set -e
+
 	local fromFile="$1"
 	if [ ! -z "$fromFile" ] ; then
 		if [ -f "$fromFile" ] ; then
