@@ -86,54 +86,52 @@ DistroLocalTools(){
 			return 0
 		;;
 		--install-distro-*)
-			local pullCommands=""
-			pullCommands+="GitClonePull \"$MMDAPP/.local/myx/myx.common/\" \"git@github.com:myx/os-myx.common.git\" & \n"
-			pullCommands+="GitClonePull \"$MMDAPP/.local/myx/myx.distro-.local/\" \"git@github.com:myx/myx.distro-.local.git\" & \n"
-			while true ; do
-				case "$1" in
-					--install-distro-remote)
-						shift
-
-						pullCommands+="GitClonePull \"$MMDAPP/.local/myx/myx.distro-remote/\" \"git@github.com:myx/myx.distro-remote.git\" & \n"
-					;;
-					--install-distro-deploy)
-						shift
-
-						pullCommands+="GitClonePull \"$MMDAPP/.local/myx/myx.distro-system/\" \"git@github.com:myx/myx.distro-system.git\" & \n"
-						pullCommands+="GitClonePull \"$MMDAPP/.local/myx/myx.distro-deploy/\" \"git@github.com:myx/myx.distro-deploy.git\" & \n"
-
-						mkdir -p "$MMDAPP/distro"
-					;;
-					--install-distro-source)
-						shift
-
-						pullCommands+="GitClonePull \"$MMDAPP/.local/myx/myx.distro-system/\" \"git@github.com:myx/myx.distro-system.git\" & \n"
-						pullCommands+="GitClonePull \"$MMDAPP/.local/myx/myx.distro-source/\" \"git@github.com:myx/myx.distro-source.git\" & \n"
-
-						mkdir -p "$MMDAPP/source"
-					;;
-					--install-distro-.local)
-						shift
-					;;
-					'')
-						if [ -z "$pullCommands" ] ; then
-							echo "ERROR: $MDSC_CMD: nothing to install, check arguments" >&2
+			local pullCommands
+			pullCommands="$(
+				echo 'GitClonePull "$MMDAPP/.local/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &'
+				echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &'
+				while true ; do
+					case "$1" in
+						--install-distro-remote)
+							shift
+							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-remote/" "git@github.com:myx/myx.distro-remote.git" &'
+						;;
+						--install-distro-deploy)
+							shift
+							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
+							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-deploy/" "git@github.com:myx/myx.distro-deploy.git" &'
+							mkdir -p "$MMDAPP/distro"
+						;;
+						--install-distro-source)
+							shift
+							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
+							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" &'
+							mkdir -p "$MMDAPP/source"
+						;;
+						--install-distro-.local)
+							shift
+							mkdir -p "$MMDAPP/.local"
+						;;
+						'')
+							if [ -z "$pullCommands" ] ; then
+								echo "ERROR: $MDSC_CMD: nothing to install, check arguments" >&2
+								set +e ; return 1
+							fi
+							break
+						;;
+						*)
+							echo "ERROR: $MDSC_CMD: invalid option: $1" >&2
 							set +e ; return 1
-						fi
-						eval "$( echo "$pullCommands" )"
-						wait
-						DistroLocalTools --make-console-command
+						;;
+					esac
+				done
+			)"
 
-						return 0
-					;;
-					*)
-						echo "ERROR: $MDSC_CMD: invalid option: $1" >&2
-						set +e ; return 1
-					;;
-				esac
-			done
+			eval "$( echo "$pullCommands" | awk '!seen[$0]++' )"
+			wait
+			DistroLocalTools --make-console-command
 
-			set +e ; return 1
+			return 0
 		;;
 		--make-*)
 			. "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/DistroLocalToolsMake.include"
