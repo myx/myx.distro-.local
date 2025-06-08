@@ -104,6 +104,8 @@ DistroLocalTools(){
 					GitClonePull "$MMDAPP/.local/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &
 					GitClonePull "$MMDAPP/.local/myx/myx.distro-deploy/" "git@github.com:myx/myx.distro-deploy.git" &
 
+					mkdir -p "$MMDAPP/distro"
+
 					wait
 				;;
 				--install-distro-source)
@@ -113,6 +115,8 @@ DistroLocalTools(){
 					GitClonePull "$MMDAPP/.local/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &
 					GitClonePull "$MMDAPP/.local/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &
 					GitClonePull "$MMDAPP/.local/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" &
+
+					mkdir -p "$MMDAPP/source"
 
 					wait
 				;;
