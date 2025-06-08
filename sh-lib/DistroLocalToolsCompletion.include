@@ -13,7 +13,7 @@ case "$1" in
 	--completion-.local)
 		shift
 		DistroLocalTools --completion-all \
-		| grep -e '^DistroLocal' -e '^Local' \
+		| grep -e '^DistroLocal' \
 		| grep -e '\.fn\.sh$' \
 		| sort -u \
 		| sed 's:\.fn\.sh$::' 

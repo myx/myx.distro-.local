@@ -1,3 +1,4 @@
+echo "'Require' command loads include-able function into current execution context." >&2
 echo "Syntax: Require <distroCommandName>" >&2
 echo >&2
 set +e ; return 1

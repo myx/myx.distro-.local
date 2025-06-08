@@ -57,7 +57,7 @@ complete -W "\` DistroLocalTools --completion-all \`" "."
 complete -W "\` DistroLocalTools --completion-all \`" "*"
 complete -W "\` DistroLocalTools --completion-all \`" "which"
 complete -W "\` DistroLocalTools --completion-require \`" "Require"
-complete -W "\` DistroLocalTools --completion-.local \`" "DistroLocal"
+complete -W "\` DistroLocalTools --completion-.local \`" "Local"
 
 consolePromptState(){
 	if [ ! -z "$MDSC_INT_CD" ] ; then

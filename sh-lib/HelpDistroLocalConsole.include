@@ -3,14 +3,17 @@ echo "This is DistroLocalConsole. It runs in DistroLocal context and provides fo
 echo >&2
 
 if type ConsoleSource >/dev/null 2>&1 ; then
+	echo "'ConsoleSource' launches or opens distro-source console." >&2
 	echo "syntax: ConsoleSource [<options>]" >&2
 	echo >&2
 fi
 if type ConsoleDeploy >/dev/null 2>&1 ; then
+	echo "'ConsoleDeploy' launches or opens distro-deploy console." >&2
 	echo "syntax: ConsoleDeploy [<options>]" >&2
 	echo >&2
 fi
 if type ConsoleRemote >/dev/null 2>&1 ; then
+	echo "'ConsoleRemote' launches or opens distro-remote console." >&2
 	echo "syntax: ConsoleRemote [<options>]" >&2
 	echo >&2
 fi
@@ -18,8 +21,8 @@ fi
 if type Require >/dev/null 2>&1 ; then
 	Require --help
 fi
-if type DistroLocal >/dev/null 2>&1 ; then
-	DistroLocal --help
+if type Local >/dev/null 2>&1 ; then
+	Local --help
 fi
 
 echo >&2
