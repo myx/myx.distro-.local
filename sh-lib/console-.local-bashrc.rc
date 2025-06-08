@@ -1,0 +1,35 @@
+echo "Working in $MMDAPP" >&2
+[ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc" 
+
+export MDSC_BIN="$MMDAPP/.local"
+# search: 1) previous path; 2) distro {.local|deploy|source} scripts.
+
+export PATH="\
+	$PATH:\
+	$MDSC_BIN/myx/myx.distro-.local/sh-scripts:\
+	$MDSC_BIN/myx/myx.distro-system/sh-scripts:\
+	$MDSC_BIN/myx/myx.distro-deploy/sh-scripts:\
+	$MDSC_BIN/myx/myx.distro-source/sh-scripts:\
+	$MDSC_BIN/myx/myx.distro-remote/sh-scripts:\
+"
+
+# . "$MDSC_BIN/myx/myx.distro-.local/sh-lib/DistroShellContext.include"
+
+consolePromptState(){
+	if [ ! -z "$MDSC_INT_CD" ] ; then
+		echo "Changing directory: $MDSC_INT_CD"
+		cd "$MDSC_INT_CD"
+		export -n MDSC_INT_CD
+	fi
+	printf "MDDSC:%s:%s" "$MDSC_INMODE" "$(basename "${MDSC_PRJ_NAME:--}")"
+}
+
+PS1="\` consolePromptState \`: $PS1"
+export PS1
+
+if [ ! -z "$MDSC_PRJ_NAME" ] ; then
+	DistroSelectProject MDSC_PRJ_NAME "$MDSC_PRJ_NAME"
+	export MDSC_SELECT_PROJECTS="$MDSC_PRJ_NAME"
+	cd "$MMDAPP/source/$MDSC_PRJ_NAME"
+	echo "Console: Project Selected: $MDSC_PRJ_NAME" >&2
+fi

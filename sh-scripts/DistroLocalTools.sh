@@ -85,52 +85,62 @@ DistroLocalTools(){
 
 			return 0
 		;;
-		--install-distro-remote)
-			shift
+		--install-distro-*)
+			case "$1" in
+				--install-distro-remote)
+					shift
 
-			GitClonePull "$MMDAPP/.local/source/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &
-			GitClonePull "$MMDAPP/.local/source/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &
-			GitClonePull "$MMDAPP/.local/source/myx/myx.distro-remote/" "git@github.com:myx/myx.distro-remote.git" &
+					GitClonePull "$MMDAPP/.local/source/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &
+					GitClonePull "$MMDAPP/.local/source/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &
+					GitClonePull "$MMDAPP/.local/source/myx/myx.distro-remote/" "git@github.com:myx/myx.distro-remote.git" &
 
-			wait
+					wait
+				;;
+				--install-distro-deploy)
+					shift
+
+					GitClonePull "$MMDAPP/.local/source/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &
+					GitClonePull "$MMDAPP/.local/source/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &
+					GitClonePull "$MMDAPP/.local/source/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &
+					GitClonePull "$MMDAPP/.local/source/myx/myx.distro-deploy/" "git@github.com:myx/myx.distro-deploy.git" &
+
+					wait
+				;;
+				--install-distro-source)
+					shift
+
+					GitClonePull "$MMDAPP/.local/source/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &
+					GitClonePull "$MMDAPP/.local/source/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &
+					GitClonePull "$MMDAPP/.local/source/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &
+					GitClonePull "$MMDAPP/.local/source/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" &
+
+					wait
+				;;
+				--install-distro-.local)
+					shift
+
+					GitClonePull "$MMDAPP/.local/source/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &
+					GitClonePull "$MMDAPP/.local/source/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &
+
+					wait
+				;;
+				*)
+					echo "ERROR: $MDSC_CMD: invalid option: $1" >&2
+					set +e ; return 1
+				;;
+			esac
+
+			DistroLocalTools --make-console-command
 
 			return 0
 		;;
-		--install-distro-deploy)
-			shift
-
-			GitClonePull "$MMDAPP/.local/source/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &
-			GitClonePull "$MMDAPP/.local/source/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &
-			GitClonePull "$MMDAPP/.local/source/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &
-			GitClonePull "$MMDAPP/.local/source/myx/myx.distro-deploy/" "git@github.com:myx/myx.distro-deploy.git" &
-
-			wait
-
-			return 0
-		;;
-		--install-distro-source)
-			shift
-
-			GitClonePull "$MMDAPP/.local/source/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &
-			GitClonePull "$MMDAPP/.local/source/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &
-			GitClonePull "$MMDAPP/.local/source/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &
-			GitClonePull "$MMDAPP/.local/source/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" &
-
-			wait
-
-			return 0
-		;;
-		--install-distro-.local)
-			shift
-
-			GitClonePull "$MMDAPP/.local/source/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &
-			GitClonePull "$MMDAPP/.local/source/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &
-
-			wait
-
-			return 0
+		--make-*)
+			. "$MMDAPP/source/myx/myx.distro-.local/sh-lib/DistroLocalToolsMake.include"
+			set +e ; return 1
 		;;
 		--system-config-option|--custom-config-option)
+			. "$MMDAPP/source/myx/myx.distro-.local/sh-lib/DistroLocalToolsConfig.include"
+			set +e ; return 1
 		;;
 		--help-install-unix-bare)
 			cat "$MMDAPP/source/myx/myx.distro-.local/sh-lib/HelpDistroLocalTools-unix-bare.text" >&2

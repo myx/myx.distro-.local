@@ -52,3 +52,7 @@ syntax: DistroLocalTools.sh --{system|custom}-config-option --show-all
 				MDLT_ACTIONS_SH_WRAP
 					Shell command to wrap shell actions to execute. Allows to run actions on
 					remote runner machine or add extra logging/notification, etc...
+
+
+		--make-console-script
+			Re-Creates DistroConsole.sh script.
