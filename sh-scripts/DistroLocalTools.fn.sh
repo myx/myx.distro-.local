@@ -157,14 +157,12 @@ DistroLocalTools(){
 			exit 1;
 		;;
 		''|--help)
-			echo "syntax: DistroLocalTools.fn.sh --install-distro-source" >&2
-			echo "syntax: DistroLocalTools.fn.sh --install-distro-deploy" >&2
+			echo "syntax: DistroLocalTools.fn.sh <option>" >&2
 			echo "syntax: DistroLocalTools.fn.sh [--help]" >&2
 			if [ "$1" = "--help" ] ; then
 				cat "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/HelpDistroLocalTools.text" >&2
 			fi
 			set +e ; return 1
-			exit 1
 		;;
 		*)
 			echo "ERROR: $MDSC_CMD: invalid option: $1" >&2
@@ -175,6 +173,11 @@ DistroLocalTools(){
 
 case "$0" in
 	*/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh)
+
+		if [ -z "$1" ] || [ "$1" = "--help" ] ; then
+			echo "syntax: DistroLocalTools.fn.sh --install-distro-source" >&2
+			echo "syntax: DistroLocalTools.fn.sh --install-distro-deploy" >&2
+		fi
 
 		set -e
 		DistroLocalTools "$@"
