@@ -17,22 +17,29 @@ DistroLocalCatMarkdown() {
 	fi
 	
   # detect “real” TTY
-  if [ -t 1 ] && [ -n "${TERM-}" ] && [ "$TERM" != dumb ]; then
+  if \
+  	[ -t 1 ] \
+	&& [ -n "${TERM-}" ] \
+	&& [ "$TERM" != dumb ] \
+	&& [ -z "${NO_COLOR-}" ] \
+	&& [ "$(tput colors 2>/dev/null)" -ge 8 ] \
+  ; then
     USE_COLOR=1
   fi
 
-  # ANSI codes
-  esc=$(printf '\033')
-  reset="${esc}[0m"
-  bold_on="${esc}[1m"   bold_off="${esc}[22m"
-  ital_on="${esc}[3m"   ital_off="${esc}[23m"
-  code_on="${esc}[96m"  code_off="${reset}"
-  quote_on="${esc}[90m" quote_off="${reset}"
-  bullet_on="${esc}[32m" bullet_off="${reset}"
-  hdr1_on="${esc}[95m"  hdr2_on="${esc}[94m"  hdr3_on="${esc}[92m"
-  hdr_off="${reset}"
 
   if [ "${USE_COLOR-}" ]; then
+	# ANSI codes
+	esc=$(printf '\033')
+	reset="${esc}[0m"
+	bold_on="${esc}[1m"   bold_off="${esc}[22m"
+	ital_on="${esc}[3m"   ital_off="${esc}[23m"
+	code_on="${esc}[96m"  code_off="${reset}"
+	quote_on="${esc}[90m" quote_off="${reset}"
+	bullet_on="${esc}[32m" bullet_off="${reset}"
+	hdr1_on="${esc}[95m"  hdr2_on="${esc}[94m"  hdr3_on="${esc}[92m"
+	hdr_off="${reset}"
+	
     sed -E \
       -e "s/^###### (.*)/${hdr1_on}\1${hdr_off}/" \
       -e "s/^##### (.*)/${hdr1_on}\1${hdr_off}/" \
