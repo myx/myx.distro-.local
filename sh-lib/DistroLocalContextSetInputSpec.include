@@ -14,7 +14,7 @@ if [ "$adpcChangeSpec" = "true" ] ; then
 		echo "ERROR: DistroLocalContextSetInputSpec: inputSpec argument is required!" >&2
 		exit 1
 	fi
-	if ! DistroShellContext --is-spec-option "$1" ; then
+	if ! DistroLocalContext --is-spec-option "$1" ; then
 		echo "ERROR: DistroLocalContextSetInputSpec: inputSpec argument is invalid: $1" >&2
 		exit 1
 	fi
