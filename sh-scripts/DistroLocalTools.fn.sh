@@ -164,11 +164,11 @@ DistroLocalTools(){
 		;;
 		--make-*)
 			. "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/DistroLocalToolsMake.include"
-			set +e ; return 1
+			return 0
 		;;
 		--system-config-option|--custom-config-option)
 			. "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/DistroLocalToolsConfig.include"
-			set +e ; return 1
+			return 0
 		;;
 		--help-install-unix-bare)
 			# cat "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/HelpDistroLocalTools-install-unix-bare.text" >&2
