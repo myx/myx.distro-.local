@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# ^^^ for syntax checking in the editor only
+
+case "$1" in 
+	--shell-prompt)
+		if [ ! -z "$MDSC_INT_CD" ] ; then
+			echo "Changing directory: $MDSC_INT_CD"
+			cd "$MDSC_INT_CD"
+			export -n MDSC_INT_CD
+		fi
+		printf "MDLC:%s:%s" ".local" "$(basename "${MDSC_PRJ_NAME:--}")"
+	;;
+	*)
+		echo "DistroLocalSourceConsole: Invalid argument: $1" >&2
+		set +e ; return 1
+	;;
+esac
