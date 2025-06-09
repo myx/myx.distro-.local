@@ -1,20 +1,28 @@
 #!/usr/bin/env bash
 # ^^^ for syntax checking in the editor only
 
+MDLC_BIN="${MDLC_BIN:-$MMDAPP/.local}"
+
 case "$1" in 
 	--shell-prompt)
-		if [ ! -z "$MDSC_INT_CD" ] ; then
-			echo "Changing directory: $MDSC_INT_CD"
-			cd "$MDSC_INT_CD"
-			export -n MDSC_INT_CD
-		fi
-		printf "MDLC:%s:%s" ".local" "$(basename "${MDSC_PRJ_NAME:--}")"
+		printf "MDLC:%s" ".local"
+		return 0
 	;;
-	''|--start-console)
+	--completion-*)
+		. "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/DistroLocalToolsCompletion.include"
+		set +e ; return 1
+	;;
+	''|--help)
+		shift
+		( . "$MDLC_BIN/myx/myx.distro-.local/sh-lib/HelpDistroLocal.include" )
+		set +e ; return 1
+	;;
+	--start-console)
 		bash --rcfile "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/console-.local-bashrc.rc" -i "$@"
+		return 0
 	;;
 	*)
-		echo "DistroLocalSourceConsole: Invalid argument: $1" >&2
+		echo "DistroLocalConsole: Invalid argument: $1" >&2
 		set +e ; return 1
 	;;
 esac

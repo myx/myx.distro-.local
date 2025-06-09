@@ -6,7 +6,7 @@ MDLC_BIN="${MDLC_BIN:-$MMDAPP/.local}"
 case "$1" in
 	--completion-require)
 		shift
-		DistroLocalTools --completion-all \
+		Local --completion-all \
 		| grep -e '\.fn\.sh$' \
 		| sort -u \
 		| sed 's:\.fn\.sh$::' 
@@ -14,7 +14,7 @@ case "$1" in
 	;;
 	--completion-.local)
 		shift
-		DistroLocalTools --completion-all \
+		Local --completion-all \
 		| grep -e '^DistroLocal' \
 		| grep -e '\.fn\.sh$' \
 		| sort -u \
