@@ -1,4 +1,4 @@
 echo "'Local' command provides/lists commands related to distro-.local operations." >&2
-echo "Syntax: Local <distro-local-command-name>" >&2
+echo "Syntax: Local <distro-.local-command-name>" >&2
 echo >&2
 set +e ; return 1
