@@ -16,7 +16,6 @@ if [ -d "$MDLC_BIN/myx/myx.distro-.local/sh-scripts" ] ; then
 	}
 fi
 
-
 if [ -d "$MDLC_BIN/myx/myx.distro-system/sh-scripts" ] ; then
 	PATH+=":$MDLC_BIN/myx/myx.distro-system/sh-scripts"
 
@@ -60,8 +59,6 @@ fi
 
 . "$MDLC_BIN/myx/myx.distro-.local/sh-lib/DistroLocalContext.include"
 DistroLocalContext --run-from-.local
-
-Require DistroLocalTools
 
 complete -W "\` Local --completion-all \`" "."
 complete -W "\` Local --completion-all \`" "*"
