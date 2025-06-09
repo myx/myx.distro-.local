@@ -65,13 +65,16 @@ case "$1" in
 			cd "$MMDAPP"
 			export MMDAPP
 
-			CONSOLE_INTERACTIVE="-i"
 			if [ "$1" == "--non-interactive" ] ; then
 				shift
-				CONSOLE_INTERACTIVE=""
+				{
+					echo . "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/console-.local-bashrc.rc"
+					cat
+				} | bash "$@"
+				return 0
 			fi
 			
-			bash --rcfile "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/console-.local-bashrc.rc" $CONSOLE_INTERACTIVE "$@"
+			bash --rcfile "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/console-.local-bashrc.rc" -i "$@"
 DISTROCONSOLE
 
 		return 0
