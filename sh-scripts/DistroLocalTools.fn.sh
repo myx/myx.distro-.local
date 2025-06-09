@@ -136,8 +136,8 @@ DistroLocalTools(){
 							set +e ; return 1
 						fi
 						cmds+="$(
-							echo
 							echo 'wait # wait for all the subprocesses to finish'
+							echo 'DistroLocalTools --make-console-commands'
 						)"
 						break
 					;;
@@ -154,7 +154,7 @@ DistroLocalTools(){
 
 			( eval "$cmds" )
 
-			DistroLocalTools --make-console-command
+			
 
 			return 0
 		;;

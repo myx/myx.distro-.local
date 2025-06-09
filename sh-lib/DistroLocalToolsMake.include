@@ -2,6 +2,30 @@
 # ^^^ for syntax checking in the editor only
 
 case "$1" in
+	--make-console-commands)
+		DistroLocalTools --make-console-command --quiet
+
+		for ITEM in 
+			"myx.distro-system/sh-lib/DistroSystemToolsMake.include"
+			"myx.distro-source/sh-lib/DistroSourceToolsMake.include"
+			"myx.distro-deploy/sh-lib/DistroDeployToolsMake.include"
+			"myx.distro-remote/sh-lib/DistroRemoteToolsMake.include"
+		; do
+			if [ -f "$MMDAPP/.local/myx/$ITEM" ] ; then
+				"$MMDAPP/.local/myx/$ITEM" --make-console-command --quiet
+			fi
+		done
+
+		if [ "$1" != "--quiet" ] ; then
+			local consoles="$( ls $MMDAPP/Distro*Console.sh | sed 's|^|	|g' )"
+			printf \
+				"\nNote: Commands to run distro conseles have beed created or updated, now you can run:\n%s\n\n" \
+				"$consoles" \
+			>&2
+		fi
+
+		return 0
+	;;
 	--make-console-command)
 		shift
 		set -e
