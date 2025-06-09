@@ -87,29 +87,25 @@ DistroLocalTools(){
 		;;
 		--install-distro-*)
 			local cmds
-			cmds+="
-			$(
+			cmds+="\n$(
 				echo 'set -e'
 				echo "export MMDAPP='$MMDAPP'"
 				echo 'GitClonePull "$MMDAPP/.local/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &'
 				echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &'
-				echo
 			)"
 
 			while true ; do
 				case "$1" in
 					--install-distro-remote)
 						shift
-						cmds+="
-						$(
+						cmds+="\n$(
 							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-remote/" "git@github.com:myx/myx.distro-remote.git" &'
 							echo 'mkdir -p "$MMDAPP/remote" # make sure `remote` directory exists'
 						)"
 					;;
 					--install-distro-deploy)
 						shift
-						cmds+="
-						$(
+						cmds+="\n$(
 							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
 							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-deploy/" "git@github.com:myx/myx.distro-deploy.git" &'
 							echo 'mkdir -p "$MMDAPP/distro" # make sure `distro` directory exists'
@@ -117,8 +113,7 @@ DistroLocalTools(){
 					;;
 					--install-distro-source)
 						shift
-						cmds+="
-						$(
+						cmds+="\n$(
 							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
 							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" &'
 							echo 'mkdir -p "$MMDAPP/source" # make sure `source` directory exists'
@@ -126,8 +121,7 @@ DistroLocalTools(){
 					;;
 					--install-distro-.local)
 						shift
-						cmds+="
-						$(
+						cmds+="\n$(
 							echo 'mkdir -p "$MMDAPP/.local" # make sure .local directory exists'
 						)"
 					;;
@@ -136,8 +130,7 @@ DistroLocalTools(){
 							echo "ERROR: $MDSC_CMD: nothing to install, check arguments" >&2
 							set +e ; return 1
 						fi
-						cmds+="
-						$(
+						cmds+="\n$(
 							echo 'wait # wait for all the subprocesses to finish'
 						)"
 						break
