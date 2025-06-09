@@ -5,11 +5,11 @@ case "$1" in
 	--make-console-commands)
 		DistroLocalTools --make-console-command --quiet
 
-		for ITEM in 
-			"myx.distro-system/sh-lib/DistroSystemToolsMake.include"
-			"myx.distro-source/sh-lib/DistroSourceToolsMake.include"
-			"myx.distro-deploy/sh-lib/DistroDeployToolsMake.include"
-			"myx.distro-remote/sh-lib/DistroRemoteToolsMake.include"
+		for ITEM in \
+			"myx.distro-system/sh-lib/DistroSystemToolsMake.include" \
+			"myx.distro-source/sh-lib/DistroSourceToolsMake.include" \
+			"myx.distro-deploy/sh-lib/DistroDeployToolsMake.include" \
+			"myx.distro-remote/sh-lib/DistroRemoteToolsMake.include" \
 		; do
 			if [ -f "$MMDAPP/.local/myx/$ITEM" ] ; then
 				"$MMDAPP/.local/myx/$ITEM" --make-console-command --quiet
