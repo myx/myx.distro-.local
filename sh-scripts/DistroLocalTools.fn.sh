@@ -89,6 +89,7 @@ DistroLocalTools(){
 			local cmds
 			cmds+="$(
 				echo 'set -e'
+				echo "export MMDAPP='$MMDAPP'"
 				echo 'GitClonePull "$MMDAPP/.local/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &'
 				echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &'
 			)"
@@ -136,6 +137,8 @@ DistroLocalTools(){
 					;;
 				esac
 			done
+
+			printf "\nWill execute ($MDSC_CMD): \n%s\n\n" "$( echo "$cmds" | sed 's|^|    |g' )" >&2
 
 			( eval "$( echo "$cmds" | awk '!seen[$0]++' )" ; wait )
 
