@@ -142,9 +142,11 @@ DistroLocalTools(){
 				esac
 			done
 
+			cmds="$( echo "$cmds" | awk '$0 && !seen[$0]++' )"
+
 			printf "\nWill execute ($MDSC_CMD): \n%s\n\n" "$( echo "$cmds" | sed 's|^|    |' )" >&2
 
-			( eval "$( echo "$cmds" | awk '!seen[$0]++' )" )
+			( eval "$cmds" )
 
 			DistroLocalTools --make-console-command
 
