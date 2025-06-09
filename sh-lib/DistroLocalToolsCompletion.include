@@ -15,7 +15,7 @@ case "$1" in
 	--completion-.local)
 		shift
 		Local --completion-all \
-		| grep '^\(DistroRemote\|Local\).*.fn.sh$' \
+		| grep '^\(DistroLocal\|Local\).*.fn.sh$' \
 		| sort -u \
 		| sed 's:\.fn\.sh$::' 
 		return 0
