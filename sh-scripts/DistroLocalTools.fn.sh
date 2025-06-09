@@ -136,7 +136,9 @@ DistroLocalTools(){
 							set +e ; return 1
 						fi
 						cmds+="$(
+							echo
 							echo 'wait # wait for all the subprocesses to finish'
+							echo
 							echo 'DistroLocalTools --make-console-commands'
 						)"
 						break
@@ -148,7 +150,7 @@ DistroLocalTools(){
 				esac
 			done
 
-			cmds="$( echo "$cmds" | awk '$0 && !seen[$0]++' )"
+			cmds="$( echo "$cmds" | awk '!$0 || !seen[$0]++' )"
 
 			printf "\n$MDSC_CMD: Will execute: \n%s\n\n" "$( echo "$cmds" | sed 's|^|    |' )" >&2
 
