@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # ^^^ for syntax checking in the editor only
 
+MDLC_BIN="${MDLC_BIN:-$MMDAPP/.local}"
+
 case "$1" in
 	--completion-require)
 		shift
