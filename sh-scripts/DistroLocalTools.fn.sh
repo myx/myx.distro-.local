@@ -92,6 +92,7 @@ DistroLocalTools(){
 				echo "export MMDAPP='$MMDAPP'"
 				echo 'GitClonePull "$MMDAPP/.local/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &'
 				echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &'
+				echo
 			)"
 
 			while true ; do
