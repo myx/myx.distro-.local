@@ -24,7 +24,7 @@ case "$1" in
 		if [ "$1" != "--quiet" ] ; then
 			local consoles="$( ls $MMDAPP/Distro*Console.sh | sed 's|^|	|g' )"
 			printf \
-				"\nNote: Commands to run distro conseles have beed created or updated, now you can run:\n%s\n\n" \
+				"\nNote: Commands to run distro consoles have beed created or updated, now you can run:\n%s\n\n" \
 				"$consoles" \
 			>&2
 		fi
