@@ -61,7 +61,7 @@ GitClonePull(){
 			if [ -n "$specificBranch" ] ; then
 				git checkout $specificBranch
 			fi
-			git pull
+			git pull --ff-only
 			cd "$currentPath"
 		fi
 	fi
