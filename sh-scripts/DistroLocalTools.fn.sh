@@ -92,6 +92,7 @@ DistroLocalTools(){
 				echo 'set -e'
 				echo "export MMDAPP='$MMDAPP'"
 				echo
+				echo 'set +e # for pulls (when no changes)'
 				echo 'GitClonePull "$MMDAPP/.local/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &'
 				echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &'
 			)"
@@ -138,6 +139,7 @@ DistroLocalTools(){
 						fi
 						cmds+="$(
 							echo
+							echo 'set -e # after pulls'
 							echo
 							echo 'wait # wait for all the subprocesses to finish'
 							echo
