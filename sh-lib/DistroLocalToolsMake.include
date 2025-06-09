@@ -12,7 +12,7 @@ case "$1" in
 			"myx.distro-remote/sh-lib/DistroRemoteToolsMake.include" \
 		; do
 			if [ -f "$MMDAPP/.local/myx/$ITEM" ] ; then
-				{ . "$MMDAPP/.local/myx/$ITEM" } --make-console-command --quiet
+				bash "$MMDAPP/.local/myx/$ITEM" --make-console-command --quiet
 			fi
 		done
 
