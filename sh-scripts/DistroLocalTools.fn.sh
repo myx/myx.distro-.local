@@ -150,7 +150,7 @@ DistroLocalTools(){
 
 			cmds="$( echo "$cmds" | awk '$0 && !seen[$0]++' )"
 
-			printf "\nWill execute ($MDSC_CMD): \n%s\n\n" "$( echo "$cmds" | sed 's|^|    |' )" >&2
+			printf "\n$MDSC_CMD: Will execute: \n%s\n\n" "$( echo "$cmds" | sed 's|^|    |' )" >&2
 
 			( eval "$cmds" )
 
