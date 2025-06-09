@@ -57,6 +57,11 @@ fi
 . "$MDLC_BIN/myx/myx.distro-.local/sh-lib/DistroLocalContext.include"
 DistroLocalContext --run-from-.local
 
+Help(){
+	( . "$MDLC_BIN/myx/myx.distro-.local/sh-lib/HelpDistroLocalConsole.include" )
+	set +e ; return 1
+}
+
 complete -W "\` Local --completion-all \`" "."
 complete -W "\` Local --completion-all \`" "*"
 complete -W "\` Local --completion-all \`" "which"

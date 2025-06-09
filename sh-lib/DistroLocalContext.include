@@ -1,10 +1,11 @@
+#!/usr/bin/env bash
+# ^^^ for syntax checking in the editor only
+
 [ -z "$MMDAPP" ] && echo 'ERROR: $MMDAPP is not set!' >&2 && exit 1
 
+MDLC_BIN="${MDLC_BIN:-$MMDAPP/.local}"
+
 if ! type DistroLocalContext >/dev/null 2>&1 ; then
-
-	MDLC_BIN="${MDLC_BIN:-$MMDAPP/.local}"
-
-	# DistroLocalContext
 	DistroLocalContext(){
 		case "$1" in
 			--uncache)
@@ -30,31 +31,32 @@ if ! type DistroLocalContext >/dev/null 2>&1 ; then
 			;;
 		esac
 	}
+fi	
 
-	if ! type Require >/dev/null 2>&1 ; then
-		Require(){
-			local distroCommand="$1" ; shift
-			if [ -z "$distroCommand" ] || [ "--help" == "$distroCommand" ] ; then
-				( . "$MDLC_BIN/myx/myx.distro-.local/sh-lib/HelpRequire.include" )
-				set +e ; return 1
-			fi
-			if type "${distroCommand%.fn.sh}" >/dev/null 2>&1 ; then
+if ! type Require >/dev/null 2>&1 ; then
+	Require(){
+		local distroCommand="$1" ; shift
+		if [ -z "$distroCommand" ] || [ "--help" == "$distroCommand" ] ; then
+			( . "$MDLC_BIN/myx/myx.distro-.local/sh-lib/HelpRequire.include" )
+			set +e ; return 1
+		fi
+		if type "${distroCommand%.fn.sh}" >/dev/null 2>&1 ; then
+			return 0
+		fi
+		
+		local ITEM
+		for ITEM in .local system source deploy remote ; do
+			if [ -f "$MDLC_BIN/myx/myx.distro-$ITEM/sh-scripts/${distroCommand%.fn.sh}.fn.sh" ] ; then
+				. "$MDLC_BIN/myx/myx.distro-$ITEM/sh-scripts/${distroCommand%.fn.sh}.fn.sh"
 				return 0
 			fi
-			
-			local ITEM
-			for ITEM in .local system source deploy remote ; do
-				if [ -f "$MDLC_BIN/myx/myx.distro-$ITEM/sh-scripts/${distroCommand%.fn.sh}.fn.sh" ] ; then
-					. "$MDLC_BIN/myx/myx.distro-$ITEM/sh-scripts/${distroCommand%.fn.sh}.fn.sh"
-					return 0
-				fi
-			done
-			source "${distroCommand%.fn.sh}.fn.sh"
-			return 0
-		}
-	fi
-	
-	
+		done
+		source "${distroCommand%.fn.sh}.fn.sh"
+		return 0
+	}
+fi
+
+if ! type Local >/dev/null 2>&1 ; then
 	Local(){
 		case "$1" in
 			''|--*)
@@ -68,13 +70,6 @@ if ! type DistroLocalContext >/dev/null 2>&1 ; then
 		fi
 		"${distroCommand%.fn.sh}" "$@"
 	}
-
-	if ! type Help >/dev/null 2>&1 ; then
-		Help(){
-			( . "$MDLC_BIN/myx/myx.distro-.local/sh-lib/HelpDistroLocalConsole.include" )
-			set +e ; return 1
-		}
-	fi
 fi
 
 while true ; do
