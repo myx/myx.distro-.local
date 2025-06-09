@@ -160,8 +160,6 @@ DistroLocalTools(){
 
 			( eval "$cmds" )
 
-			
-
 			return 0
 		;;
 		--make-*)
