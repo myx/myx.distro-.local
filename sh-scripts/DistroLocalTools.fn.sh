@@ -91,6 +91,7 @@ DistroLocalTools(){
 				echo
 				echo 'set -e'
 				echo "export MMDAPP='$MMDAPP'"
+				echo
 				echo 'GitClonePull "$MMDAPP/.local/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &'
 				echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &'
 			)"
@@ -136,6 +137,7 @@ DistroLocalTools(){
 							set +e ; return 1
 						fi
 						cmds+="$(
+							echo
 							echo
 							echo 'wait # wait for all the subprocesses to finish'
 							echo
