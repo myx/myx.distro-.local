@@ -9,9 +9,10 @@ case "$1" in
 		chmod 770 "$MMDAPP/DistroLocalConsole.sh"
 
 		if [ "$1" != "--quiet" ] ; then
+			local consoles="$( ls $MMDAPP/Distro*Console.sh | sed 's|^|	|g' )"
 			printf \
-				"\nNote: DistroLocalConsole.sh created, now you can run:\n\t%s\n\n" \
-				"$MMDAPP/DistroLocalConsole.sh" \
+				"\nNote: DistroLocalConsole.sh created, now you can run:\n%s\n\n" \
+				"$consoles" \
 			>&2
 		fi
 
