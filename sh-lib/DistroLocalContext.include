@@ -42,26 +42,13 @@ if ! type DistroLocalContext >/dev/null 2>&1 ; then
 				return 0
 			fi
 			
-			if [ -f "$MDLC_BIN/myx/myx.distro-.local/sh-scripts/${distroCommand%.fn.sh}.fn.sh" ] ; then
-				. "$MDLC_BIN/myx/myx.distro-.local/sh-scripts/${distroCommand%.fn.sh}.fn.sh"
-				return 0
-			fi
-			if [ -f "$MDLC_BIN/myx/myx.distro-system/sh-scripts/${distroCommand%.fn.sh}.fn.sh" ] ; then
-				. "$MDLC_BIN/myx/myx.distro-system/sh-scripts/${distroCommand%.fn.sh}.fn.sh"
-				return 0
-			fi
-			if [ -f "$MDLC_BIN/myx/myx.distro-source/sh-scripts/${distroCommand%.fn.sh}.fn.sh" ] ; then
-				. "$MDLC_BIN/myx/myx.distro-source/sh-scripts/${distroCommand%.fn.sh}.fn.sh"
-				return 0
-			fi
-			if [ -f "$MDLC_BIN/myx/myx.distro-deploy/sh-scripts/${distroCommand%.fn.sh}.fn.sh" ] ; then
-				. "$MDLC_BIN/myx/myx.distro-deploy/sh-scripts/${distroCommand%.fn.sh}.fn.sh"
-				return 0
-			fi
-			if [ -f "$MDLC_BIN/myx/myx.distro-remote/sh-scripts/${distroCommand%.fn.sh}.fn.sh" ] ; then
-				. "$MDLC_BIN/myx/myx.distro-remote/sh-scripts/${distroCommand%.fn.sh}.fn.sh"
-				return 0
-			fi
+			local ITEM
+			for ITEM in .local system source deploy remote ; do
+				if [ -f "$MDLC_BIN/myx/myx.distro-$ITEM/sh-scripts/${distroCommand%.fn.sh}.fn.sh" ] ; then
+					. "$MDLC_BIN/myx/myx.distro-$ITEM/sh-scripts/${distroCommand%.fn.sh}.fn.sh"
+					return 0
+				fi
+			done
 			source "${distroCommand%.fn.sh}.fn.sh"
 			return 0
 		}
@@ -96,7 +83,7 @@ while true ; do
 	fi 
 	if DistroLocalContext --is-spec-option "$1" ; then
 		[ -z "$MDSC_DETAIL" ] || echo "DistroLocalContext: input spec: $1" >&2
-		. "$MDSC_ORIGIN/DistroLocalContextSetInputSpec.include"
+		. "$MDLC_BIN/myx/myx.distro-.local/sh-lib/DistroLocalContextSetInputSpec.include"		
 		shift
 		continue
 	fi
