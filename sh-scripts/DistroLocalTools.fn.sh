@@ -100,6 +100,7 @@ DistroLocalTools(){
 						shift
 						cmds+="$(
 							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-remote/" "git@github.com:myx/myx.distro-remote.git" &'
+							echo 'mkdir -p "$MMDAPP/remote" # make sure `remote` directory exists'
 						)"
 					;;
 					--install-distro-deploy)
@@ -107,7 +108,7 @@ DistroLocalTools(){
 						cmds+="$(
 							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
 							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-deploy/" "git@github.com:myx/myx.distro-deploy.git" &'
-							echo 'mkdir -p "$MMDAPP/distro"'
+							echo 'mkdir -p "$MMDAPP/distro" # make sure `distro` directory exists'
 						)"
 					;;
 					--install-distro-source)
@@ -115,13 +116,13 @@ DistroLocalTools(){
 						cmds+="$(
 							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
 							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" &'
-							echo 'mkdir -p "$MMDAPP/source"'
+							echo 'mkdir -p "$MMDAPP/source" # make sure `source` directory exists'
 						)"
 					;;
 					--install-distro-.local)
 						shift
 						cmds+="$(
-							echo 'mkdir -p "$MMDAPP/.local"'
+							echo 'mkdir -p "$MMDAPP/.local" # make sure .local directory exists'
 						)"
 					;;
 					'')
@@ -129,6 +130,9 @@ DistroLocalTools(){
 							echo "ERROR: $MDSC_CMD: nothing to install, check arguments" >&2
 							set +e ; return 1
 						fi
+						cmds+="$(
+							echo 'wait # wait for all the subprocesses to finish'
+						)"
 						break
 					;;
 					*)
@@ -138,9 +142,9 @@ DistroLocalTools(){
 				esac
 			done
 
-			printf "\nWill execute ($MDSC_CMD): \n%s\n\n" "$( echo "$cmds" | sed 's|^|    |g' )" >&2
+			printf "\nWill execute ($MDSC_CMD): \n%s\n\n" "$( echo "$cmds" | sed 's|^|    |' )" >&2
 
-			( eval "$( echo "$cmds" | awk '!seen[$0]++' )" ; wait )
+			( eval "$( echo "$cmds" | awk '!seen[$0]++' )" )
 
 			DistroLocalTools --make-console-command
 
