@@ -12,7 +12,7 @@ Distro components:
 
 [`Local`: Common (distro-*) tools installer, updater and launcher.](https://github.com/myx/myx.distro-.local?tab=readme-ov-file#myxdistro-.local)
 
-[`Remote`: distro-remote](https://github.com/myx/myx.distro-source?tab=readme-ov-file#myxdistro-remote)
+[`Remote`: distro-remote](https://github.com/myx/myx.distro-remote?tab=readme-ov-file#myxdistro-remote)
 
 [`Source`: distro-source](https://github.com/myx/myx.distro-source?tab=readme-ov-file#myxdistro-source)
 [`Deploy`: distro-deploy](https://github.com/myx/myx.distro-deploy?tab=readme-ov-file#myxdistro-deploy)
