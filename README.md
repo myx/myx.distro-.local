@@ -15,7 +15,7 @@ This utility facilitates **myx.distro** workspace (directory) creation and allow
 
 ## Distro commands: 
 
-[`DistroLocalTools` command manual](https://github.com/myx/myx.distro-.local/blob/main/sh-lib/HelpDistroLocalTools.text)
+[**DistroLocalTools** command manual](https://github.com/myx/myx.distro-.local/blob/main/sh-lib/HelpDistroLocalTools.text)
 
 
 ---
