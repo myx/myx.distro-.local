@@ -40,13 +40,10 @@ Following steps should be performed in the shell:
    2. Change into that directory:  
 		```cd /Volumes/disk2/hobby-set```
 
-3. While in workspace root directory, **Clone the Git repository** for 
-    `git@github.com:myx/myx.distro-.local.git` into  
-    `.local/myx/myx.distro-.local`:  
+3. While in workspace root directory, **Clone the Git repository** for `git@github.com:myx/myx.distro-.local.git` into `.local/myx/myx.distro-.local` using following commands:  
 
-		```mkdir -p .local/myx/```
-
-		```( cd .local/myx && git clone git@github.com:myx/myx.distro-.local.git )```
+	```mkdir -p .local/myx/```
+	```( cd .local/myx && git clone git@github.com:myx/myx.distro-.local.git )```
 
 4. **Run the installer script** using one of the following commands, depending on your desired setup:
 
