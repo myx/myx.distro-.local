@@ -1,10 +1,15 @@
 # myx.distro-.local
 
-	Common (distro-*) tools installer, updater and launcher.
+	Workspace Utility. Common (distro-*) tools installer, updater and launcher.
+
+This utility facilitates **myx.distro** workspace (directory) creation and allows installation of  
+`myx.distro-remote`, `myx.distro-deploy` or `myx.distro-source` applications in any **myx.distro** workspace.
+
+---
 
 Installation Instructions: 
 
-[Bare Install on Unix](https://github.com/myx/myx.distro-.local/blob/main/sh-lib/HelpDistroLocalTools-install-unix-bare.md)
+[Installation: Bare Install on Unix](https://github.com/myx/myx.distro-.local/blob/main/sh-lib/HelpDistroLocalTools-install-unix-bare.md)
 
 Distro components: 
 
