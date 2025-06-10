@@ -36,8 +36,11 @@ Following steps should be performed in the shell:
 
 2. **Create an empty workspace folder** and **change your current working directoy** into it:  
    1. Create a root directory for your workspace (e.g., `/Volumes/disk2/hobby-set`):  
+
 		```mkdir -p /Volumes/disk2/hobby-set```
+
    2. Change into that directory:  
+
 		```cd /Volumes/disk2/hobby-set```
 
 3. While in workspace root directory, **Clone the Git repository** for `git@github.com:myx/myx.distro-.local.git` into `.local/myx/myx.distro-.local` using following commands:  
