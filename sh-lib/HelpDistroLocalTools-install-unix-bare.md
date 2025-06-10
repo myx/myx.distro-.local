@@ -11,9 +11,19 @@ Following steps should be performed in the shell:
 
 1. **Open your shell terminal**, and:  
    1. Ensure you are using **bash** by running:  
-      bash  
+   		bash -c 'echo Hello!'
+	 you should get:
+		`Hello!`
+
    2. Verify that **git** is installed and working:  
-      git --version
+   		git --version
+	 you should get something like:
+		`git version 2.39.5 (Apple Git-154)`
+
+   2. Verify that **git** is configured to work with **gihhub.com**:  
+   		ssh -T git@github.com
+	 you should get something like:
+		`Hi XXX! You've successfully authenticated, but GitHub does not provide shell access.`
 
 2. **Create an empty workspace folder** and **change your current working directoy** into it:  
    1. Create a root directory for your workspace (e.g., `/Volumes/disk2/hobby-set`):  
