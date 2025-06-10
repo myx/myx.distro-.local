@@ -24,20 +24,28 @@ Following steps should be performed in the shell:
 3. While in workspace root directory, **Clone the Git repository** for 
    `git@github.com:myx/myx.distro-.local.git` into  
    `.local/myx/myx.distro-.local`:  
-   mkdir -p .local/myx/  
-   ( cd .local/myx && git clone git@github.com:myx/myx.distro-.local.git )
+
+	mkdir -p .local/myx/  
+
+	( cd .local/myx && git clone git@github.com:myx/myx.distro-.local.git )
 
 4. **Run the installer script** using one of the following commands, depending on your desired setup:
 
    - **Empty workspace** (to be configured later):  
-     bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --init-distro-workspace
+
+	bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --init-distro-workspace
 
    - **Remote workspace tools** (connect to source and deploy machines on remote hosts or local VMs):  
-     bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --install-distro-remote
+
+	bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --install-distro-remote
 
    - **Deploy workspace tools** (deployment runners or admin terminal servers):  
-     bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --install-distro-deploy
+
+	bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --install-distro-deploy
 
    - **Source workspace tools** (build system runners or local source for developers):  
-     bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --install-distro-source
 
+	bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --install-distro-source
+
+5. Then you can **Enter Local Console** any time by running `DistroLocalConsole.sh` from
+   your workspace directory. 
