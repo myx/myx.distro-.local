@@ -13,6 +13,13 @@ This utility facilitates **myx.distro** workspace (directory) creation and allow
 
 ---
 
+## Distro commands: 
+
+[DistroLocalTools command manual](https://github.com/myx/myx.distro-.local/blob/main/sh-lib/HelpDistroLocalTools.text)
+
+
+---
+
 ## Distro components: 
 
 [`Remote`: distro-remote](https://github.com/myx/myx.distro-remote?tab=readme-ov-file#myxdistro-remote)
