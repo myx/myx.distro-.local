@@ -7,11 +7,13 @@ This utility facilitates **myx.distro** workspace (directory) creation and allow
 
 ---
 
-Installation Instructions: 
+## Installation Instructions: 
 
 [Installation: Bare Install on Unix](https://github.com/myx/myx.distro-.local/blob/main/sh-lib/HelpDistroLocalTools-install-unix-bare.md)
 
-Distro components: 
+---
+
+## Distro components: 
 
 [Distro system for source to deploy cdci](https://github.com/myx/myx.distro?tab=readme-ov-file#myxdistro)
 
