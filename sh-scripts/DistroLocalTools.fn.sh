@@ -19,6 +19,12 @@ fi
 GitClonePull(){
 	set -e
 
+	if [ -x "$MMDAPP/.local/myx/myx.common/os-myx.common/host/share/myx.common/bin/git/clonePull" ] ; then 
+		echo "ERROR: GitClonePull: executable found!" >&2
+		"$MMDAPP/.local/myx/myx.common/os-myx.common/host/share/myx.common/bin/git/clonePull" "$@"
+		return 0
+	fi
+
 	local tgtPath="$1"
 	[ -z "$tgtPath" ] && echo "ERROR: GitClonePull: tgtPath is required!" >&2 && return 1
 
@@ -93,7 +99,7 @@ DistroLocalTools(){
 				echo "export MMDAPP='$MMDAPP'"
 				echo
 				echo 'set +e # for pulls (when no changes)'
-				echo 'GitClonePull "$MMDAPP/.local/myx/myx.common/" "git@github.com:myx/os-myx.common.git" &'
+				echo 'GitClonePull "$MMDAPP/.local/myx/myx.common/os-myx.common" "git@github.com:myx/os-myx.common.git" &'
 				echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &'
 			)"
 
