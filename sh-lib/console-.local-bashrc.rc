@@ -8,6 +8,15 @@ export MDLC_BIN="$MMDAPP/.local"
 
 # search: 1) previous path; 2) distro {.local|system|deploy|source} scripts.
 
+if [ -d "$MDLC_BIN/myx/myx.common/os-myx.common/host/tarball/bin/myx.common" ] ; then
+	PATH="$MDLC_BIN/myx/myx.common/os-myx.common/host/tarball/bin/:$PATH"
+
+	LocalConsole(){
+		bash --rcfile "$MDLC_BIN/myx/myx.distro-.local/sh-lib/console-.local-bashrc.rc" -i "$@"
+		return 0
+	}
+fi
+
 if [ -d "$MDLC_BIN/myx/myx.distro-.local/sh-scripts" ] ; then
 	PATH+=":$MDLC_BIN/myx/myx.distro-.local/sh-scripts"
 
