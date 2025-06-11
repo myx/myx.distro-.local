@@ -16,7 +16,7 @@ case "$1" in
 					DistroTools(){
 						. "$MMDAPP/.local/myx/$ITEM"
 					}
-					DistroTools --make-console-command --quiet
+					DistroTools --make-console-commands --quiet
 				)
 			fi
 		done
