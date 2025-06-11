@@ -11,8 +11,12 @@ case "$1" in
 			FILE="$MMDAPP/.local/myx/myx.distro-${NAME}/sh-lib/Distro${ITEM}ToolsMake.include"
 			if [ -f "$FILE" ] ; then
 				(
-					eval "Distro${ITEM}Tools(){ ; . '$FILE' ; }"
-					Distro${ITEM}Tools --make-console-commands --quiet
+					eval "\n\
+						Distro${ITEM}Tools(){ \n\
+							. '$FILE' \n\
+						}\n\
+						Distro${ITEM}Tools --make-console-commands --quiet \n\
+					"
 				)
 			fi
 		done
