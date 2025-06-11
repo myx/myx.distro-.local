@@ -54,19 +54,21 @@ syntax: DistroLocalTools.fn.sh --{system|custom}-config-option <operation>
 		--make-console-script
 			Re-Creates DistroLocalConsole.sh script.
 
-	Examples:
+	Examples (in Local Console, within workspace context):
 
 		DistroLocalTools.fn.sh --install-distro-source
 		DistroLocalTools.fn.sh --install-distro-deploy
 		DistroLocalTools.fn.sh --install-distro-remote
 
+		DistroLocalTools.fn.sh --help
+
+		DistroLocalTools.fn.sh --install-distro-source --install-distro-deploy
 		DistroLocalTools.fn.sh --install-distro-source --install-distro-deploy --install-distro-remote
+
+	Examples (in OS default shell):
 
 		bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --install-distro-source --install-distro-deploy --install-distro-remote
 
 		bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh
 		bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --help
 		bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --help-install-unix-bare
-
-		DistroLocalTools --completion-require
-		bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --completion-require
