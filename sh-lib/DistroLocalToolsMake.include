@@ -4,7 +4,7 @@
 case "$1" in
 	--make-console-commands)
 		DistroLocalTools --make-console-command --quiet
-
+		set -x
 		local ITEM NAME FILE
 		for ITEM in "System" "Source" "Deploy" "Remote" ; do
 			NAME="$( printf '%s' "$INPUT" | tr '[:upper:]' '[:lower:]' )"
