@@ -11,6 +11,7 @@ case "$1" in
 			FILE="$MMDAPP/.local/myx/myx.distro-${NAME}/sh-lib/Distro${ITEM}ToolsMake.include"
 			if [ -f "$FILE" ] ; then
 				(
+					set -x
 					eval "\n\
 						Distro${ITEM}Tools(){ \n\
 							. '$FILE' \n\
