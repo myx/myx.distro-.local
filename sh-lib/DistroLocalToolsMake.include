@@ -4,10 +4,10 @@
 case "$1" in
 	--make-console-commands)
 		DistroLocalTools --make-console-command --quiet
-		set -x
+
 		local ITEM NAME FILE
 		for ITEM in "System" "Source" "Deploy" "Remote" ; do
-			NAME="$( printf '%s' "$INPUT" | tr '[:upper:]' '[:lower:]' )"
+			NAME="$( printf '%s' "$ITEM" | tr '[:upper:]' '[:lower:]' )"
 			FILE="$MMDAPP/.local/myx/myx.distro-${NAME}/sh-lib/Distro${ITEM}ToolsMake.include"
 			if [ -f "$FILE" ] ; then
 				(
