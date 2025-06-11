@@ -5,18 +5,14 @@ case "$1" in
 	--make-console-commands)
 		DistroLocalTools --make-console-command --quiet
 
-		for ITEM in \
-			"myx.distro-system/sh-lib/DistroSystemToolsMake.include" \
-			"myx.distro-source/sh-lib/DistroSourceToolsMake.include" \
-			"myx.distro-deploy/sh-lib/DistroDeployToolsMake.include" \
-			"myx.distro-remote/sh-lib/DistroRemoteToolsMake.include" \
-		; do
-			if [ -f "$MMDAPP/.local/myx/$ITEM" ] ; then
+		local ITEM NAME FILE
+		for ITEM in "System" "Source" "Deploy" "Remote" ; do
+			NAME="$( printf '%s' "$INPUT" | tr '[:upper:]' '[:lower:]' )"
+			FILE="$MMDAPP/.local/myx/myx.distro-${NAME}/sh-lib/Distro${ITEM}ToolsMake.include"
+			if [ -f "$FILE" ] ; then
 				(
-					DistroTools(){
-						. "$MMDAPP/.local/myx/$ITEM"
-					}
-					DistroTools --make-console-commands --quiet
+					eval "Distro${ITEM}Tools(){ ; . '$FILE' ; }"
+					Distro${ITEM}Tools --make-console-commands --quiet
 				)
 			fi
 		done
