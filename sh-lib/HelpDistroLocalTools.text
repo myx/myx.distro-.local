@@ -50,9 +50,13 @@ syntax: DistroLocalTools.fn.sh --{system|custom}-config-option <operation>
 					Shell command to wrap shell actions to execute. Allows to run actions on
 					remote runner machine or add extra logging/notification, etc...
 
+		--make-console-command
+			Re-Creates `DistroLocalConsole.sh` script to be used as a command to quickly enter workspace 
+			console.
 
-		--make-console-script
-			Re-Creates DistroLocalConsole.sh script.
+		--make-console-commands
+			Re-Creates `Distro*Console.sh` scripts for all components installes to be used as commands to 
+			quickly enter workspace console.
 
 	Examples (in Local Console, within workspace context):
 
