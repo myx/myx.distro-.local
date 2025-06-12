@@ -9,7 +9,7 @@ export MDLC_BIN="$MMDAPP/.local"
 # search: 1) previous path; 2) distro {.local|system|deploy|source} scripts.
 
 if [ -x "$MDLC_BIN/myx/myx.common/os-myx.common/host/tarball/bin/myx.common" ] ; then
-	PATH="$MDLC_BIN/myx/myx.common/os-myx.common/host/tarball/bin/:$PATH"
+	PATH="$MDLC_BIN/myx/myx.common/os-myx.common/host/tarball/bin:$PATH"
 fi
 
 if [ -d "$MDLC_BIN/myx/myx.distro-.local/sh-scripts" ] ; then
