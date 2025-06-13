@@ -1,24 +1,22 @@
 #!/usr/bin/env bash
 # ^^^ for syntax checking in the editor only
 
-MDLC_BIN="${MDLC_BIN:-$MMDAPP/.local}"
-
 case "$1" in 
 	--shell-prompt)
 		printf "MDLC:%s" ".local"
 		return 0
 	;;
 	--completion-*)
-		. "$MDLC_BIN/myx/myx.distro-.local/sh-lib/DistroLocalToolsCompletion.include"
+		. "$MDLC_ORIGIN/myx/myx.distro-.local/sh-lib/DistroLocalToolsCompletion.include"
 		set +e ; return 1
 	;;
 	''|--help)
 		shift
-		( . "$MDLC_BIN/myx/myx.distro-.local/sh-lib/HelpDistroLocal.include" )
+		( . "$MDLC_ORIGIN/myx/myx.distro-.local/sh-lib/HelpDistroLocal.include" )
 		set +e ; return 1
 	;;
 	--start-console)
-		bash --rcfile "$MDLC_BIN/myx/myx.distro-.local/sh-lib/console-.local-bashrc.rc" -i "$@"
+		bash --rcfile "$MDLC_ORIGIN/myx/myx.distro-.local/sh-lib/console-.local-bashrc.rc" -i "$@"
 		return 0
 	;;
 	*)

@@ -1,4 +1,7 @@
-[ -z "$MMDAPP" ] && echo 'ERROR: $MMDAPP is not set!' >&2 && exit 1
+#!/usr/bin/env bash
+# ^^^ for syntax checking in the editor only
+
+: "${MMDAPP:?ERROR: MMDAPP is not set}"
 
 # DistroLocalContextSetInputSpec
 
@@ -10,10 +13,7 @@ else
 fi
 
 if [ "$adpcChangeSpec" = "true" ] ; then
-	if [ -z "$1" ] ; then
-		echo "ERROR: DistroLocalContextSetInputSpec: inputSpec argument is required!" >&2
-		exit 1
-	fi
+	: "${1:?ERROR: DistroLocalContextSetInputSpec: inputSpec argument is required}"
 	if ! DistroLocalContext --is-spec-option "$1" ; then
 		echo "ERROR: DistroLocalContextSetInputSpec: inputSpec argument is invalid: $1" >&2
 		exit 1
@@ -22,12 +22,12 @@ fi
 
 case "$1" in
 	--run-from-.local)
-		MDLC_BIN="${MDLC_BIN:-$MMDAPP/.local}"
+		MDLC_ORIGIN="${MDLC_ORIGIN:-$MMDAPP/.local}"
 		MDSC_INMODE=".local"
 		MDSC_OPTION="--run-from-.local"
 	;;
 	--run-from-source)
-		MDLC_BIN="${MDLC_BIN:-$MMDAPP/source}"
+		MDLC_ORIGIN="${MDLC_ORIGIN:-$MMDAPP/source}"
 		MDSC_INMODE="source"
 		MDSC_OPTION="--run-from-source"
 	;;
@@ -38,7 +38,7 @@ case "$1" in
 esac
 
 if [ -z "${previousSpec:-$MDSC_OPTION}" ] || [ "$previousSpec" != "$MDSC_OPTION" ] ; then
-	export MDLC_BIN
+	export MDLC_ORIGIN
 	export MDSC_INMODE
 	export MDSC_OPTION
 	
