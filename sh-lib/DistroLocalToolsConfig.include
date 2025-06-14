@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ^^^ for syntax checking in the editor only
-set -x
+
 ### in your scripts you can pull in user overrides via:
 ###   if [ -f "$MMDAPP/.local/home/$(id -un)/MDLT.settings.env" ]; then
 ###     . "$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
