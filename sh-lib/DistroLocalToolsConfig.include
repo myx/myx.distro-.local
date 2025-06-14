@@ -8,14 +8,18 @@
 ###
 case "$1" in
   --*-config-option)
-    local scope="$1"; shift
-    local cmd="$1";   shift
+    local scope cmd \
+          system_file user_file \
+          config_file tmp new \
+          key val ifval curr
 
-    local system_file="$MMDAPP/.local/MDLC_SETTINGS.env"
-    local user_file ="$MMDAPP/.local/home/$(id -un)/MDLC_SETTINGS.env"
-    local config_file tmp new key val ifval curr
+    scope="$1"; shift
+    cmd="$1";   shift
 
-    # decide which file we’re touching—and ensure it exists
+    system_file="$MMDAPP/.local/MDLC_SETTINGS.env"
+    user_file="$MMDAPP/.local/home/$(id -un)/MDLC_SETTINGS.env"
+
+    # pick target and bootstrap if needed
     case "$scope" in
       --system-config-option)
         config_file=$system_file
@@ -26,7 +30,7 @@ case "$1" in
         config_file=$user_file
         mkdir -p "${config_file%/*}" || return 1
         touch "$config_file"
-        # if system never touched yet, create an empty stub so scripts can always source it
+        # ensure system stub always exists
         [ -f "$system_file" ] || { mkdir -p "${system_file%/*}"; touch "$system_file"; }
         ;;
       *)
@@ -35,14 +39,14 @@ case "$1" in
         ;;
     esac
 
-    # robust temp‐file cleanup
+    # prepare temps & cleanup
     tmp="$config_file.$$"
     new="$config_file.new.$$"
     trap 'rm -f -- "$tmp" "$new"' EXIT
 
     case "$cmd" in
+
       --select-all)
-        # all non-comment lines
         grep -h '^[^#].*=' "$config_file"
         ;;
 
@@ -50,14 +54,18 @@ case "$1" in
         if [ "$1" = --all ]; then
           grep -h '^[^#].*=' "$config_file"
         else
-          grep -h "^$1=" "$config_file" | tail -n1 | cut -d= -f2-
+          grep -h "^$1=" "$config_file" \
+            | tail -n1 \
+            | cut -d= -f2-
         fi
         ;;
 
       --select-default)
         key=$1; val=$2
         if grep -q "^$key=" "$config_file"; then
-          grep -h "^$key=" "$config_file" | tail -n1 | cut -d= -f2-
+          grep -h "^$key=" "$config_file" \
+            | tail -n1 \
+            | cut -d= -f2-
         else
           printf '%s\n' "$val"
         fi
@@ -65,7 +73,6 @@ case "$1" in
 
       --upsert)
         key=$1; val=$2
-        # remove old key, append new
         grep -v "^$key=" "$config_file" >"$tmp"
         printf '%s=%s\n' "$key" "$val" >>"$tmp"
         mv "$tmp" "$config_file"
@@ -73,11 +80,13 @@ case "$1" in
 
       --upsert-if)
         key=$1; val=$2; ifval=$3
-        curr=$(grep -h "^$key=" "$config_file" | tail -n1 | cut -d= -f2-)
-        [ "$curr" != "$ifval" ] && return 0
-        # fall through to --upsert
-        set -- --upsert "$key" "$val"
-        cmd="$1"; shift
+        curr=$(grep -h "^$key=" "$config_file" \
+               | tail -n1 | cut -d= -f2-)
+        if [ "$curr" = "$ifval" ]; then
+          grep -v "^$key=" "$config_file" >"$tmp"
+          printf '%s=%s\n' "$key" "$val" >>"$tmp"
+          mv "$tmp" "$config_file"
+        fi
         ;;
 
       --delete)
@@ -87,11 +96,12 @@ case "$1" in
 
       --delete-if)
         key=$1; ifval=$2
-        curr=$(grep -h "^$key=" "$config_file" | tail -n1 | cut -d= -f2-)
-        [ "$curr" != "$ifval" ] && return 0
-        # fall through to --delete
-        set -- --delete "$key"
-        cmd="$1"; shift
+        curr=$(grep -h "^$key=" "$config_file" \
+               | tail -n1 | cut -d= -f2-)
+        if [ "$curr" = "$ifval" ]; then
+          grep -v "^$key=" "$config_file" >"$tmp"
+          mv "$tmp" "$config_file"
+        fi
         ;;
 
       *)
