@@ -7,16 +7,16 @@ case "$1" in
 		return 0
 	;;
 	--completion-*)
-		. "$MDLC_ORIGIN/myx/myx.distro-.local/sh-lib/DistroLocalToolsCompletion.include"
+		. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/DistroLocalToolsCompletion.include"
 		set +e ; return 1
 	;;
 	''|--help)
 		shift
-		( . "$MDLC_ORIGIN/myx/myx.distro-.local/sh-lib/HelpDistroLocal.include" )
+		( . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/HelpDistroLocal.include" )
 		set +e ; return 1
 	;;
 	--start-console)
-		bash --rcfile "$MDLC_ORIGIN/myx/myx.distro-.local/sh-lib/console-.local-bashrc.rc" -i "$@"
+		bash --rcfile "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/console-.local-bashrc.rc" -i "$@"
 		return 0
 	;;
 	*)

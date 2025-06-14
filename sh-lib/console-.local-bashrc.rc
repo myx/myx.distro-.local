@@ -4,65 +4,65 @@
 echo "LocalConsole: Working in $MMDAPP" >&2
 [ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc" 
 
-export MDLC_ORIGIN="$MMDAPP/.local"
+export MDLT_ORIGIN="$MMDAPP/.local"
 
 # search: 1) previous path; 2) distro {.local|system|deploy|source} scripts.
 
-if [ -x "$MDLC_ORIGIN/myx/myx.common/os-myx.common/host/tarball/bin/myx.common" ] ; then
-	PATH="$MDLC_ORIGIN/myx/myx.common/os-myx.common/host/tarball/bin:$PATH"
+if [ -x "$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/bin/myx.common" ] ; then
+	PATH="$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/bin:$PATH"
 fi
 
-if [ -d "$MDLC_ORIGIN/myx/myx.distro-.local/sh-scripts" ] ; then
-	PATH+=":$MDLC_ORIGIN/myx/myx.distro-.local/sh-scripts"
+if [ -d "$MDLT_ORIGIN/myx/myx.distro-.local/sh-scripts" ] ; then
+	PATH+=":$MDLT_ORIGIN/myx/myx.distro-.local/sh-scripts"
 
 	LocalConsole(){
-		bash --rcfile "$MDLC_ORIGIN/myx/myx.distro-.local/sh-lib/console-.local-bashrc.rc" -i "$@"
+		bash --rcfile "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/console-.local-bashrc.rc" -i "$@"
 		return 0
 	}
 fi
 
-if [ -d "$MDLC_ORIGIN/myx/myx.distro-system/sh-scripts" ] ; then
-	PATH+=":$MDLC_ORIGIN/myx/myx.distro-system/sh-scripts"
+if [ -d "$MDLT_ORIGIN/myx/myx.distro-system/sh-scripts" ] ; then
+	PATH+=":$MDLT_ORIGIN/myx/myx.distro-system/sh-scripts"
 fi
 
-if [ -d "$MDLC_ORIGIN/myx/myx.distro-deploy/sh-scripts" ] ; then
-	PATH+=":$MDLC_ORIGIN/myx/myx.distro-deploy/sh-scripts"
+if [ -d "$MDLT_ORIGIN/myx/myx.distro-deploy/sh-scripts" ] ; then
+	PATH+=":$MDLT_ORIGIN/myx/myx.distro-deploy/sh-scripts"
 
 	echo "LocalConsole: Type 'DeployConsole' to start Deploy Console." >&2
 
 	DeployConsole(){
-		bash --rcfile "$MDLC_ORIGIN/myx/myx.distro-deploy/sh-lib/console-deploy-bashrc.rc" -i "$@"
+		bash --rcfile "$MDLT_ORIGIN/myx/myx.distro-deploy/sh-lib/console-deploy-bashrc.rc" -i "$@"
 		return 0
 	}
 fi
 
-if [ -d "$MDLC_ORIGIN/myx/myx.distro-source/sh-scripts" ] ; then
-	PATH+=":$MDLC_ORIGIN/myx/myx.distro-source/sh-scripts"
+if [ -d "$MDLT_ORIGIN/myx/myx.distro-source/sh-scripts" ] ; then
+	PATH+=":$MDLT_ORIGIN/myx/myx.distro-source/sh-scripts"
 
 	echo "LocalConsole: Type 'SourceConsole' to start Source Console." >&2
 
 	SourceConsole(){
-		bash --rcfile "$MDLC_ORIGIN/myx/myx.distro-source/sh-lib/console-source-bashrc.rc" -i "$@"
+		bash --rcfile "$MDLT_ORIGIN/myx/myx.distro-source/sh-lib/console-source-bashrc.rc" -i "$@"
 		return 0
 	}
 fi
 
-if [ -d "$MDLC_ORIGIN/myx/myx.distro-remote/sh-scripts" ] ; then
-	PATH+=":$MDLC_ORIGIN/myx/myx.distro-remote/sh-scripts"
+if [ -d "$MDLT_ORIGIN/myx/myx.distro-remote/sh-scripts" ] ; then
+	PATH+=":$MDLT_ORIGIN/myx/myx.distro-remote/sh-scripts"
 
 	echo "LocalConsole: Type 'RemoteConsole' to start Remote Console." >&2
 
 	RemoteConsole(){
-		bash --rcfile "$MDLC_ORIGIN/myx/myx.distro-remote/sh-lib/console-remote-bashrc.rc" -i "$@"
+		bash --rcfile "$MDLT_ORIGIN/myx/myx.distro-remote/sh-lib/console-remote-bashrc.rc" -i "$@"
 		return 0
 	}
 fi
 
-. "$MDLC_ORIGIN/myx/myx.distro-.local/sh-lib/DistroLocalContext.include"
+. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/DistroLocalContext.include"
 DistroLocalContext --run-from-.local
 
 Help(){
-	( . "$MDLC_ORIGIN/myx/myx.distro-.local/sh-lib/HelpDistroLocalConsole.include" )
+	( . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/HelpDistroLocalConsole.include" )
 	set +e ; return 1
 }
 
