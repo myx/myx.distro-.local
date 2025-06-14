@@ -12,7 +12,7 @@ case "$1" in
     local cmd key val ifval curr tmp new
 
     system_file="$MMDAPP/.local/MDLT.settings.env"
-    user_file ="$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
+    user_file="$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
 
     # pick target & ensure stub files exist
     case "$1" in
