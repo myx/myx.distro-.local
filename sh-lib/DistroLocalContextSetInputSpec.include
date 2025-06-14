@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ^^^ for syntax checking in the editor only
 
-: "${MMDAPP:?ERROR: MMDAPP is not set}"
+: "${MMDAPP:?⛔ ERROR: MMDAPP is not set}"
 
 # DistroLocalContextSetInputSpec
 
@@ -13,9 +13,9 @@ else
 fi
 
 if [ "$adpcChangeSpec" = "true" ] ; then
-	: "${1:?ERROR: DistroLocalContextSetInputSpec: inputSpec argument is required}"
+	: "${1:?⛔ ERROR: DistroLocalContextSetInputSpec: inputSpec argument is required}"
 	if ! DistroLocalContext --is-spec-option "$1" ; then
-		echo "ERROR: DistroLocalContextSetInputSpec: inputSpec argument is invalid: $1" >&2
+		echo "⛔ ERROR: DistroLocalContextSetInputSpec: inputSpec argument is invalid: $1" >&2
 		exit 1
 	fi
 fi
@@ -32,7 +32,7 @@ case "$1" in
 		MDSC_OPTION="--run-from-source"
 	;;
 	*)
-		echo "ERROR: DistroLocalContextSetInputSpec: Invalid input spec: $argOption" >&2
+		echo "⛔ ERROR: DistroLocalContextSetInputSpec: Invalid input spec: $argOption" >&2
 		exit 1
 	;;
 esac

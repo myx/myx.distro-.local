@@ -29,7 +29,7 @@ case "$1" in
         [ -f "$system_file" ] || { mkdir -p "${system_file%/*}"; touch "$system_file"; }
         ;;
       --*-config-option)
-        echo "ERROR: unsupported config scope '$1'" >&2
+        echo "⛔ ERROR: unsupported config scope '$1'" >&2
         return 1
         ;;
     esac
@@ -102,7 +102,7 @@ case "$1" in
         ;;
 
       *)
-        echo "ERROR: unknown config operation '$cmd'" >&2
+        echo "⛔ ERROR: unknown config operation '$cmd'" >&2
         return 1
         ;;
     esac

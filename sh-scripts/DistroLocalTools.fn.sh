@@ -9,7 +9,7 @@ if [ -z "$MMDAPP" ] ; then
 	set -e
 	export MMDAPP="$( cd $(dirname "$0")/../../../.. ; pwd )"
 	echo "$0: Working in: $MMDAPP"  >&2
-	[ -d "$MMDAPP/.local" ] || ( echo "ERROR: expecting '.local' directory." >&2 && exit 1 )
+	[ -d "$MMDAPP/.local" ] || ( echo "⛔ ERROR: expecting '.local' directory." >&2 && exit 1 )
 fi
 
 ##
@@ -20,16 +20,16 @@ GitClonePull(){
 	set -e
 
 	if [ -x "$MMDAPP/.local/myx/myx.common/os-myx.common/host/share/myx.common/bin/git/clonePull" ] ; then 
-		echo "ERROR: GitClonePull: executable found!" >&2
+		echo "⛔ ERROR: GitClonePull: executable found!" >&2
 		"$MMDAPP/.local/myx/myx.common/os-myx.common/host/share/myx.common/bin/git/clonePull" "$@"
 		return 0
 	fi
 
 	local tgtPath="$1"
-	[ -z "$tgtPath" ] && echo "ERROR: GitClonePull: tgtPath is required!" >&2 && return 1
+	[ -z "$tgtPath" ] && echo "⛔ ERROR: GitClonePull: tgtPath is required!" >&2 && return 1
 
 	local repoUrl="$2"
-	[ -z "$repoUrl" ] && echo "ERROR: GitClonePull: repoUrl is required!" >&2 && return 1
+	[ -z "$repoUrl" ] && echo "⛔ ERROR: GitClonePull: repoUrl is required!" >&2 && return 1
 
 	local specificBranch="$3"
 	
@@ -72,7 +72,7 @@ GitClonePull(){
 		fi
 	fi
 	if [ ! -d "$tgtPath" ] || [ ! -d "$tgtPath/.git" ] ; then
-		echo "ERROR: GitClonePull: error checking out!" >&2 && return 1
+		echo "⛔ ERROR: GitClonePull: error checking out!" >&2 && return 1
 	fi
 
 	echo "GitClonePull: $tgtPath: finished." >&2
@@ -140,7 +140,7 @@ DistroLocalTools(){
 					;;
 					'')
 						if [ -z "$cmds" ] ; then
-							echo "ERROR: $MDSC_CMD: nothing to install, check arguments" >&2
+							echo "⛔ ERROR: $MDSC_CMD: nothing to install, check arguments" >&2
 							set +e ; return 1
 						fi
 						cmds+="$(
@@ -154,7 +154,7 @@ DistroLocalTools(){
 						break
 					;;
 					*)
-						echo "ERROR: $MDSC_CMD: invalid option: $1" >&2
+						echo "⛔ ERROR: $MDSC_CMD: invalid option: $1" >&2
 						set +e ; return 1
 					;;
 				esac
@@ -190,7 +190,7 @@ DistroLocalTools(){
 			set +e ; return 1
 		;;
 		*)
-			echo "ERROR: $MDSC_CMD: invalid option: $1" >&2
+			echo "⛔ ERROR: $MDSC_CMD: invalid option: $1" >&2
 			set +e ; return 1
 		;;
 	esac
