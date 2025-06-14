@@ -4,39 +4,55 @@
 case "$1" in
   --*-config-option)
     local scope="$1"; shift
-    local cmd key val ifval curr tmp
-    local config_file
-
-    # user‐file expression for the system file’s dynamic source‐guard
+    local cmd key val ifval curr tmp config_file system_file user_file
+    # an expression so the system file always sources *whoever* is running it later
     local user_file_expr='$MMDAPP/.local/home/$(id -un)/MDLT.settings.env'
 
+    system_file=$MMDAPP/.local/MDLT.settings.env
+    user_file=$MMDAPP/.local/home/$(id -un)/MDLT.settings.env
+
+    # decide which file we’re touching—and prep system header if needed
     case "$scope" in
       --system-config-option)
-        config_file="$MMDAPP/.local/MDLT.settings.env"
-        mkdir -p "$(dirname -- "$config_file")" || return 1
-        {
+        config_file=$system_file
+        mkdir -p "$(dirname "$system_file")" || return 1
+        # regenerate header every time
+        header=$(
           printf '# Auto-generated system settings – do not edit\n'
           printf 'if [ -f %s ]; then . %s; fi\n\n' \
                  "$user_file_expr" "$user_file_expr"
-        } >"$config_file"
+        )
         ;;
+
       --custom-config-option)
-        config_file="$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
-        mkdir -p "$(dirname -- "$config_file")" || return 1
-        : >"$config_file"
+        config_file=$user_file
+        # ensure system file exists (so future ‘. MDLT.settings.env’ picks up this user file)
+        if [ ! -f "$system_file" ]; then
+          mkdir -p "$(dirname "$system_file")" || return 1
+          printf '%s' "$(
+            printf '# Auto-generated system settings – do not edit\n'
+            printf 'if [ -f %s ]; then . %s; fi\n\n' \
+                   "$user_file_expr" "$user_file_expr"
+          )" >"$system_file"
+        fi
+        mkdir -p "$(dirname "$user_file")" || return 1
+        touch "$user_file"
         ;;
+
       *)
         echo "ERROR: unsupported config scope '$scope'" >&2
         return 1
         ;;
     esac
 
+    # grab sub-command
     cmd=$1; shift
     tmp=$config_file.$$
 
     case "$cmd" in
+
       --select-all)
-        # same as --select --all
+        # dump every KEY=VALUE
         sed -n 's/^[[:space:]]*\([^=][^=]*\)=\(.*\)$/\1=\2/p' "$config_file"
         ;;
 
@@ -44,14 +60,18 @@ case "$1" in
         if [ "$1" = --all ]; then
           sed -n 's/^[[:space:]]*\([^=][^=]*\)=\(.*\)$/\1=\2/p' "$config_file"
         else
-          grep -h "^$1=" "$config_file" | tail -n1 | cut -d= -f2-
+          grep -h "^$1=" "$config_file" \
+            | tail -n1 \
+            | cut -d= -f2-
         fi
         ;;
 
       --select-default)
         key=$1; val=$2
         if grep -q "^$key=" "$config_file"; then
-          grep -h "^$key=" "$config_file" | tail -n1 | cut -d= -f2-
+          grep -h "^$key=" "$config_file" \
+            | tail -n1 \
+            | cut -d= -f2-
         else
           printf '%s\n' "$val"
         fi
@@ -59,33 +79,77 @@ case "$1" in
 
       --upsert)
         key=$1; val=$2
-        grep -v "^$key=" "$config_file" >"$tmp"
-        printf '%s=%s\n' "$key" "$val" >>"$tmp"
-        mv "$tmp" "$config_file"
+        if [ "$scope" = --system-config-option ]; then
+          # strip the old header/body, then rewrite header+body+new entry
+          sed '1,/^$/d; /^'"$key"'=/d' "$system_file" >"$tmp"
+          printf '%s' "$header" >"$system_file"
+          cat "$tmp" >>"$system_file"
+          printf '%s=%s\n' "$key" "$val" >>"$system_file"
+        else
+          # custom file—just remove old key, then append
+          grep -v "^$key=" "$user_file" >"$tmp"
+          mv "$tmp" "$user_file"
+          printf '%s=%s\n' "$key" "$val" >>"$user_file"
+        fi
         ;;
 
       --upsert-if)
         key=$1; val=$2; ifval=$3
-        curr=$(grep -h "^$key=" "$config_file" \
-               | tail -n1 | cut -d= -f2-)
-        if [ "$curr" = "$ifval" ]; then
-          grep -v "^$key=" "$config_file" >"$tmp"
-          printf '%s=%s\n' "$key" "$val" >>"$tmp"
-          mv "$tmp" "$config_file"
+        if [ "$scope" = --system-config-option ]; then
+          curr=$(
+            sed -n '1,/^$/d;s/^\('"$key"'=\)\(.*\)$/\2/p' "$system_file" \
+            | tail -n1
+          )
+          if [ "$curr" = "$ifval" ]; then
+            sed '1,/^$/d; /^'"$key"'=/d' "$system_file" >"$tmp"
+            printf '%s' "$header" >"$system_file"
+            cat "$tmp" >>"$system_file"
+            printf '%s=%s\n' "$key" "$val" >>"$system_file"
+          fi
+        else
+          curr=$(grep -h "^$key=" "$user_file" \
+                 | tail -n1 \
+                 | cut -d= -f2-)
+          if [ "$curr" = "$ifval" ]; then
+            grep -v "^$key=" "$user_file" >"$tmp"
+            mv "$tmp" "$user_file"
+            printf '%s=%s\n' "$key" "$val" >>"$user_file"
+          fi
         fi
         ;;
 
       --delete)
         key=$1
-        grep -v "^$key=" "$config_file" >"$tmp" && mv "$tmp" "$config_file"
+        if [ "$scope" = --system-config-option ]; then
+          sed '1,/^$/d; /^'"$key"'=/d' "$system_file" >"$tmp"
+          printf '%s' "$header" >"$system_file"
+          cat "$tmp" >>"$system_file"
+        else
+          grep -v "^$key=" "$user_file" >"$tmp"
+          mv "$tmp" "$user_file"
+        fi
         ;;
 
       --delete-if)
         key=$1; ifval=$2
-        curr=$(grep -h "^$key=" "$config_file" \
-               | tail -n1 | cut -d= -f2-)
-        if [ "$curr" = "$ifval" ]; then
-          grep -v "^$key=" "$config_file" >"$tmp" && mv "$tmp" "$config_file"
+        if [ "$scope" = --system-config-option ]; then
+          curr=$(
+            sed -n '1,/^$/d;s/^\('"$key"'=\)\(.*\)$/\2/p' "$system_file" \
+            | tail -n1
+          )
+          if [ "$curr" = "$ifval" ]; then
+            sed '1,/^$/d; /^'"$key"'=/d' "$system_file" >"$tmp"
+            printf '%s' "$header" >"$system_file"
+            cat "$tmp" >>"$system_file"
+          fi
+        else
+          curr=$(grep -h "^$key=" "$user_file" \
+                 | tail -n1 \
+                 | cut -d= -f2-)
+          if [ "$curr" = "$ifval" ]; then
+            grep -v "^$key=" "$user_file" >"$tmp"
+            mv "$tmp" "$user_file"
+          fi
         fi
         ;;
 
