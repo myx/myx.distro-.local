@@ -1,24 +1,21 @@
 #!/usr/bin/env bash
 # ^^^ for syntax checking in the editor only
 set -x
-### To include user overrides, your scripts can do:
-###   if [ -f "$MMDAPP/.local/home/$(id -un)/MDLC.settings.env" ]; then
-###     . "$MMDAPP/.local/home/$(id -un)/MDLC.settings.env"
+### in your scripts you can pull in user overrides via:
+###   if [ -f "$MMDAPP/.local/home/$(id -un)/MDLT.settings.env" ]; then
+###     . "$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
 ###   fi
 ###
 case "$1" in
   --*-config-option)
-    # capture scope & cmd
-    scope="$1"; shift
-    cmd  ="$1"; shift
+    local config_file system_file user_file
+    local cmd key val ifval curr tmp new
 
-    # new filenames
-    system_file="$MMDAPP/.local/MDLC.settings.env"
-    user_file  ="$MMDAPP/.local/home/$(id -un)/MDLC.settings.env"
-    config_file= tmp= new= key= val= ifval= curr=
+    system_file="$MMDAPP/.local/MDLT.settings.env"
+    user_file ="$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
 
-    # pick target & bootstrap if needed
-    case "$scope" in
+    # pick target & ensure stub files exist
+    case "$1" in
       --system-config-option)
         config_file=$system_file
         mkdir -p "${config_file%/*}" || return 1
@@ -28,23 +25,25 @@ case "$1" in
         config_file=$user_file
         mkdir -p "${config_file%/*}" || return 1
         touch "$config_file"
-        # ensure a stub system file for downstream sourcing
+        # bootstrap empty system‐file on first custom touch
         [ -f "$system_file" ] || { mkdir -p "${system_file%/*}"; touch "$system_file"; }
         ;;
-      *)
-        echo "ERROR: unsupported config scope '$scope'" >&2
+      --*-config-option)
+        echo "ERROR: unsupported config scope '$1'" >&2
         return 1
         ;;
     esac
 
-    # temp files + cleanup on exit
+    # shift past the scope flag, grab the sub-command
+    shift
+    cmd=$1; shift
+
+    # prepare temp‐files & ensure cleanup
     tmp="$config_file.$$"
     new="$config_file.new.$$"
     trap 'rm -f -- "$tmp" "$new"' EXIT
 
-    # dispatch operations
     case "$cmd" in
-
       --select-all)
         grep -h '^[^#].*=' "$config_file" || :
         ;;
@@ -108,6 +107,10 @@ case "$1" in
         ;;
     esac
 
+    return 0
+    ;;
+
+  *)
     return 0
     ;;
 esac
