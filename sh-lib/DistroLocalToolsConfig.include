@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ^^^ for syntax checking in the editor only
-
+set -x
 ### Source custom (user) config in your scripts like this:
 ###   if [ -f "$MMDAPP/.local/home/$(id -un)/MDLT.settings.env" ]; then
 ###     . "$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
