@@ -78,7 +78,7 @@ case "$1" in
         # fall through to --upsert
         set -- --upsert "$key" "$val"
         cmd="$1"; shift
-        ;;&
+        ;;
 
       --delete)
         key=$1
