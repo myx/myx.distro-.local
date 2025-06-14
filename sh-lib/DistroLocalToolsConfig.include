@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+# ^^^ for syntax checking in the editor only
+
+case "$1" in
+  --*-config-option)
+    local scope="$1"; shift
+    local cmd key val ifval curr tmp
+    local config_file
+
+    # user‐file expression for the system file’s dynamic source‐guard
+    local user_file_expr='$MMDAPP/.local/home/$(id -un)/MDLT.settings.env'
+
+    case "$scope" in
+      --system-config-option)
+        config_file="$MMDAPP/.local/MDLT.settings.env"
+        mkdir -p "$(dirname -- "$config_file")" || return 1
+        {
+          printf '# Auto-generated system settings – do not edit\n'
+          printf 'if [ -f %s ]; then . %s; fi\n\n' \
+                 "$user_file_expr" "$user_file_expr"
+        } >"$config_file"
+        ;;
+      --custom-config-option)
+        config_file="$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
+        mkdir -p "$(dirname -- "$config_file")" || return 1
+        : >"$config_file"
+        ;;
+      *)
+        echo "ERROR: unsupported config scope '$scope'" >&2
+        return 1
+        ;;
+    esac
+
+    cmd=$1; shift
+    tmp=$config_file.$$
+
+    case "$cmd" in
+      --select-all)
+        # same as --select --all
+        sed -n 's/^[[:space:]]*\([^=][^=]*\)=\(.*\)$/\1=\2/p' "$config_file"
+        ;;
+
+      --select)
+        if [ "$1" = --all ]; then
+          sed -n 's/^[[:space:]]*\([^=][^=]*\)=\(.*\)$/\1=\2/p' "$config_file"
+        else
+          grep -h "^$1=" "$config_file" | tail -n1 | cut -d= -f2-
+        fi
+        ;;
+
+      --select-default)
+        key=$1; val=$2
+        if grep -q "^$key=" "$config_file"; then
+          grep -h "^$key=" "$config_file" | tail -n1 | cut -d= -f2-
+        else
+          printf '%s\n' "$val"
+        fi
+        ;;
+
+      --upsert)
+        key=$1; val=$2
+        grep -v "^$key=" "$config_file" >"$tmp"
+        printf '%s=%s\n' "$key" "$val" >>"$tmp"
+        mv "$tmp" "$config_file"
+        ;;
+
+      --upsert-if)
+        key=$1; val=$2; ifval=$3
+        curr=$(grep -h "^$key=" "$config_file" \
+               | tail -n1 | cut -d= -f2-)
+        if [ "$curr" = "$ifval" ]; then
+          grep -v "^$key=" "$config_file" >"$tmp"
+          printf '%s=%s\n' "$key" "$val" >>"$tmp"
+          mv "$tmp" "$config_file"
+        fi
+        ;;
+
+      --delete)
+        key=$1
+        grep -v "^$key=" "$config_file" >"$tmp" && mv "$tmp" "$config_file"
+        ;;
+
+      --delete-if)
+        key=$1; ifval=$2
+        curr=$(grep -h "^$key=" "$config_file" \
+               | tail -n1 | cut -d= -f2-)
+        if [ "$curr" = "$ifval" ]; then
+          grep -v "^$key=" "$config_file" >"$tmp" && mv "$tmp" "$config_file"
+        fi
+        ;;
+
+      *)
+        echo "ERROR: unknown config operation '$cmd'" >&2
+        rm -f -- "$tmp"
+        return 1
+        ;;
+    esac
+
+    rm -f -- "$tmp" 2>/dev/null
+    return 0
+    ;;
+esac

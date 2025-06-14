@@ -33,7 +33,7 @@ GitClonePull(){
 
 	local specificBranch="$3"
 	
-	local currentPath="`pwd`"
+	local currentPath="$PWD"
 	
 	if [ -d "$tgtPath" ] && [ -d "$tgtPath/.git" ] ; then
 		cd "$tgtPath"
@@ -149,7 +149,7 @@ DistroLocalTools(){
 							echo
 							echo 'wait # wait for all the subprocesses to finish'
 							echo
-							echo 'DistroLocalTools --make-console-commands'
+							echo 'DistroLocalTools --make-workspace-integration-files'
 						)"
 						break
 					;;
@@ -172,7 +172,7 @@ DistroLocalTools(){
 			. "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/DistroLocalToolsMake.include"
 			return 0
 		;;
-		--system-config-option|--custom-config-option)
+		--*-config-option|--*-config-option)
 			. "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/DistroLocalToolsConfig.include"
 			return 0
 		;;

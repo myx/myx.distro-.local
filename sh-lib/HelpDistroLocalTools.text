@@ -42,9 +42,14 @@ syntax: DistroLocalTools.fn.sh --{system|custom}-config-option <operation>
 			Following options are defined (list of basic ones, option names are not limited
 			to this list, but these options are actively used by scripts of this package):
 
-				MDLT_CONSOLE_RC_SCRIPT
-					Shell script to include in console start. Allows to setup extra commands 
-					or settings.
+				MDLT_CONSOLE_ORIGIN
+					Supports values of ".local" or "source". This parameter is used (with some 
+					extra sanity checks) while detecting MDLC_ORIGIN context value.
+
+				MDLT_CONSOLE_SCRIPT
+					Shell script to include in console initialisation process. Allows to setup 
+					extra commands or settings. Note: before including this script, $HOME/.bashrc
+					will be included automatically, if present.
 
 				MDLT_ACTIONS_SH_WRAP
 					Shell command to wrap shell actions to execute. Allows to run actions on
@@ -54,7 +59,7 @@ syntax: DistroLocalTools.fn.sh --{system|custom}-config-option <operation>
 			Re-Creates `DistroLocalConsole.sh` script to be used as a command to quickly enter workspace 
 			console.
 
-		--make-console-commands
+		--make-workspace-integration-files
 			Re-Creates `Distro*Console.sh` scripts for all components installes to be used as commands to 
 			quickly enter workspace console.
 
