@@ -1,77 +1,63 @@
 #!/usr/bin/env bash
 # ^^^ for syntax checking in the editor only
 
+### Source custom (user) config in your scripts like this:
+###   if [ -f "$MMDAPP/.local/home/$(id -un)/MDLC_SETTINGS.env" ]; then
+###     . "$MMDAPP/.local/home/$(id -un)/MDLC_SETTINGS.env"
+###   fi
+###
 case "$1" in
   --*-config-option)
     local scope="$1"; shift
-    local cmd key val ifval curr tmp config_file system_file user_file
-    # an expression so the system file always sources *whoever* is running it later
-    local user_file_expr='$MMDAPP/.local/home/$(id -un)/MDLT.settings.env'
+    local cmd="$1";   shift
 
-    system_file=$MMDAPP/.local/MDLT.settings.env
-    user_file=$MMDAPP/.local/home/$(id -un)/MDLT.settings.env
+    local system_file="$MMDAPP/.local/MDLC_SETTINGS.env"
+    local user_file ="$MMDAPP/.local/home/$(id -un)/MDLC_SETTINGS.env"
+    local config_file tmp new key val ifval curr
 
-    # decide which file we’re touching—and prep system header if needed
+    # decide which file we’re touching—and ensure it exists
     case "$scope" in
       --system-config-option)
         config_file=$system_file
-        mkdir -p "$(dirname "$system_file")" || return 1
-        # regenerate header every time
-        header=$(
-          printf '# Auto-generated system settings – do not edit\n'
-          printf 'if [ -f %s ]; then . %s; fi\n\n' \
-                 "$user_file_expr" "$user_file_expr"
-        )
+        mkdir -p "${config_file%/*}" || return 1
+        touch "$config_file"
         ;;
-
       --custom-config-option)
         config_file=$user_file
-        # ensure system file exists (so future ‘. MDLT.settings.env’ picks up this user file)
-        if [ ! -f "$system_file" ]; then
-          mkdir -p "$(dirname "$system_file")" || return 1
-          printf '%s' "$(
-            printf '# Auto-generated system settings – do not edit\n'
-            printf 'if [ -f %s ]; then . %s; fi\n\n' \
-                   "$user_file_expr" "$user_file_expr"
-          )" >"$system_file"
-        fi
-        mkdir -p "$(dirname "$user_file")" || return 1
-        touch "$user_file"
+        mkdir -p "${config_file%/*}" || return 1
+        touch "$config_file"
+        # if system never touched yet, create an empty stub so scripts can always source it
+        [ -f "$system_file" ] || { mkdir -p "${system_file%/*}"; touch "$system_file"; }
         ;;
-
       *)
         echo "ERROR: unsupported config scope '$scope'" >&2
         return 1
         ;;
     esac
 
-    # grab sub-command
-    cmd=$1; shift
-    tmp=$config_file.$$
+    # robust temp‐file cleanup
+    tmp="$config_file.$$"
+    new="$config_file.new.$$"
+    trap 'rm -f -- "$tmp" "$new"' EXIT
 
     case "$cmd" in
-
       --select-all)
-        # dump every KEY=VALUE
-        sed -n 's/^[[:space:]]*\([^=][^=]*\)=\(.*\)$/\1=\2/p' "$config_file"
+        # all non-comment lines
+        grep -h '^[^#].*=' "$config_file"
         ;;
 
       --select)
         if [ "$1" = --all ]; then
-          sed -n 's/^[[:space:]]*\([^=][^=]*\)=\(.*\)$/\1=\2/p' "$config_file"
+          grep -h '^[^#].*=' "$config_file"
         else
-          grep -h "^$1=" "$config_file" \
-            | tail -n1 \
-            | cut -d= -f2-
+          grep -h "^$1=" "$config_file" | tail -n1 | cut -d= -f2-
         fi
         ;;
 
       --select-default)
         key=$1; val=$2
         if grep -q "^$key=" "$config_file"; then
-          grep -h "^$key=" "$config_file" \
-            | tail -n1 \
-            | cut -d= -f2-
+          grep -h "^$key=" "$config_file" | tail -n1 | cut -d= -f2-
         else
           printf '%s\n' "$val"
         fi
@@ -79,88 +65,41 @@ case "$1" in
 
       --upsert)
         key=$1; val=$2
-        if [ "$scope" = --system-config-option ]; then
-          # strip the old header/body, then rewrite header+body+new entry
-          sed '1,/^$/d; /^'"$key"'=/d' "$system_file" >"$tmp"
-          printf '%s' "$header" >"$system_file"
-          cat "$tmp" >>"$system_file"
-          printf '%s=%s\n' "$key" "$val" >>"$system_file"
-        else
-          # custom file—just remove old key, then append
-          grep -v "^$key=" "$user_file" >"$tmp"
-          mv "$tmp" "$user_file"
-          printf '%s=%s\n' "$key" "$val" >>"$user_file"
-        fi
+        # remove old key, append new
+        grep -v "^$key=" "$config_file" >"$tmp"
+        printf '%s=%s\n' "$key" "$val" >>"$tmp"
+        mv "$tmp" "$config_file"
         ;;
 
       --upsert-if)
         key=$1; val=$2; ifval=$3
-        if [ "$scope" = --system-config-option ]; then
-          curr=$(
-            sed -n '1,/^$/d;s/^\('"$key"'=\)\(.*\)$/\2/p' "$system_file" \
-            | tail -n1
-          )
-          if [ "$curr" = "$ifval" ]; then
-            sed '1,/^$/d; /^'"$key"'=/d' "$system_file" >"$tmp"
-            printf '%s' "$header" >"$system_file"
-            cat "$tmp" >>"$system_file"
-            printf '%s=%s\n' "$key" "$val" >>"$system_file"
-          fi
-        else
-          curr=$(grep -h "^$key=" "$user_file" \
-                 | tail -n1 \
-                 | cut -d= -f2-)
-          if [ "$curr" = "$ifval" ]; then
-            grep -v "^$key=" "$user_file" >"$tmp"
-            mv "$tmp" "$user_file"
-            printf '%s=%s\n' "$key" "$val" >>"$user_file"
-          fi
-        fi
-        ;;
+        curr=$(grep -h "^$key=" "$config_file" | tail -n1 | cut -d= -f2-)
+        [ "$curr" != "$ifval" ] && return 0
+        # fall through to --upsert
+        set -- --upsert "$key" "$val"
+        cmd="$1"; shift
+        ;;&
 
       --delete)
         key=$1
-        if [ "$scope" = --system-config-option ]; then
-          sed '1,/^$/d; /^'"$key"'=/d' "$system_file" >"$tmp"
-          printf '%s' "$header" >"$system_file"
-          cat "$tmp" >>"$system_file"
-        else
-          grep -v "^$key=" "$user_file" >"$tmp"
-          mv "$tmp" "$user_file"
-        fi
+        grep -v "^$key=" "$config_file" >"$tmp" && mv "$tmp" "$config_file"
         ;;
 
       --delete-if)
         key=$1; ifval=$2
-        if [ "$scope" = --system-config-option ]; then
-          curr=$(
-            sed -n '1,/^$/d;s/^\('"$key"'=\)\(.*\)$/\2/p' "$system_file" \
-            | tail -n1
-          )
-          if [ "$curr" = "$ifval" ]; then
-            sed '1,/^$/d; /^'"$key"'=/d' "$system_file" >"$tmp"
-            printf '%s' "$header" >"$system_file"
-            cat "$tmp" >>"$system_file"
-          fi
-        else
-          curr=$(grep -h "^$key=" "$user_file" \
-                 | tail -n1 \
-                 | cut -d= -f2-)
-          if [ "$curr" = "$ifval" ]; then
-            grep -v "^$key=" "$user_file" >"$tmp"
-            mv "$tmp" "$user_file"
-          fi
-        fi
-        ;;
+        curr=$(grep -h "^$key=" "$config_file" | tail -n1 | cut -d= -f2-)
+        [ "$curr" != "$ifval" ] && return 0
+        # fall through to --delete
+        set -- --delete "$key"
+        cmd="$1"; shift
+        ;;&
 
       *)
         echo "ERROR: unknown config operation '$cmd'" >&2
-        rm -f -- "$tmp"
         return 1
         ;;
     esac
 
-    rm -f -- "$tmp" 2>/dev/null
     return 0
     ;;
 esac
