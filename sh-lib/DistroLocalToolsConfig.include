@@ -92,7 +92,7 @@ case "$1" in
         # fall through to --delete
         set -- --delete "$key"
         cmd="$1"; shift
-        ;;&
+        ;;
 
       *)
         echo "ERROR: unknown config operation '$cmd'" >&2
