@@ -2,8 +2,8 @@
 # ^^^ for syntax checking in the editor only
 
 ### Source custom (user) config in your scripts like this:
-###   if [ -f "$MMDAPP/.local/home/$(id -un)/MDLC_SETTINGS.env" ]; then
-###     . "$MMDAPP/.local/home/$(id -un)/MDLC_SETTINGS.env"
+###   if [ -f "$MMDAPP/.local/home/$(id -un)/MDLT.settings.env" ]; then
+###     . "$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
 ###   fi
 ###
 case "$1" in
@@ -16,8 +16,8 @@ case "$1" in
     scope="$1"; shift
     cmd="$1";   shift
 
-    system_file="$MMDAPP/.local/MDLC_SETTINGS.env"
-    user_file="$MMDAPP/.local/home/$(id -un)/MDLC_SETTINGS.env"
+    system_file="$MMDAPP/.local/MDLT.settings.env"
+    user_file="$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
 
     # pick target and bootstrap if needed
     case "$scope" in
