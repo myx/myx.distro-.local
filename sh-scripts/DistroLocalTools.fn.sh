@@ -24,11 +24,11 @@ Prefix(){
 	local PREFTEXT="$1"
 	shift
 
-	local PREFTEXT="`printf %s "$PREFTEXT" | tr '^' '-' | tr -d '\n' `"
+	PREFTEXT="$( printf %s "$PREFTEXT" | tr '^' '-' | tr -d '\n' )"
 	
 	set -e
 
-    (	echo "$@" 2>&1 \
+    ( "$@" 2>&1 \
     		|| ( EXITCODE=$? ; set +x ; echo "⛔ ERROR: exited with error status ($EXITCODE)" ; exit $EXITCODE ) \
    	) | sed -l -e "s^\^^$PREFTEXT: ^" 1>&2
    	
@@ -42,7 +42,7 @@ GitClonePull(){
 	set -e
 
 	if [ -x "$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/share/myx.common/bin/git/clonePull" ] ; then 
-		echo "⛔ ERROR: GitClonePull: executable found!" >&2
+		echo "😻 GitClonePull: executable found!" >&2
 		"$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/share/myx.common/bin/git/clonePull" "$@"
 		return 0
 	fi
