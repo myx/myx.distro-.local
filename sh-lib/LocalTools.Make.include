@@ -98,7 +98,7 @@ case "$1" in
 				;;
 			esac
 			if [ ! -f "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalContext.include" ] ; then
-				echo "⛔ ERROR: Context.SetInputSpec: can't find/detect origin" >&2
+				echo "⛔ ERROR: Context.SetInputSpec: can't find/detect origin, spec: $MDLT_CONSOLE_ORIGIN" >&2
 				exit 1
 			fi
 
@@ -108,7 +108,7 @@ case "$1" in
 			if [ "$1" == "--non-interactive" ] ; then
 				shift
 				{
-					echo . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/console-.local-bashrc.rc"
+					echo ". '$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/console-.local-bashrc.rc'"
 					cat
 				} | bash "$@"
 				exit 0
