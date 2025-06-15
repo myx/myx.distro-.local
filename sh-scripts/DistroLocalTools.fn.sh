@@ -25,7 +25,7 @@ Prefix(){
 	
 	set -e
 
-    (	"$@" 2>&1 \
+    (	echo "$@" 2>&1 \
     		|| ( EXITCODE=$? ; set +x ; echo "⛔ ERROR: exited with error status ($EXITCODE)" ; exit $EXITCODE ) \
    	) | sed -l -e "s^\^^$PREFTEXT: ^" 1>&2
    	
