@@ -12,14 +12,6 @@ else
 	set -- "--run-from-.local"
 fi
 
-if [ "$adpcChangeSpec" = "true" ] ; then
-	: "${1:?⛔ ERROR: DistroLocalContextSetInputSpec: inputSpec argument is required}"
-	if ! DistroLocalContext --is-spec-option "$1" ; then
-		echo "⛔ ERROR: DistroLocalContextSetInputSpec: inputSpec argument is invalid: $1" >&2
-		exit 1
-	fi
-fi
-
 case "$1" in
 	--run-from-.local)
 		MDLT_ORIGIN="${MDLT_ORIGIN:-$MMDAPP/.local}"
@@ -32,21 +24,14 @@ case "$1" in
 		MDSC_OPTION="--run-from-source"
 	;;
 	*)
-		echo "⛔ ERROR: DistroLocalContextSetInputSpec: Invalid input spec: $argOption" >&2
+		echo "⛔ ERROR: DistroLocalContextSetInputSpec: Invalid input spec: $1" >&2
 		exit 1
 	;;
 esac
 
-if [ -z "${previousSpec:-$MDSC_OPTION}" ] || [ "$previousSpec" != "$MDSC_OPTION" ] ; then
-	export MDLT_ORIGIN
-	export MDSC_INMODE
-	export MDSC_OPTION
-	
-	echo "DistroLocalContextSetInputSpec: mode: $MDSC_INMODE, spec: $MDSC_OPTION" >&2
-fi
+export MDLT_ORIGIN
+export MDSC_INMODE
+export MDSC_OPTION
 
-if [ ! -z "$MDSC_OUTPUT" ] && [ ! -d "$MDSC_OUTPUT" ] ; then
-	echo "DistroLocalContextSetInputSpec: creating output folder: $MDSC_OUTPUT" >&2
-	mkdir -p "$MDSC_OUTPUT"
-fi
+echo "DistroLocalContextSetInputSpec: mode: $MDSC_INMODE, spec: $MDSC_OPTION, origin: $MDLT_ORIGIN" >&2
  

@@ -74,6 +74,10 @@ syntax: DistroLocalTools.fn.sh --{system|custom}-config-option <operation>
 		DistroLocalTools.fn.sh --install-distro-source --install-distro-deploy
 		DistroLocalTools.fn.sh --install-distro-source --install-distro-deploy --install-distro-remote
 
+		Distro DistroSourceTools --system-config-option --upsert-if MDLT_CONSOLE_ORIGIN source ""
+		Distro DistroSourceTools --system-config-option --delete-if MDLT_CONSOLE_ORIGIN source
+		DistroSourceTools.fn.sh --system-config-option --select-all
+
 	Examples (in OS default shell):
 
 		bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --install-distro-source --install-distro-deploy --install-distro-remote
