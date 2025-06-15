@@ -21,8 +21,8 @@ case "$1" in
 			echo "${MDLT_CONSOLE_ORIGIN:-.local}" \
 		) )"
 		MDSC_INMODE="${MDLT_CONSOLE_ORIGIN#$MMDAPP/}"
-		case MDSC_INMODE in
-			'.local')
+		case "$MDSC_INMODE" in
+			.local)
 				export MDLT_ORIGIN="$MMDAPP/.local"
 				export MDSC_INMODE=".local"
 				export MDSC_OPTION="--run-from-.local"
