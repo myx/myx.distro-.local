@@ -9,13 +9,13 @@ This utility facilitates **myx.distro** workspace (directory) creation and allow
 
 ## Installation Instructions: 
 
-[Installation: Bare Install on Unix](https://github.com/myx/myx.distro-.local/blob/main/sh-lib/HelpDistroLocalTools-install-unix-bare.md)
+[Installation: Bare Install on Unix](https://github.com/myx/myx.distro-.local/blob/main/sh-lib/Help.DistroLocalTools-install-unix-bare.md)
 
 ---
 
 ## Distro commands: 
 
-[**DistroLocalTools** command manual](https://github.com/myx/myx.distro-.local/blob/main/sh-lib/HelpDistroLocalTools.text)
+[**DistroLocalTools** command manual](https://github.com/myx/myx.distro-.local/blob/main/sh-lib/Help.DistroLocalTools.text)
 
 
 ---

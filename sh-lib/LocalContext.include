@@ -9,36 +9,21 @@ if ! type DistroLocalContext >/dev/null 2>&1 ; then
 	DistroLocalContext(){
 
 		case "$1" in
-			--init-variables)
-				[ -n "$MDLT_ORIGIN" ] && [ -n "$MDLT_OPTION" ] && return 0
-				local MDLT_CONSOLE_ORIGIN="$( ( . "$MMDAPP/.local/MDLT.settings.env" && echo "${MDLT_CONSOLE_ORIGIN:-$MMDAPP/.local}" ) )"
-				MDSC_INMODE="${MDLT_CONSOLE_ORIGIN#$MMDAPP/}"
-				case MDSC_INMODE in
-					.local)
-						export MDLT_ORIGIN="$MMDAPP/.local"
-						export MDSC_INMODE=".local"
-						return 0
-					;;
-					source)
-						if [ -f "$MMDAPP/" ]
-						export MDLT_ORIGIN="$MMDAPP/$MDSC_INMODE"
-						return 0
-					;;
-					*)
-						echo "🙋 WARNING: LocalContext.SetInputSpec: MDLT_CONSOLE_ORIGIN spec: $MDLT_CONSOLE_ORIGIN, defaulting to '.local'" >&2
-						export MDLT_ORIGIN="$MMDAPP/.local"
-						export MDSC_INMODE=".local"
-						return 0
-					;;
-				esac
-			;;
 			--is-spec-option)
 				case "$2" in
-					--run-from-source|--run-from-.local)
+					--run-from-source|--run-from-.local|--run-from-detect|--init-variables|--run-from-path)
 						return 0
 					;;
 				esac
 				set +e ; return 1
+			;;
+			--init-variables|--run-from-detect)
+				if [ -n "$MDLT_ORIGIN" ] && [ -n "$MDLT_OPTION" ] ; then
+					return 0
+				fi
+				[ -z "$MDSC_DETAIL" ] || echo "DistroLocalContext: input spec: $1" >&2
+				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalContext.SetInputSpec.include"		
+				return 0
 			;;
 			*)
 				if DistroLocalContext --is-spec-option "$1" ; then
@@ -57,7 +42,7 @@ if ! type Require >/dev/null 2>&1 ; then
 	Require(){
 		local distroCommand="$1" ; shift
 		if [ -z "$distroCommand" ] || [ "--help" == "$distroCommand" ] ; then
-			( . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/HelpRequire.include" )
+			( . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/Help.Require.include" )
 			set +e ; return 1
 		fi
 		if type "${distroCommand%.fn.sh}" >/dev/null 2>&1 ; then

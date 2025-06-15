@@ -6,7 +6,7 @@ DistroLocalCatMarkdown() {
 	set -e
 
 	local fromFile="$1"
-	if [ ! -z "$fromFile" ] ; then
+	if [ -n "$fromFile" ] ; then
 		if [ ! -f "$fromFile" ] ; then
 			echo "⛔ ERROR: DistroLocalCatMarkdown: file not found: $fromFile" >&2
 			set +e ; return 1

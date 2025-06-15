@@ -7,12 +7,12 @@ case "$1" in
 		return 0
 	;;
 	--completion-*)
-		. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/DistroLocalConsole.Completion.include"
+		. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalConsole.Completion.include"
 		set +e ; return 1
 	;;
 	''|--help)
 		shift
-		( . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/HelpDistroLocal.include" )
+		( . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/Help.DistroLocal.include" )
 		set +e ; return 1
 	;;
 	--start-console)
@@ -20,7 +20,7 @@ case "$1" in
 		return 0
 	;;
 	*)
-		echo "DistroLocalConsole: Invalid argument: $1" >&2
+		echo "LocalConsole: Invalid argument: $1" >&2
 		set +e ; return 1
 	;;
 esac

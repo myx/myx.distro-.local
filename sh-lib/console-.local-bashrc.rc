@@ -62,7 +62,7 @@ fi
 DistroLocalContext --run-from-.local
 
 Help(){
-	( . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/HelpDistroLocalConsole.include" )
+	( . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/Help.DistroLocalConsole.include" )
 	set +e ; return 1
 }
 

@@ -197,15 +197,15 @@ DistroLocalTools(){
 			return 0
 		;;
 		--help-install-unix-bare)
-			. "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/DistroLocalCatMarkdown.include"
-			DistroLocalCatMarkdown "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/HelpDistroLocalTools-install-unix-bare.md" >&2
+			. "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/LocalTools.CatMarkdown.include"
+			DistroLocalCatMarkdown "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/Help.DistroLocalTools-install-unix-bare.md" >&2
 			exit 1;
 		;;
 		''|--help)
 			echo "syntax: DistroLocalTools.fn.sh <option>" >&2
 			echo "syntax: DistroLocalTools.fn.sh [--help]" >&2
 			if [ "$1" = "--help" ] ; then
-				cat "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/HelpDistroLocalTools.text" >&2
+				cat "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/Help.DistroLocalTools.text" >&2
 			fi
 			set +e ; return 1
 		;;
