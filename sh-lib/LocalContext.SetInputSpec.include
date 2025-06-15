@@ -9,9 +9,9 @@
 case "$1" in
 	--run-from-.local)
 		export MDLT_ORIGIN="$MMDAPP/.local"
-		export MDSC_INMODE=".local"
+		export MDLC_INMODE=".local"
 		export MDLT_OPTION="--run-from-.local"
-		echo "LocalContext.SetInputSpec: mode: $MDSC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
+		echo "LocalContext.SetInputSpec: mode: $MDLC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
 		return 0
 	;;
 	''|--run-from-detect|--init-variables)
@@ -20,49 +20,49 @@ case "$1" in
 			. "$MMDAPP/.local/MDLT.settings.env"
 			echo "${MDLT_CONSOLE_ORIGIN:-.local}" \
 		) )"
-		MDSC_INMODE="${MDLT_CONSOLE_ORIGIN#$MMDAPP/}"
-		case "$MDSC_INMODE" in
+		MDLC_INMODE="${MDLT_CONSOLE_ORIGIN#$MMDAPP/}"
+		case "$MDLC_INMODE" in
 			.local)
 				export MDLT_ORIGIN="$MMDAPP/.local"
-				export MDSC_INMODE=".local"
+				export MDLC_INMODE=".local"
 				export MDLT_OPTION="--run-from-.local"
-				echo "LocalContext.SetInputSpec: mode: $MDSC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
+				echo "LocalContext.SetInputSpec: mode: $MDLC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
 				return 0
 			;;
 			source)
 				if [ -f "$MMDAPP/source/myx/myx.distro-.local/sh-lib/LocalContext.include" ] ; then
-					export MDLT_ORIGIN="$MMDAPP/$MDSC_INMODE"
-					export MDSC_INMODE="source"
+					export MDLT_ORIGIN="$MMDAPP/$MDLC_INMODE"
+					export MDLC_INMODE="source"
 					export MDLT_OPTION="--run-from-source"
-					echo "LocalContext.SetInputSpec: mode: $MDSC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
+					echo "LocalContext.SetInputSpec: mode: $MDLC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
 					return 0
 				fi
 				export MDLT_ORIGIN="$MMDAPP/.local"
-				export MDSC_INMODE=".local"
+				export MDLC_INMODE=".local"
 				export MDLT_OPTION="--run-from-.local"
-				echo "LocalContext.SetInputSpec: mode: $MDSC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
+				echo "LocalContext.SetInputSpec: mode: $MDLC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
 				return 0
 			;;
 			/*)
-				if [ -f "$MDSC_INMODE/myx/myx.distro-.local/sh-lib/LocalContext.include" ] ; then
-					export MDLT_ORIGIN="$MDSC_INMODE"
-					export MDSC_INMODE="extern"
-					export MDLT_OPTION="--run-from-path $MDSC_INMODE"
-					echo "LocalContext.SetInputSpec: mode: $MDSC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
+				if [ -f "$MDLC_INMODE/myx/myx.distro-.local/sh-lib/LocalContext.include" ] ; then
+					export MDLT_ORIGIN="$MDLC_INMODE"
+					export MDLC_INMODE="extern"
+					export MDLT_OPTION="--run-from-path $MDLC_INMODE"
+					echo "LocalContext.SetInputSpec: mode: $MDLC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
 					return 0
 				fi
 				export MDLT_ORIGIN="$MMDAPP/.local"
-				export MDSC_INMODE=".local"
+				export MDLC_INMODE=".local"
 				export MDLT_OPTION="--run-from-.local"
-				echo "LocalContext.SetInputSpec: mode: $MDSC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
+				echo "LocalContext.SetInputSpec: mode: $MDLC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
 				return 0
 			;;
 			*)
-				echo "🙋 WARNING: LocalContext.SetInputSpec: MDLT_CONSOLE_ORIGIN spec: '$MDSC_INMODE', defaulting to '.local'" >&2
+				echo "🙋 WARNING: LocalContext.SetInputSpec: MDLT_CONSOLE_ORIGIN spec: '$MDLC_INMODE', defaulting to '.local'" >&2
 				export MDLT_ORIGIN="$MMDAPP/.local"
-				export MDSC_INMODE=".local"
+				export MDLC_INMODE=".local"
 				export MDLT_OPTION="--run-from-.local"
-				echo "LocalContext.SetInputSpec: mode: $MDSC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
+				echo "LocalContext.SetInputSpec: mode: $MDLC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
 				return 0
 			;;
 		esac
@@ -74,32 +74,32 @@ case "$1" in
 	--run-from-path)
 		if [ -n "$2" ] && [ -f "$2/myx/myx.distro-.local/sh-lib/LocalContext.include" ] ; then
 			export MDLT_ORIGIN="$2"
-			export MDSC_INMODE="extern"
+			export MDLC_INMODE="extern"
 			export MDLT_OPTION="--run-from-path $2"
 
-			echo "LocalContext.SetInputSpec: mode: $MDSC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
+			echo "LocalContext.SetInputSpec: mode: $MDLC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
 			return 0
 		fi
 		echo "🙋 WARNING: Context.SetInputSpec: $1 requested but source is not available at '$2', defaulting to --run-from-.local" >&2
 		export MDLT_ORIGIN="$MMDAPP/.local"
-		export MDSC_INMODE=".local"
+		export MDLC_INMODE=".local"
 		export MDLT_OPTION="--run-from-.local"
-		echo "LocalContext.SetInputSpec: mode: $MDSC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
+		echo "LocalContext.SetInputSpec: mode: $MDLC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
 		return 0
 	;;
 	--run-from-source)
 		if [ ! -f "$MMDAPP/source/myx/myx.distro-.local/sh-lib/LocalContext.include" ] ; then
-			export MDLT_ORIGIN="$MMDAPP/$MDSC_INMODE"
-			export MDSC_INMODE="source"
+			export MDLT_ORIGIN="$MMDAPP/$MDLC_INMODE"
+			export MDLC_INMODE="source"
 			export MDLT_OPTION="--run-from-source"
-			echo "LocalContext.SetInputSpec: mode: $MDSC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
+			echo "LocalContext.SetInputSpec: mode: $MDLC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
 			return 0
 		fi
 		echo "🙋 WARNING: Context.SetInputSpec: $1 requested but source is not available, defaulting to --run-from-.local" >&2
 		export MDLT_ORIGIN="$MMDAPP/.local"
-		export MDSC_INMODE=".local"
+		export MDLC_INMODE=".local"
 		export MDLT_OPTION="--run-from-.local"
-		echo "LocalContext.SetInputSpec: mode: $MDSC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
+		echo "LocalContext.SetInputSpec: mode: $MDLC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
 		return 0
 	;;
 	*)
@@ -108,4 +108,4 @@ case "$1" in
 	;;
 esac
 
-echo "LocalContext.SetInputSpec: mode: $MDSC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
+echo "LocalContext.SetInputSpec: mode: $MDLC_INMODE, spec: $MDLT_OPTION, origin: $MDLT_ORIGIN" >&2
