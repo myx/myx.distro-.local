@@ -12,6 +12,9 @@ if [ -z "$MMDAPP" ] ; then
 	[ -d "$MMDAPP/.local" ] || ( echo "⛔ ERROR: expecting '.local' directory." >&2 && exit 1 )
 fi
 
+: "${MDLT_ORIGIN:=$MMDAPP/.local}"
+export MDLT_ORIGIN
+
 
 ##
 ## To make this script self-sufficient, this copied IN SIMPLIFIED FORM from:
@@ -38,9 +41,9 @@ Prefix(){
 GitClonePull(){
 	set -e
 
-	if [ -x "$MMDAPP/.local/myx/myx.common/os-myx.common/host/share/myx.common/bin/git/clonePull" ] ; then 
+	if [ -x "$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/share/myx.common/bin/git/clonePull" ] ; then 
 		echo "⛔ ERROR: GitClonePull: executable found!" >&2
-		"$MMDAPP/.local/myx/myx.common/os-myx.common/host/share/myx.common/bin/git/clonePull" "$@"
+		"$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/share/myx.common/bin/git/clonePull" "$@"
 		return 0
 	fi
 
@@ -114,10 +117,11 @@ DistroLocalTools(){
 				echo
 				echo 'set -e'
 				echo "export MMDAPP='$MMDAPP'"
+				echo "export MDLT_ORIGIN='${MDLT_ORIGIN:-$MMDAPP/.local}'"
 				echo
 				echo 'set +e # for pulls (when no changes)'
-				echo 'Prefix "os-myx.common" GitClonePull "$MMDAPP/.local/myx/myx.common/os-myx.common" "git@github.com:myx/os-myx.common.git" &'
-				echo 'Prefix "distro-.local" GitClonePull "$MMDAPP/.local/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &'
+				echo 'Prefix "os-myx.common" GitClonePull "$MDLT_ORIGIN/myx/myx.common/os-myx.common" "git@github.com:myx/os-myx.common.git" &'
+				echo 'Prefix "distro-.local" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &'
 				echo 'touch "$MMDAPP/.local/MDLT.settings.env" # make sure workspace env file exists'
 			)"
 
@@ -135,8 +139,8 @@ DistroLocalTools(){
 						shift
 						cmds+="$(
 							echo
-							echo 'Prefix "distro-system" GitClonePull "$MMDAPP/.local/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
-							echo 'Prefix "distro-deploy" GitClonePull "$MMDAPP/.local/myx/myx.distro-deploy/" "git@github.com:myx/myx.distro-deploy.git" &'
+							echo 'Prefix "distro-system" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
+							echo 'Prefix "distro-deploy" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-deploy/" "git@github.com:myx/myx.distro-deploy.git" &'
 							echo 'mkdir -p "$MMDAPP/distro" # make sure `distro` directory exists'
 						)"
 					;;
@@ -144,8 +148,8 @@ DistroLocalTools(){
 						shift
 						cmds+="$(
 							echo
-							echo 'Prefix "distro-system" GitClonePull "$MMDAPP/.local/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
-							echo 'Prefix "distro-source" GitClonePull "$MMDAPP/.local/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" &'
+							echo 'Prefix "distro-system" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
+							echo 'Prefix "distro-source" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" &'
 							echo 'mkdir -p "$MMDAPP/source" # make sure `source` directory exists'
 						)"
 					;;
@@ -187,23 +191,23 @@ DistroLocalTools(){
 			return 0
 		;;
 		--make-*)
-			. "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/LocalTools.Make.include"
+			. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Make.include"
 			return 0
 		;;
 		--*-config-option|--*-config-option)
-			. "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/LocalTools.Config.include"
+			. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Config.include"
 			return 0
 		;;
 		--help-install-unix-bare)
-			. "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/LocalTools.CatMarkdown.include"
-			DistroLocalCatMarkdown "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/Help.DistroLocalTools-install-unix-bare.md" >&2
+			. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.CatMarkdown.include"
+			DistroLocalCatMarkdown "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/Help.DistroLocalTools-install-unix-bare.md" >&2
 			exit 1;
 		;;
 		''|--help)
 			echo "syntax: DistroLocalTools.fn.sh <option>" >&2
 			echo "syntax: DistroLocalTools.fn.sh [--help]" >&2
 			if [ "$1" = "--help" ] ; then
-				cat "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/Help.DistroLocalTools.text" >&2
+				cat "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/Help.DistroLocalTools.text" >&2
 			fi
 			set +e ; return 1
 		;;
