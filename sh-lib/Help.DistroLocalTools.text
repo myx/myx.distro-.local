@@ -43,8 +43,9 @@ syntax: DistroLocalTools.fn.sh --{system|custom}-config-option <operation>
 			to this list, but these options are actively used by scripts of this package):
 
 				MDLT_CONSOLE_ORIGIN
-					Supports values of ".local" or "source". This parameter is used (with some 
-					extra sanity checks) while detecting MDLT_ORIGIN context value.
+					Supports values of ".local", "source" or absolute path to whatever workspace's 
+					".local" or "source" directory. This parameter is used (with some extra sanity 
+					checks) while detecting MDLT_ORIGIN context value.
 
 				MDLT_CONSOLE_SCRIPT
 					Shell script to include in console initialisation process. Allows to setup 

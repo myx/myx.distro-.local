@@ -4,7 +4,8 @@
 echo "LocalConsole: Working in $MMDAPP" >&2
 [ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc" 
 
-export MDLT_ORIGIN="$MMDAPP/.local"
+. "${MDLT_ORIGIN:-$MMDAPP/.local}/myx/myx.distro-.local/sh-lib/LocalContext.include"
+DistroLocalContext --run-from-detect
 
 # search: 1) previous path; 2) distro {.local|system|deploy|source} scripts.
 
@@ -57,9 +58,6 @@ if [ -d "$MDLT_ORIGIN/myx/myx.distro-remote/sh-scripts" ] ; then
 		return 0
 	}
 fi
-
-. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalContext.include"
-DistroLocalContext --run-from-.local
 
 Help(){
 	( . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/Help.DistroLocalConsole.include" )
