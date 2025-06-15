@@ -6,7 +6,7 @@
 
 local MDLT_CONSOLE_ORIGIN ; MDLT_CONSOLE_ORIGIN="$( ( \
 	. "$MMDAPP/.local/MDLT.settings.env" \
-	&& echo "${MDLT_CONSOLE_ORIGIN:.local}" \
+	&& echo "${MDLT_CONSOLE_ORIGIN:-.local}" \
 ) )"
 MDSC_INMODE="${MDLT_CONSOLE_ORIGIN#$MMDAPP/}"
 case MDSC_INMODE in
