@@ -44,11 +44,9 @@ GitClonePull(){
 		return 0
 	fi
 
-	local tgtPath="$1"
-	[ -z "$tgtPath" ] && echo "⛔ ERROR: GitClonePull: tgtPath is required!" >&2 && return 1
-
-	local repoUrl="$2"
-	[ -z "$repoUrl" ] && echo "⛔ ERROR: GitClonePull: repoUrl is required!" >&2 && return 1
+	: "${1:?⛔ ERROR: GitClonePull: tgtPath is required!}"
+	: "${2:?⛔ ERROR: GitClonePull: repoUrl is required!}"
+	local tgtPath="$1" repoUrl="$2"
 
 	local specificBranch="$3"
 	
