@@ -21,7 +21,7 @@ case "$1" in
 		MDSC_OPTION="--run-from-source"
 	;;
 	*)
-		echo "⛔ ERROR: DistroLocalContext.SetInputSpec: Invalid input spec: $1" >&2
+		echo "⛔ ERROR: LocalContext.SetInputSpec: Invalid input spec: $1" >&2
 		exit 1
 	;;
 esac
@@ -30,5 +30,5 @@ export MDLT_ORIGIN
 export MDSC_INMODE
 export MDSC_OPTION
 
-echo "DistroLocalContext.SetInputSpec: mode: $MDSC_INMODE, spec: $MDSC_OPTION, origin: $MDLT_ORIGIN" >&2
+echo "LocalContext.SetInputSpec: mode: $MDSC_INMODE, spec: $MDSC_OPTION, origin: $MDLT_ORIGIN" >&2
  

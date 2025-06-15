@@ -12,6 +12,25 @@ if [ -z "$MMDAPP" ] ; then
 	[ -d "$MMDAPP/.local" ] || ( echo "⛔ ERROR: expecting '.local' directory." >&2 && exit 1 )
 fi
 
+
+##
+## To make this script self-sufficient, this copied IN SIMPLIFIED FORM from:
+## `myx/myx.common/os-myx.common/host/share/myx.common/bin/lib/prefix`
+##
+Prefix(){
+	local PREFTEXT="$1"
+	shift
+
+	local PREFTEXT="`printf %s "$PREFTEXT" | tr '^' '-' | tr -d '\n' `"
+	
+	set -e
+
+    (	"$@" 2>&1 \
+    		|| ( EXITCODE=$? ; set +x ; echo "⛔ ERROR: exited with error status ($EXITCODE)" ; exit $EXITCODE ) \
+   	) | sed -l -e "s^\^^$PREFTEXT: ^" 1>&2
+   	
+}
+
 ##
 ## To make this script self-sufficient, this copied from:
 ## `myx/myx.common/os-myx.common/host/share/myx.common/bin/git/clonePull`
@@ -99,8 +118,9 @@ DistroLocalTools(){
 				echo "export MMDAPP='$MMDAPP'"
 				echo
 				echo 'set +e # for pulls (when no changes)'
-				echo 'GitClonePull "$MMDAPP/.local/myx/myx.common/os-myx.common" "git@github.com:myx/os-myx.common.git" &'
-				echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &'
+				echo 'Prefix "os-myx.common" GitClonePull "$MMDAPP/.local/myx/myx.common/os-myx.common" "git@github.com:myx/os-myx.common.git" &'
+				echo 'Prefix "distro-.local" GitClonePull "$MMDAPP/.local/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &'
+				echo 'touch "$MMDAPP/.local/MDLT.settings.env" # make sure workspace env file exists'
 			)"
 
 			while true ; do
@@ -109,7 +129,7 @@ DistroLocalTools(){
 						shift
 						cmds+="$(
 							echo
-							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-remote/" "git@github.com:myx/myx.distro-remote.git" &'
+							echo 'Prefix "distro-remote" GitClonePull "$MMDAPP/.local/myx/myx.distro-remote/" "git@github.com:myx/myx.distro-remote.git" &'
 							echo 'mkdir -p "$MMDAPP/remote" # make sure `remote` directory exists'
 						)"
 					;;
@@ -117,8 +137,8 @@ DistroLocalTools(){
 						shift
 						cmds+="$(
 							echo
-							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
-							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-deploy/" "git@github.com:myx/myx.distro-deploy.git" &'
+							echo 'Prefix "distro-system" GitClonePull "$MMDAPP/.local/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
+							echo 'Prefix "distro-deploy" GitClonePull "$MMDAPP/.local/myx/myx.distro-deploy/" "git@github.com:myx/myx.distro-deploy.git" &'
 							echo 'mkdir -p "$MMDAPP/distro" # make sure `distro` directory exists'
 						)"
 					;;
@@ -126,8 +146,8 @@ DistroLocalTools(){
 						shift
 						cmds+="$(
 							echo
-							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
-							echo 'GitClonePull "$MMDAPP/.local/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" &'
+							echo 'Prefix "distro-system" GitClonePull "$MMDAPP/.local/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
+							echo 'Prefix "distro-source" GitClonePull "$MMDAPP/.local/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" &'
 							echo 'mkdir -p "$MMDAPP/source" # make sure `source` directory exists'
 						)"
 					;;
@@ -169,11 +189,11 @@ DistroLocalTools(){
 			return 0
 		;;
 		--make-*)
-			. "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/DistroLocalToolsMake.include"
+			. "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/LocalTools.Make.include"
 			return 0
 		;;
 		--*-config-option|--*-config-option)
-			. "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/DistroLocalToolsConfig.include"
+			. "$MMDAPP/.local/myx/myx.distro-.local/sh-lib/LocalTools.Config.include"
 			return 0
 		;;
 		--help-install-unix-bare)

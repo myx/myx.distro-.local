@@ -58,7 +58,7 @@ if [ -d "$MDLT_ORIGIN/myx/myx.distro-remote/sh-scripts" ] ; then
 	}
 fi
 
-. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/DistroLocalContext.include"
+. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalContext.include"
 DistroLocalContext --run-from-.local
 
 Help(){

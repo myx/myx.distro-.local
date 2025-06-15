@@ -3,15 +3,34 @@
 
 : "${MMDAPP:?⛔ ERROR: MMDAPP is not set}"
 
-MDLT_ORIGIN="${MDLT_ORIGIN:-$MMDAPP/.local}"
+: "${MDLT_ORIGIN:=$MMDAPP/.local}"
 
 if ! type DistroLocalContext >/dev/null 2>&1 ; then
 	DistroLocalContext(){
+
 		case "$1" in
-			--uncache)
-				shift
-				echo "DistroLocalContext: clear cache" >&2
-				return 0
+			--init-variables)
+				[ -n "$MDLT_ORIGIN" ] && [ -n "$MDLT_OPTION" ] && return 0
+				local MDLT_CONSOLE_ORIGIN="$( ( . "$MMDAPP/.local/MDLT.settings.env" && echo "${MDLT_CONSOLE_ORIGIN:-$MMDAPP/.local}" ) )"
+				MDSC_INMODE="${MDLT_CONSOLE_ORIGIN#$MMDAPP/}"
+				case MDSC_INMODE in
+					.local)
+						export MDLT_ORIGIN="$MMDAPP/.local"
+						export MDSC_INMODE=".local"
+						return 0
+					;;
+					source)
+						if [ -f "$MMDAPP/" ]
+						export MDLT_ORIGIN="$MMDAPP/$MDSC_INMODE"
+						return 0
+					;;
+					*)
+						echo "🙋 WARNING: LocalContext.SetInputSpec: MDLT_CONSOLE_ORIGIN spec: $MDLT_CONSOLE_ORIGIN, defaulting to '.local'" >&2
+						export MDLT_ORIGIN="$MMDAPP/.local"
+						export MDSC_INMODE=".local"
+						return 0
+					;;
+				esac
 			;;
 			--is-spec-option)
 				case "$2" in
@@ -26,7 +45,7 @@ if ! type DistroLocalContext >/dev/null 2>&1 ; then
 					local adpcChangeSpec="true"
 			
 					[ -z "$MDSC_DETAIL" ] || echo "DistroLocalContext: input spec: $1" >&2
-					. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/DistroLocalContext.SetInputSpec.include"		
+					. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalContext.SetInputSpec.include"		
 					return 0
 				fi
 			;;
@@ -61,7 +80,7 @@ if ! type Local >/dev/null 2>&1 ; then
 	Local(){
 		case "$1" in
 			''|--*)
-				( . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/DistroLocalConsole.include" )
+				( . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalConsole.include" )
 				set +e ; return 1
 			;;
 		esac
@@ -81,7 +100,7 @@ while true ; do
 	fi 
 	if DistroLocalContext --is-spec-option "$1" ; then
 		[ -n "$MDSC_DETAIL" ] && echo "DistroLocalContext: input spec: $1" >&2
-		. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/DistroLocalContext.SetInputSpec.include"		
+		. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalContext.SetInputSpec.include"		
 		shift
 		continue
 	fi
