@@ -16,9 +16,9 @@ case "$1" in
 	;;
 	''|--run-from-detect|--init-variables)
 		local MDLT_CONSOLE_ORIGIN ; MDLT_CONSOLE_ORIGIN="$( ( \
-			set -x \
-			. "$MMDAPP/.local/MDLT.settings.env" \
-			&& echo "${MDLT_CONSOLE_ORIGIN:-.local}" \
+			set -ex \
+			. "$MMDAPP/.local/MDLT.settings.env"
+			echo "${MDLT_CONSOLE_ORIGIN:-.local}" \
 		) )"
 		MDSC_INMODE="${MDLT_CONSOLE_ORIGIN#$MMDAPP/}"
 		case MDSC_INMODE in
