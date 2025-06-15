@@ -19,12 +19,11 @@ case "$1" in
 			FILE="$MDLT_ORIGIN/myx/myx.distro-${NAME}/sh-lib/Distro${ITEM}ToolsMake.include"
 			if [ -f "$FILE" ] ; then
 				(
-					set +x
 					eval "$(
 						echo "Distro${ITEM}Tools(){"
 						echo "	. '$FILE'"
 						echo "}"
-						echo "Distro${ITEM}Tools --make-workspace-integration-files --quiet"
+						echo "Distro${ITEM}Tools --make-workspace-integration-files --quiet || true"
 					)"
 				)
 			fi
