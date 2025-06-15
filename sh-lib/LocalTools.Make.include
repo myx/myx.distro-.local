@@ -6,7 +6,7 @@ case "$1" in
 		shift
 
 		if [ -z "$MDLT_ORIGIN" ] || [ "$MDLT_ORIGIN" == "$MMDAPP/.local" ] ; then
-			touch $MMDAPP/.local/MDLC_.LOCAL_ENV_SETTINGS.env
+			touch $MMDAPP/.local/MDLT.settings.env
 		fi
 
 		DistroLocalTools --make-console-command --quiet
