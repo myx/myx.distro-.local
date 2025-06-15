@@ -58,7 +58,7 @@ case "$1" in
 				return 0
 			;;
 			*)
-				echo "🙋 WARNING: LocalContext.SetInputSpec: MDLT_CONSOLE_ORIGIN spec: '$MDLT_CONSOLE_ORIGIN', defaulting to '.local'" >&2
+				echo "🙋 WARNING: LocalContext.SetInputSpec: MDLT_CONSOLE_ORIGIN spec: '$MDSC_INMODE', defaulting to '.local'" >&2
 				export MDLT_ORIGIN="$MMDAPP/.local"
 				export MDSC_INMODE=".local"
 				export MDSC_OPTION="--run-from-.local"
