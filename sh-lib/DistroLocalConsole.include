@@ -7,7 +7,7 @@ case "$1" in
 		return 0
 	;;
 	--completion-*)
-		. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/DistroLocalToolsCompletion.include"
+		. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/DistroLocalConsole.Completion.include"
 		set +e ; return 1
 	;;
 	''|--help)

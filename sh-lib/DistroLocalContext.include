@@ -26,7 +26,7 @@ if ! type DistroLocalContext >/dev/null 2>&1 ; then
 					local adpcChangeSpec="true"
 			
 					[ -z "$MDSC_DETAIL" ] || echo "DistroLocalContext: input spec: $1" >&2
-					. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/DistroLocalContextSetInputSpec.include"		
+					. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/DistroLocalContext.SetInputSpec.include"		
 					return 0
 				fi
 			;;
@@ -81,7 +81,7 @@ while true ; do
 	fi 
 	if DistroLocalContext --is-spec-option "$1" ; then
 		[ -n "$MDSC_DETAIL" ] && echo "DistroLocalContext: input spec: $1" >&2
-		. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/DistroLocalContextSetInputSpec.include"		
+		. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/DistroLocalContext.SetInputSpec.include"		
 		shift
 		continue
 	fi
