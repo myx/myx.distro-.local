@@ -51,10 +51,6 @@ Following steps should be performed in the shell:
 
 4. **Run the installer script** using one of the following commands, depending on your desired setup:
 
-   - **Empty workspace** (to be configured later):  
-
-		```bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --init-distro-workspace```
-
    - **Remote workspace tools** (connect to source and deploy machines on remote hosts or local VMs):  
 
 		```bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --install-distro-remote```
@@ -66,6 +62,12 @@ Following steps should be performed in the shell:
    - **Source workspace tools** (build system runners or local source for developers):  
 
 		```bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --install-distro-source```
+
+   - **Empty workspace** (to be configured later):  
+
+		```bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --init-distro-workspace```
+		```bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --install-distro-.local```
+		(the latter will install and preconfigure local tools but you get to choose components later)
 
 5. Then you can **Enter Local Console** any time by running `DistroLocalConsole.sh` from
    your workspace directory. 

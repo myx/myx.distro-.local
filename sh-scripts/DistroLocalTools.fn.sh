@@ -106,10 +106,46 @@ DistroLocalTools(){
 	set -e
 
 	case "$1" in
+		--make-*)
+			. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Make.include"
+			return 0
+		;;
+		--*-config-option|--*-config-option)
+			. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Config.include"
+			return 0
+		;;
+		--help-install-unix-bare)
+			. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.CatMarkdown.include"
+			DistroLocalCatMarkdown "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/Help.DistroLocalTools-install-unix-bare.md" >&2
+			exit 1;
+		;;
+		''|--help)
+			echo "syntax: DistroLocalTools.fn.sh <option>" >&2
+			echo "syntax: DistroLocalTools.fn.sh [--help]" >&2
+			if [ "$1" = "--help" ] ; then
+				cat "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/Help.DistroLocalTools.text" >&2
+			fi
+			set +e ; return 1
+		;;
 		--init-distro-workspace)
 			shift
 
 			return 0
+		;;
+		--install-workspace-from-stdin-config)
+			local cmds
+			cmds+="$(
+				echo
+				echo 'set -e'
+				echo "export MMDAPP='$MMDAPP'"
+				echo "export MDLT_ORIGIN='${MDLT_ORIGIN:-$MMDAPP/.local}'"
+				echo
+				echo 'set +e # for pulls (when no changes)'
+				echo 'Prefix "os-myx.common" GitClonePull "$MDLT_ORIGIN/myx/myx.common/os-myx.common" "git@github.com:myx/os-myx.common.git" &'
+				echo 'Prefix "distro-.local" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &'
+				echo 'touch "$MMDAPP/.local/MDLT.settings.env" # make sure workspace env file exists'
+			)"
+
 		;;
 		--install-distro-*)
 			# update '.local' when running scripts from locally editable 'source'
@@ -192,27 +228,6 @@ DistroLocalTools(){
 
 			return 0
 		;;
-		--make-*)
-			. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Make.include"
-			return 0
-		;;
-		--*-config-option|--*-config-option)
-			. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Config.include"
-			return 0
-		;;
-		--help-install-unix-bare)
-			. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.CatMarkdown.include"
-			DistroLocalCatMarkdown "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/Help.DistroLocalTools-install-unix-bare.md" >&2
-			exit 1;
-		;;
-		''|--help)
-			echo "syntax: DistroLocalTools.fn.sh <option>" >&2
-			echo "syntax: DistroLocalTools.fn.sh [--help]" >&2
-			if [ "$1" = "--help" ] ; then
-				cat "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/Help.DistroLocalTools.text" >&2
-			fi
-			set +e ; return 1
-		;;
 		*)
 			echo "⛔ ERROR: $MDSC_CMD: invalid option: $1" >&2
 			set +e ; return 1
@@ -224,9 +239,14 @@ case "$0" in
 	*/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh)
 
 		if [ -z "$1" ] || [ "$1" = "--help" ] ; then
-			echo "syntax: DistroLocalTools.fn.sh --install-distro-source" >&2
-			echo "syntax: DistroLocalTools.fn.sh --install-distro-deploy" >&2
-			echo "syntax: DistroLocalTools.fn.sh --install-distro-remote" >&2
+			if [ -z "$1" ] || [ ! -f "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/Help.DistroLocalTools.text" ] ; then
+				echo "syntax: DistroLocalTools.fn.sh --install-distro-source" >&2
+				echo "syntax: DistroLocalTools.fn.sh --install-distro-deploy" >&2
+				echo "syntax: DistroLocalTools.fn.sh --install-distro-remote" >&2
+			else
+				cat "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/Help.DistroLocalTools.text" >&2
+				set +e ; return 1
+			fi
 		fi
 
 		set -e
