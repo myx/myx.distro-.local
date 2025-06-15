@@ -112,6 +112,8 @@ DistroLocalTools(){
 			return 0
 		;;
 		--install-distro-*)
+			# update '.local' when running scripts from locally editable 'source'
+			[ "$MDLC_INMODE" != "source" ] || local MDLT_ORIGIN="$MMDAPP/.local"
 			local cmds
 			cmds+="$(
 				echo
