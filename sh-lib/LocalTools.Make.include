@@ -98,7 +98,7 @@ case "$1" in
 				;;
 			esac
 			if [ ! -f "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalContext.include" ] ; then
-				echo "⛔ ERROR: Context.SetInputSpec: can't find/detect origin, spec: $MDLT_CONSOLE_ORIGIN, origin: $MDLT_ORIGIN" >&2
+				echo "⛔ ERROR: LocalContext.SetInputSpec: can't find/detect origin, spec: $MDLT_CONSOLE_ORIGIN, origin: $MDLT_ORIGIN" >&2
 				exit 1
 			fi
 
