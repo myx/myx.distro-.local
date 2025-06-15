@@ -14,11 +14,12 @@ case "$1" in
 		DistroLocalTools --make-console-command --quiet
 
 		local ITEM NAME FILE
-		for ITEM in "System" "Source" "Deploy" "Remote" ; do
+		for ITEM in "Source" "Deploy" "Remote" ; do
 			NAME="$( printf '%s' "$ITEM" | tr '[:upper:]' '[:lower:]' )"
 			FILE="$MDLT_ORIGIN/myx/myx.distro-${NAME}/sh-lib/Distro${ITEM}ToolsMake.include"
 			if [ -f "$FILE" ] ; then
 				(
+					set +x
 					eval "$(
 						echo "Distro${ITEM}Tools(){"
 						echo "	. '$FILE'"
