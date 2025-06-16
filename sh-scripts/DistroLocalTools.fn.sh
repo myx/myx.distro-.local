@@ -5,34 +5,7 @@
 ## Designed to be able to run without distro context. Used to install required parts.
 ##
 
-if [ -z "$MMDAPP" ] ; then
-	set -e
-	export MMDAPP="$( cd $(dirname "$0")/../../../.. ; pwd )"
-	echo "$0: Working in: $MMDAPP"  >&2
-	[ -d "$MMDAPP/.local" ] || ( echo "⛔ ERROR: expecting '.local' directory." >&2 && exit 1 )
-fi
 
-: "${MDLT_ORIGIN:=$MMDAPP/.local}"
-export MDLT_ORIGIN
-
-
-##
-## To make this script self-sufficient, this copied IN SIMPLIFIED FORM from:
-## `myx/myx.common/os-myx.common/host/share/myx.common/bin/lib/prefix`
-##
-Prefix(){
-	local PREFTEXT="$1"
-	shift
-
-	PREFTEXT="$( printf %s "$PREFTEXT" | tr '^' '-' | tr -d '\n' )"
-	
-	set -e
-
-    ( "$@" 2>&1 \
-    		|| ( EXITCODE=$? ; set +x ; echo "⛔ ERROR: exited with error status ($EXITCODE)" ; exit $EXITCODE ) \
-   	) | sed -l -e "s^\^^$PREFTEXT: ^" 1>&2
-   	
-}
 
 ##
 ## To make this script self-sufficient, this copied from:
@@ -99,6 +72,63 @@ GitClonePull(){
 }
 
 
+# this part supposed to install, import or update the workspace on possible non-prepared machine
+case "$1" in
+	--install-workspace-from-stdin-config)
+		: "${TGT_APP_PATH:?⛔ ERROR: TGT_APP_PATH env must be set}"
+		MMDAPP=$TGT_APP_PATH
+		case $MMDAPP in
+			"~"*) MMDAPP=$HOME${MMDAPP#\~} ;;
+		esac
+		case $MMDAPP in
+			/*) ;;
+			*)  MMDAPP=$PWD/$MMDAPP ;;
+		esac
+			
+		export MMDAPP ; mkdir -p "$MMDAPP" ; cd "$MMDAPP"
+		echo "$0: Workspace root: $PWD" >&2
+		
+		if [ ! -d ".local/myx" ] ; then
+			echo "Install: .local system, pulling system packages..." >&2
+			mkdir -p ".local/myx" ; ( cd ".local/myx" ; rm -rf "myx.distro-.local" ; git clone git@github.com:myx/myx.distro-.local.git )
+		fi
+
+		echo "Install: DistroLocalTools.fn.sh --stdin-workspace-config-parse..." >&2
+		cat | bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --stdin-workspace-config-parse
+
+		echo "Install: DistroLocalTools.fn.sh done" >&2
+		exit 0
+	;;
+esac
+
+if [ -z "$MMDAPP" ] ; then
+	set -e
+	export MMDAPP="$( cd $(dirname "$0")/../../../.. ; pwd )"
+	echo "$0: Working in: $MMDAPP"  >&2
+	[ -d "$MMDAPP/.local" ] || ( echo "⛔ ERROR: expecting '.local' directory." >&2 && exit 1 )
+fi
+
+: "${MDLT_ORIGIN:=$MMDAPP/.local}"
+export MDLT_ORIGIN
+
+
+##
+## To make this script self-sufficient, this copied IN SIMPLIFIED FORM from:
+## `myx/myx.common/os-myx.common/host/share/myx.common/bin/lib/prefix`
+##
+Prefix(){
+	local PREFTEXT="$1"
+	shift
+
+	PREFTEXT="$( printf %s "$PREFTEXT" | tr '^' '-' | tr -d '\n' )"
+	
+	set -e
+
+    ( "$@" 2>&1 \
+    		|| ( EXITCODE=$? ; set +x ; echo "⛔ ERROR: exited with error status ($EXITCODE)" ; exit $EXITCODE ) \
+   	) | sed -l -e "s^\^^$PREFTEXT: ^" 1>&2
+   	
+}
 DistroLocalTools(){
 	local MDSC_CMD='DistroLocalTools'
 	[ -z "$MDSC_DETAIL" ] || echo "> $MDSC_CMD $@" >&2
@@ -133,17 +163,28 @@ DistroLocalTools(){
 			return 0
 		;;
 		--install-workspace-from-stdin-config)
+			shift
+			return 0
 			local cmds
 			cmds+="$(
-				echo
-				echo 'set -e'
-				echo "export MMDAPP='$MMDAPP'"
-				echo "export MDLT_ORIGIN='${MDLT_ORIGIN:-$MMDAPP/.local}'"
-				echo
-				echo 'set +e # for pulls (when no changes)'
-				echo 'Prefix "os-myx.common" GitClonePull "$MDLT_ORIGIN/myx/myx.common/os-myx.common" "git@github.com:myx/os-myx.common.git" &'
-				echo 'Prefix "distro-.local" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &'
-				echo 'touch "$MMDAPP/.local/MDLT.settings.env" # make sure workspace env file exists'
+				echo ': "${TGT_APP_PATH:?⛔ ERROR: TGT_APP_PATH env must be set}"'
+				echo 'MMDAPP=$TGT_APP_PATH'
+				echo 'case $MMDAPP in'
+  				echo '"~"*) MMDAPP=$HOME${MMDAPP#\~} ;;'
+				echo 'esac'
+				echo 'case $MMDAPP in'
+				echo '  /*) ;;'
+				echo '  *)  MMDAPP=$PWD/$MMDAPP ;;'
+				echo 'esac'
+				echo 
+				echo 'export MMDAPP ; mkdir -p "$MMDAPP" ; cd "$MMDAPP"'
+				echo 'echo "$0: Workspace root: $PWD" >&2'
+				echo 
+				echo 'if [ ! -d ".local/myx" ] ; then'
+				echo '	echo "Install: .local system, pulling system packages..." >&2'
+				echo '	mkdir -p ".local/myx" ; ( cd ".local/myx" ; rm -rf "myx.distro-.local" ; git clone git@github.com:myx/myx.distro-.local.git )'
+				echo 'fi'
+				echo 'cat | '
 			)"
 
 		;;
