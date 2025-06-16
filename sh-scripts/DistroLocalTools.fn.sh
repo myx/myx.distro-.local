@@ -162,8 +162,9 @@ DistroLocalTools(){
 
 			return 0
 		;;
-		--install-workspace-from-stdin-config)
+		--stdin-workspace-config-parse)
 			shift
+			cat
 			return 0
 			local cmds
 			cmds+="$(
