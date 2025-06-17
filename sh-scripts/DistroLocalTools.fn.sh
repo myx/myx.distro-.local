@@ -272,6 +272,10 @@ DistroLocalTools(){
 
 			return 0
 		;;
+		--verbose)
+			shift
+			set -x
+		;;
 		*)
 			echo "⛔ ERROR: $MDSC_CMD: invalid option: $1" >&2
 			set +e ; return 1
