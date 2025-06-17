@@ -105,16 +105,19 @@ case "$1" in
 			cd "$MMDAPP"
 			export MMDAPP
 
+
 			if [ "$1" == "--non-interactive" ] ; then
 				shift
 				{
+					echo MDSC_ARGUMENTS="$@"
 					echo ". '$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/console-.local-bashrc.rc'"
 					cat
-				} | bash -- "$@"
+				} | bash -s
 				exit 0
 			fi
 			
-			bash --rcfile "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/console-.local-bashrc.rc" -i -- "$@"
+			export MDSC_ARGUMENTS="$@" \
+			bash --rcfile "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/console-.local-bashrc.rc" -i
 DISTROCONSOLE
 
 		return 0
