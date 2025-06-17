@@ -16,7 +16,7 @@ case "$1" in
 		set +e ; return 1
 	;;
 	--start-console)
-		bash --rcfile "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/console-.local-bashrc.rc" -i "$@"
+		bash --rcfile "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/console-.local-bashrc.rc" -i -- "$@"
 		return 0
 	;;
 	*)
