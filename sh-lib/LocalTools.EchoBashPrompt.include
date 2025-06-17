@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# ^^^ for syntax checking in the editor only
+
+DistroLocalEchoBashPrompt() {
+
+	set -e
+
+	echo ': ::prompt-check::' | ( \
+		env PS1="$( \
+			eval "printf '%b' \"$PS1\"" \
+		)" bash --noprofile --norc -i -s 2>&1 \
+	) \
+	| fgrep ': ::prompt-check::' \
+	| head -n1 \
+	| sed 's|: ::prompt-check::.*$||'
+
+	printf '%b' "${1:-\n}"
+}
