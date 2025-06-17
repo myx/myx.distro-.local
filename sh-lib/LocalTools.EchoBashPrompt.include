@@ -5,14 +5,23 @@ DistroLocalEchoBashPrompt() {
 
 	set -e
 
-	echo ': ::prompt-check::' | ( \
+	local capture
+	capture="$(
+	printf '\n%s\n%s\n' \
+		': ::prompt-check::' \
+		': ::prompt-check::' \
+	| ( \
 		env PS1="$( \
 			eval "printf '%b' \"$PS1\"" \
 		)" bash --noprofile --norc -i -s 2>&1 \
 	) \
-	| fgrep ': ::prompt-check::' \
-	| head -n1 \
-	| sed 's|: ::prompt-check::.*$||'
+	| sed -n '1,/: ::prompt-check::.*$/d ; /: ::prompt-check::/{ s/^\(.*\): ::prompt-check::.*$/\1/ ; p ; q ; };p'
 
-	printf '%b' "${1:-\n}"
+	#| sed -n -e '1,/: ::prompt-check::.*$/d' -e '/: ::prompt-check::/,$d' -e 'p'
+	#| sed -n '/: ::prompt-check::.*$/{ s/^\(.*\): ::prompt-check::.*$/\1/;p;q; }'
+	#| awk '/: ::prompt-check::/{ sub(/: ::prompt-check::.*/,""); print; exit }'
+
+	)"
+
+	printf '%b%b' "$capture" "${1:-\n}"
 }
