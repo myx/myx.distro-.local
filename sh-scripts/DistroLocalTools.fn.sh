@@ -145,15 +145,17 @@ DistroLocalTools(){
 			return 0
 		;;
 		--help-install-unix-bare)
-			. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.CatMarkdown.include"
-			DistroLocalCatMarkdown "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/Help.DistroLocalTools-install-unix-bare.md" >&2
-			exit 1;
+			(
+				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.CatMarkdown.include"
+				DistroLocalCatMarkdown "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools-install-unix-bare.md" >&2
+				exit 1;
+			)
 		;;
 		''|--help)
 			echo "syntax: DistroLocalTools.fn.sh <option>" >&2
 			echo "syntax: DistroLocalTools.fn.sh [--help]" >&2
 			if [ "$1" = "--help" ] ; then
-				cat "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/Help.DistroLocalTools.text" >&2
+				cat "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools.text" >&2
 			fi
 			set +e ; return 1
 		;;
@@ -281,12 +283,12 @@ case "$0" in
 	*/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh)
 
 		if [ -z "$1" ] || [ "$1" = "--help" ] ; then
-			if [ -z "$1" ] || [ ! -f "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/Help.DistroLocalTools.text" ] ; then
+			if [ -z "$1" ] || [ ! -f "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools.text" ] ; then
 				echo "syntax: DistroLocalTools.fn.sh --install-distro-source" >&2
 				echo "syntax: DistroLocalTools.fn.sh --install-distro-deploy" >&2
 				echo "syntax: DistroLocalTools.fn.sh --install-distro-remote" >&2
 			else
-				cat "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/Help.DistroLocalTools.text" >&2
+				cat "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools.text" >&2
 				set +e ; return 1
 			fi
 		fi
