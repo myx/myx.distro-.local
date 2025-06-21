@@ -11,7 +11,7 @@
 ## Executable commands to setup source sub-system
 
 	# (🛠️) Configuring system to run from source repositories, so we can test local changes...
-	source exec Source DistroSourceTools --system-config-option --upsert-if MDLT_CONSOLE_ORIGIN source ""
+	source exec Source DistroSourceTools --system-config-option --upsert-if MDLT_CONSOLE_ORIGIN "source" ""
 
 	# (⬇️) Syncing all known project's git repositories...
 	source exec Source DistroImageSync --all-tasks --execute-source-prepare-pull
