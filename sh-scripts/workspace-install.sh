@@ -200,5 +200,37 @@ if [ -n "$INSTALL_SYSTEMS" ]; then
   bash .local/myx/myx.distro-system/sh-scripts/DistroLocalTools.fn.sh $INSTALL_SYSTEMS
 fi
 
+## 6 - do 'source' commands
+{
+	ROOT_LIST=$(printf '%s\n' "$CONFIG_CONTENT" \
+		| awk '/^source[[:space:]]+root[[:space:]]/ { print $3 }' \
+		| tr '\n' ' ')
 
-# ─── 5) NEXT STEPS: parse workspace config file and feed the script via ./DistroLocalConsole.sh ───────
+	# split third field on first two “:”, keeping “url” intact
+	REPO_LIST=$(printf '%s\n' "$CONFIG_CONTENT" \
+		| awk '/^source[[:space:]]+pull[[:space:]]/ { print $3 }' \
+		| sed -E 's#([^:]+):([^:]+):(.*)#\1\t\3\t\2#')
+
+	EXTRA_CMDS=$(printf '%s\n' "$CONFIG_CONTENT" \
+		| sed -n -E 's/^source[[:space:]]+exec[[:space:]]+(.+)/Source \1/p')
+
+	if [ -n "$ROOT_LIST$REPO_LIST$EXTRA_CMDS" ]; then
+		sed -e 's/^[[:space:]]*//' -e '/^#/d' -e '/^$/d' \
+			| ./DistroSourceConsole.sh --non-interactive <<EOF
+		set -ex
+
+		echo "SourceInstall: Register repository roots..." >&2
+		Source DistroSourceTools --register-repository-roots $ROOT_LIST
+
+		echo "SourceInstall: Pull initial repositories..." >&2
+		Source DistroImageSync --execute-from-stdin-repo-list <<REPO_LIST
+			$REPO_LIST
+		REPO_LIST
+
+		echo "SourceInstall: Running extra commands..." >&2
+		$EXTRA_CMDS
+
+		echo "SourceInstall: All Source Console tasks done." >&2
+EOF
+	fi
+}
