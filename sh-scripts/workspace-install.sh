@@ -210,7 +210,7 @@ if [ -n "$INSTALL_SYSTEMS" ]; then
   bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh $INSTALL_SYSTEMS
 fi
 
-## 6 - do 'source' commands
+## do 'source' commands
 {
 	ROOT_LIST=$( echo $(
 		printf '%s\n' "$CONFIG_CONTENT" \
@@ -236,17 +236,21 @@ fi
 	#	| sed -n -E 's/^source[[:space:]]+exec[[:space:]]+(.+)/Source \1/p'
 	)
 
-	# printf "ROOTS: %s\n" "$ROOT_LIST"
-	# printf "REPOS: %s\n" "$REPO_LIST"
-	# printf "EXECS: %s\n" "$EXEC_CMDS"
+	# printf 'ROOTS: %s\n' "$ROOT_LIST"
+	# printf 'REPOS: %s\n' "$REPO_LIST"
+	# printf 'EXECS: %s\n' "$EXEC_CMDS"
 
 	if [ -n "$ROOT_LIST$REPO_LIST$EXEC_CMDS" ]; then
 		FULL_CODE="$(
+
 			echo 'set -e'
+			echo ': ${MDSC_DETAIL:=true}'
+
 			if [ -n "$ROOT_LIST" ] ; then
 				echo "echo '📝 workspace-install: Register repository roots ($ROOT_LIST)...' >&2"
 				echo "Source DistroSourceTools --register-repository-roots $ROOT_LIST"
 			fi
+
 			if [ -n "$REPO_LIST" ] ; then
 				echo "echo '⬇️ workspace-install: Pull workspace-initial git repositories...' >&2"
 				echo "printf '%s\n' '$REPO_LIST' | Source DistroImageSync --execute-from-stdin-repo-list"
@@ -258,10 +262,116 @@ fi
 			fi
 
 			echo 'echo "✅ workspace-install: All Source Console tasks done." >&2'
+
 		)"
 
-		printf "WHOLE: %s\n" "$FULL_CODE"
+		# printf 'WHOLE: %s\n' "$FULL_CODE"
 
-		echo "$FULL_CODE" | ./DistroSourceConsole.sh --non-interactive --verbose
+		printf '%s\n' "$FULL_CODE" | ./DistroSourceConsole.sh --non-interactive
 	fi
 }
+
+## do 'remote' commands
+{
+	EXEC_CMDS=$(
+		printf '%s\n' "$CONFIG_CONTENT" \
+		| sed -n -E 's/^remote[[:space:]]+exec[[:space:]]+(.+)/\1/p' \
+		| while read -r COMMAND_LINE ; do
+			echo "echo '🎬 workspace-install: executing: $COMMAND_LINE' >&2"
+			echo "$COMMAND_LINE"
+		done
+	)
+
+	# printf 'EXECS: %s\n' "$EXEC_CMDS"
+
+	if [ -n "$EXEC_CMDS" ]; then
+		FULL_CODE="$(
+
+			echo 'set -e'
+			echo ': ${MDSC_DETAIL:=true}'
+
+			if [ -n "$EXEC_CMDS" ] ; then
+				echo "echo '🖥️ workspace-install: Running extra commands...' >&2"
+				echo "$EXEC_CMDS"
+			fi
+
+			echo 'echo "✅ workspace-install: All Remote Console tasks done." >&2'
+
+		)"
+
+		# printf 'WHOLE: %s\n' "$FULL_CODE"
+
+		printf '%s\n' "$FULL_CODE" | ./DistroRemoteConsole.sh --non-interactive
+	fi
+}
+
+## do 'deploy' commands
+{
+	EXEC_CMDS=$(
+		printf '%s\n' "$CONFIG_CONTENT" \
+		| sed -n -E 's/^deploy[[:space:]]+exec[[:space:]]+(.+)/\1/p' \
+		| while read -r COMMAND_LINE ; do
+			echo "echo '🎬 workspace-install: executing: $COMMAND_LINE' >&2"
+			echo "$COMMAND_LINE"
+		done
+	)
+
+	# printf 'EXECS: %s\n' "$EXEC_CMDS"
+
+	if [ -n "$EXEC_CMDS" ]; then
+		FULL_CODE="$(
+
+			echo 'set -e'
+			echo ': ${MDSC_DETAIL:=true}'
+
+			if [ -n "$EXEC_CMDS" ] ; then
+				echo "echo '🖥️ workspace-install: Running extra commands...' >&2"
+				echo "$EXEC_CMDS"
+			fi
+
+			echo 'echo "✅ workspace-install: All Deploy Console tasks done." >&2'
+
+		)"
+
+		# printf 'WHOLE: %s\n' "$FULL_CODE"
+
+		printf '%s\n' "$FULL_CODE" | ./DistroDeployConsole.sh --non-interactive
+	fi
+}
+
+## do 'local' commands
+{
+	EXEC_CMDS=$(
+		printf '%s\n' "$CONFIG_CONTENT" \
+		| sed -n -E 's/^.local[[:space:]]+exec[[:space:]]+(.+)/\1/p' \
+		| while read -r COMMAND_LINE ; do
+			echo "echo '🎬 workspace-install: executing: $COMMAND_LINE' >&2"
+			echo "$COMMAND_LINE"
+		done
+	#	| sed -n -E 's/^source[[:space:]]+exec[[:space:]]+(.+)/Source \1/p'
+	)
+
+	# printf 'EXECS: %s\n' "$EXEC_CMDS"
+
+	if [ -n "$EXEC_CMDS" ]; then
+		FULL_CODE="$(
+
+			echo 'set -e'
+			echo ': ${MDSC_DETAIL:=true}'
+
+			if [ -n "$EXEC_CMDS" ] ; then
+				echo "echo '🖥️ workspace-install: Running extra commands...' >&2"
+				echo "$EXEC_CMDS"
+			fi
+
+			echo 'echo "✅ workspace-install: All Local Console tasks done." >&2'
+
+		)"
+
+		# printf 'WHOLE: %s\n' "$FULL_CODE"
+
+		printf '%s\n' "$FULL_CODE" | ./DistroLocalConsole.sh --non-interactive
+	fi
+}
+
+echo "🏁 workspace-install.sh: Installation finished." >&2
