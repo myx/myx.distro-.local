@@ -3,15 +3,15 @@ set -euo pipefail
 
 ###############################################################################
 #
-# This is 'boot' standaline installer script, that allows to bootstrap and install
+# This is 'boot' standalone installer script, that allows to bootstrap and install
 # any myx.distro workspace project and setup the base system and utilities.
 #
 # Supported flags:
-#   --web-fetch           Download GitHub ZIP & unpack (default)
-#   --git-clone           Clone via git
-#   --force               Always re-bootstrap even if already present
-#   --config-stdin        Read workspace config from stdin
-#   --config-file <file>  Use workspace config file specified
+#   --web-fetch				Download GitHub ZIP & unpack (default)
+#   --git-clone				Clone via git
+#   --force					Always re-bootstrap even if already present
+#   --config-stdin			Read workspace config from stdin
+#   --config-file <file>	Use workspace config file specified
 #
 # Usage:
 #   TGT_APP_PATH=…/workspace ./workspace-install.sh [--git-clone|--web-fetch] [--force]
@@ -47,18 +47,18 @@ BOOT_UPDATE=0
 BOOT_CONFIG=
 while [ $# -gt 0 ]; do
   case "$1" in
-    --web-fetch|--git-clone)
+	--web-fetch|--git-clone)
 		BOOT_METHOD=$1; shift ;;
-    --force)
+	--force)
 		BOOT_UPDATE=1; shift ;;
 	--config-stdin)
 		BOOT_CONFIG= ; shift ;;
 	--config-file)
-		: "${2:?⛔ ERROR: $1 argument requires file-path argument to follow!}"
+		[ $# -lt 2 ] && { echo "⛔ ERROR: workspace-install: $1 needs argument" >&2; exit 1; }
 		BOOT_CONFIG=$2 ; shift ; shift ;;
-    *)
+	*)
 		echo "⛔ ERROR: workspace-install: invalid option: $1" >&2
-		set +e ; return 1
+		exit 1
   esac
 done
 
@@ -85,46 +85,46 @@ echo "$0: Workspace root: $PWD" >&2
 case "$BOOT_METHOD" in
 
   git-clone)
-    if ! command -v git >/dev/null 2>&1; then
-      echo "ERROR: git is required for --git-clone" >&2
-      exit 1
-    fi
-    ;;
+	if ! command -v git >/dev/null 2>&1; then
+	  echo "⛔ ERROR: workspace-install: git is required for --git-clone" >&2
+	  exit 1
+	fi
+	;;
 
   web-fetch)
-    # downloader
-    if   command -v curl >/dev/null 2>&1; then
-      DLOAD_CMD() { curl -fsSL "$1"; }
-    elif command -v wget >/dev/null 2>&1; then
-      DLOAD_CMD() { wget -q -O - "$1"; }
-    elif command -v fetch >/dev/null 2>&1; then
-      DLOAD_CMD() { fetch -q -o - "$1"; }
-    else
-      echo "ERROR: need curl, wget or fetch for --web-fetch" >&2
-      exit 1
-    fi
+	# downloader
+	if   command -v curl >/dev/null 2>&1; then
+		DLOAD_CMD() { curl -fsSL -o "$1" "$2"; }
+	elif command -v wget >/dev/null 2>&1; then
+		DLOAD_CMD() { wget -q -O "$1" "$2"; }
+	elif command -v fetch >/dev/null 2>&1; then
+		DLOAD_CMD() { fetch -q -o "$1" "$2"; }
+	else
+		echo "⛔ ERROR: workspace-install: need curl, wget or fetch" >&2; 
+		exit 1
+	fi
 
-    # unzipper
-    if   command -v unzip  >/dev/null 2>&1; then
-      UNZIP_CMD() { unzip -q "$1" -d "$2"; }
-    elif command -v bsdtar >/dev/null 2>&1; then
-      UNZIP_CMD() { bsdtar -C "$2" -x -f "$1"; }
-    else
-      echo "ERROR: need unzip or bsdtar for --web-fetch" >&2
-      exit 1
-    fi
+	# unzipper
+	if   command -v unzip  >/dev/null 2>&1; then
+	  UNZIP_CMD() { unzip -q "$1" -d "$2"; }
+	elif command -v bsdtar >/dev/null 2>&1; then
+	  UNZIP_CMD() { bsdtar -C "$2" -x -f "$1"; }
+	else
+	  echo "⛔ ERROR: workspace-install: need unzip or bsdtar for --web-fetch" >&2
+	  exit 1
+	fi
 
-    # rsync (we'll use it to sync the fetched archive)
-    if ! command -v rsync >/dev/null 2>&1; then
-      echo "ERROR: rsync is required for --web-fetch" >&2
-      exit 1
-    fi
-    ;;
+	# rsync (we'll use it to sync the fetched archive)
+	if ! command -v rsync >/dev/null 2>&1; then
+	  echo "⛔ ERROR: workspace-install: rsync is required for --web-fetch" >&2
+	  exit 1
+	fi
+	;;
 
   *)
-    echo "ERROR: unsupported boot mode: $BOOT_METHOD" >&2
-    exit 1
-    ;;
+	echo "⛔ ERROR: workspace-install: unsupported boot mode: $BOOT_METHOD" >&2
+	exit 1
+	;;
 esac
 
 # ─── 4) CONDITIONAL BOOTSTRAP ────────────────────────────────────────────────
@@ -132,42 +132,73 @@ LOCAL_BASE="$MMDAPP/.local/myx"
 DISTRO_DIR="$LOCAL_BASE/myx.distro-system"
 
 if [ "$BOOT_UPDATE" -eq 1 ] || [ ! -d "$LOCAL_BASE" ]; then
-  echo "→ Bootstrapping distro-system via $BOOT_METHOD…" >&2
+  echo "workspace-install: → Bootstrapping distro-system via $BOOT_METHOD…" >&2
   mkdir -p "$LOCAL_BASE"
 
   case "$BOOT_METHOD" in
 
-    git-clone)
+	git-clone)
 		if [ -d "$DISTRO_DIR" ]; then
-			echo "  • updating existing clone…" >&2
+			echo "workspace-install: • updating existing clone…" >&2
 			git -C "$DISTRO_DIR" fetch --depth=1 origin main \
 				&& git -C "$DISTRO_DIR" reset --hard FETCH_HEAD
 		else
-			echo "  • git clone…" >&2
+			echo "workspace-install: • git clone…" >&2
 			git clone --depth=1 \
 				https://github.com/myx/myx.distro-system.git \
 				"$DISTRO_DIR" >&2
 		fi
-      ;;
+	  ;;
 
-    web-fetch)
-      echo "  • setting up temporary directory" >&2
-      TMPBASE="${TMPDIR:-$MMDAPP/.local/tmp}/boot-web-fetch.XXXXXXXXXX"
-      WORKTMP=$(mktemp -d "$TMPBASE")
-      trap 'rm -rf "$WORKTMP"' EXIT INT TERM
+	web-fetch)
+		# running in subshell to cleanup it's temp upon arm exit
+		(
+			echo "workspace-install: • setting up temporary directory" >&2
+			TMPBASE="${TMPDIR:-$MMDAPP/.local/tmp}/boot-web-fetch.XXXXXXXXXX"
 
-      echo "  • downloading & unpacking ZIP…" >&2
-      DLOAD_CMD https://github.com/myx/myx.distro-system/archive/refs/heads/main.zip \
-	  | UNZIP_CMD "$WORKTMP"
+			# created, used and deleted within this arm only
+			WORKTMP=$(mktemp -d "$TMPBASE")
+			trap 'rm -rf "$WORKTMP"' EXIT INT TERM
 
-      # find the extracted folder (GitHub names it myx.distro-system-main)
-      SRC_DIR=$(find "$WORKTMP" -maxdepth 1 -type d -name 'myx.distro-system-*' | head -1)
+			echo "workspace-install: • downloading ZIP…" >&2
+			DLOAD_CMD "$WORKTMP/boot.zip" "https://github.com/myx/myx.distro-system/archive/refs/heads/main.zip"
 
-      echo "  • syncing files to $DISTRO_DIR…" >&2
-      rsync -a --delete "$SRC_DIR"/ "$DISTRO_DIR"/
-      ;;
+			echo "workspace-install: • unpacking ZIP…" >&2
+			UNZIP_CMD "$WORKTMP/boot.zip" "$WORKTMP"
+
+			# find the extracted folder (GitHub names it myx.distro-system-main)
+			SRC_DIR=$(find "$WORKTMP" -maxdepth 1 -type d -name 'myx.distro-system-*' | head -1)
+
+			echo "workspace-install: • syncing files to $DISTRO_DIR…" >&2
+			rsync -a --delete "$SRC_DIR"/ "$DISTRO_DIR"/
+		)
+	  ;;
 
   esac
 fi
+
+
+# ─── LOAD WORKSPACE CONFIG ────────────────────────────────────────────────────
+
+# supports both: stdin and file specification
+CONFIG_CONTENT=$( cat $BOOT_CONFIG )
+
+
+# ─── DETECT & INSTALL NEEDED SYSTEMS ─────────────────────────────────────────
+INSTALL_SYSTEMS=
+for sys in $(printf '%s\n' "$CONFIG_CONTENT" \
+             | awk '$1!~/^#/ && NF {print $1}' \
+             | sort -u); do
+  # if --force OR the target sub‐directory doesn’t exist
+  if [ "$BOOT_UPDATE" -eq 1 ] || [ ! -d "$sys" ]; then
+    INSTALL_SYSTEMS="$INSTALL_SYSTEMS --install-distro-$sys"
+  fi
+done
+
+if [ -n "$INSTALL_SYSTEMS" ]; then
+  echo "workspace-install: DistroLocalTools.fn.sh $INSTALL_SYSTEMS" >&2
+  bash .local/myx/myx.distro-system/sh-scripts/DistroLocalTools.fn.sh $INSTALL_SYSTEMS
+fi
+
 
 # ─── 5) NEXT STEPS: parse workspace config file and feed the script via ./DistroLocalConsole.sh ───────
