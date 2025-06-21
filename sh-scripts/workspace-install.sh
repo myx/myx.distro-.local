@@ -132,7 +132,7 @@ LOCAL_BASE="$MMDAPP/.local/myx"
 DISTRO_DIR="$LOCAL_BASE/myx.distro-.local"
 
 if [ "$BOOT_UPDATE" -eq 1 ] || [ ! -d "$LOCAL_BASE" ] || [ ! -f "$DISTRO_DIR/sh-scripts/workspace-install.sh" ] ; then
-  echo "workspace-install: → Bootstrapping distro-.local via $BOOT_METHOD" >&2
+  echo "📜 workspace-install: → Bootstrapping distro-.local via $BOOT_METHOD" >&2
   mkdir -p "$LOCAL_BASE"
 
   case "$BOOT_METHOD" in
@@ -141,11 +141,11 @@ if [ "$BOOT_UPDATE" -eq 1 ] || [ ! -d "$LOCAL_BASE" ] || [ ! -f "$DISTRO_DIR/sh-
 		# mkdir -p ".local/myx" ; ( cd ".local/myx" ; rm -rf "myx.distro-.local" ; git clone git@github.com:myx/myx.distro-.local.git )
 
 		if [ -d "$DISTRO_DIR" ]; then
-			echo "workspace-install: • updating existing clone…" >&2
+			echo "🌏 workspace-install: • updating existing clone…" >&2
 			git -C "$DISTRO_DIR" fetch --depth=1 origin main \
 				&& git -C "$DISTRO_DIR" reset --hard FETCH_HEAD
 		else
-			echo "workspace-install: • git clone…" >&2
+			echo "🌏 workspace-install: • git clone…" >&2
 			git clone --depth=1 \
 				https://github.com/myx/myx.distro-.local.git \
 				"$DISTRO_DIR" >&2
@@ -155,23 +155,22 @@ if [ "$BOOT_UPDATE" -eq 1 ] || [ ! -d "$LOCAL_BASE" ] || [ ! -f "$DISTRO_DIR/sh-
 	--web-fetch)
 		# running in subshell to cleanup it's temp upon arm exit
 		(
-			echo "workspace-install: • setting up temporary directory" >&2
 			TMPBASE="${TMPDIR:-$MMDAPP/.local/tmp}/boot-web-fetch.XXXXXXXXXX"
 
 			# created, used and deleted within this arm only
 			WORKTMP=$(mktemp -d "$TMPBASE")
 			trap 'rm -rf "$WORKTMP"' EXIT INT TERM
 
-			echo "workspace-install: • downloading ZIP…" >&2
+			echo "🌏 workspace-install: • downloading ZIP…" >&2
 			DLOAD_CMD "$WORKTMP/boot.zip" "https://github.com/myx/myx.distro-.local/archive/refs/heads/main.zip"
 
-			echo "workspace-install: • unpacking ZIP…" >&2
+			echo "🗂️ workspace-install: • unpacking ZIP…" >&2
 			UNZIP_CMD "$WORKTMP/boot.zip" "$WORKTMP"
 
 			# find the extracted folder (GitHub names it myx.distro-.local-main)
 			SRC_DIR=$(find "$WORKTMP" -maxdepth 1 -type d -name 'myx.distro-.local-*' | head -1)
 
-			echo "workspace-install: • syncing files to $DISTRO_DIR" >&2
+			echo "🔂 workspace-install: • syncing files to $DISTRO_DIR" >&2
 			rsync -a --delete "$SRC_DIR"/ "$DISTRO_DIR"/
 		)
 	  ;;
@@ -207,17 +206,17 @@ for sys in $(printf '%s\n' "$CONFIG_CONTENT" \
 done
 
 if [ -n "$INSTALL_SYSTEMS" ]; then
-  echo "workspace-install: DistroLocalTools.fn.sh $INSTALL_SYSTEMS" >&2
+  echo "🛠️ workspace-install: DistroLocalTools.fn.sh $INSTALL_SYSTEMS" >&2
   bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh $INSTALL_SYSTEMS
 fi
 
 ## 6 - do 'source' commands
 {
-	ROOT_LIST=$(
+	ROOT_LIST=$( echo $(
 		printf '%s\n' "$CONFIG_CONTENT" \
 		| awk '/^source[[:space:]]+root[[:space:]]/ { print $3 }' \
 		| tr '\n' ' '
-	)
+	) )
 
 	# split third field on first two “:”, keeping “url” intact
 	REPO_LIST=$(
@@ -227,28 +226,34 @@ fi
 		| awk '!x[$0]++'
 	) 
 
-	EXTRA_CMDS=$(
+	EXEC_CMDS=$(
 		printf '%s\n' "$CONFIG_CONTENT" \
-		| sed -n -E 's/^source[[:space:]]+exec[[:space:]]+(.+)/Source \1/p'
+		| sed -n -E 's/^source[[:space:]]+exec[[:space:]]+(.+)/\1/p'
+	#	| sed -n -E 's/^source[[:space:]]+exec[[:space:]]+(.+)/Source \1/p'
 	)
 
-	if [ -n "$ROOT_LIST$REPO_LIST$EXTRA_CMDS" ]; then
+	# printf "%s\n\n%s\n\n%s\n\n" "$ROOT_LIST" "$REPO_LIST" "$EXEC_CMDS"
+
+	if [ -n "$ROOT_LIST$REPO_LIST$EXEC_CMDS" ]; then
 		sed -e 's/^[[:space:]]*//' -e '/^#/d' -e '/^$/d' \
-			| ./DistroSourceConsole.sh --non-interactive <<EOF
+			| ./DistroSourceConsole.sh --non-interactive --verbose <<EOF
 
 		set -e
 
-		echo "SourceInstall: Register repository roots..." >&2
-		Source DistroSourceTools --register-repository-roots $ROOT_LIST
+		if [ -n "$ROOT_LIST" ] ; then
+			echo "📝 workspace-install: Register repository roots ($ROOT_LIST)..."
+			Source DistroSourceTools --register-repository-roots $ROOT_LIST
+		fi
 
-		echo "SourceInstall: Pull initial repositories..." >&2
-		set -x
-		printf "%s\n" "$REPO_LIST" | Source DistroImageSync --execute-from-stdin-repo-list
-		set +x
+		if [ -n "$REPO_LIST" ] ; then
+			echo "⬇️ workspace-install: Pull workspace-initial git repositories..." >&2
+			printf "%s\n" "$REPO_LIST" | Source DistroImageSync --execute-from-stdin-repo-list
+		fi
 
-		echo "SourceInstall: Running extra commands..." >&2
-		set -x
-		$EXTRA_CMDS
+		if [ -n "$EXEC_CMDS" ] ; then
+			echo "🖥️ workspace-install: Running extra commands..." >&2
+			$EXEC_CMDS
+		fi
 
 		echo "SourceInstall: All Source Console tasks done." >&2
 
