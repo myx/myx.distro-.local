@@ -42,7 +42,7 @@ set -euo pipefail
 : "${TGT_APP_PATH:?⛔ ERROR: TGT_APP_PATH env must be set}"
 
 # ─── 1) PARSE FLAGS ──────────────────────────────────────────────────────────
-BOOT_METHOD=web-fetch
+BOOT_METHOD=--web-fetch
 BOOT_UPDATE=0
 BOOT_CONFIG=
 while [ $# -gt 0 ]; do
@@ -84,14 +84,14 @@ echo "$0: Workspace root: $PWD" >&2
 # ─── 3) VALIDATE TOOLS FOR CHOSEN BOOT_METHOD ────────────────────────────────
 case "$BOOT_METHOD" in
 
-  git-clone)
+  --git-clone)
 	if ! command -v git >/dev/null 2>&1; then
 	  echo "⛔ ERROR: workspace-install: git is required for --git-clone" >&2
 	  exit 1
 	fi
 	;;
 
-  web-fetch)
+  --web-fetch)
 	# downloader
 	if   command -v curl >/dev/null 2>&1; then
 		DLOAD_CMD() { curl -fsSL -o "$1" "$2"; }
@@ -129,15 +129,17 @@ esac
 
 # ─── 4) CONDITIONAL BOOTSTRAP ────────────────────────────────────────────────
 LOCAL_BASE="$MMDAPP/.local/myx"
-DISTRO_DIR="$LOCAL_BASE/myx.distro-system"
+DISTRO_DIR="$LOCAL_BASE/myx.distro-.local"
 
-if [ "$BOOT_UPDATE" -eq 1 ] || [ ! -d "$LOCAL_BASE" ]; then
-  echo "workspace-install: → Bootstrapping distro-system via $BOOT_METHOD…" >&2
+if [ "$BOOT_UPDATE" -eq 1 ] || [ ! -d "$LOCAL_BASE" ] || [ ! -f "$DISTRO_DIR/sh-scripts/workspace-install.sh" ] ; then
+  echo "workspace-install: → Bootstrapping distro-.local via $BOOT_METHOD" >&2
   mkdir -p "$LOCAL_BASE"
 
   case "$BOOT_METHOD" in
 
-	git-clone)
+	--git-clone)
+		# mkdir -p ".local/myx" ; ( cd ".local/myx" ; rm -rf "myx.distro-.local" ; git clone git@github.com:myx/myx.distro-.local.git )
+
 		if [ -d "$DISTRO_DIR" ]; then
 			echo "workspace-install: • updating existing clone…" >&2
 			git -C "$DISTRO_DIR" fetch --depth=1 origin main \
@@ -145,12 +147,12 @@ if [ "$BOOT_UPDATE" -eq 1 ] || [ ! -d "$LOCAL_BASE" ]; then
 		else
 			echo "workspace-install: • git clone…" >&2
 			git clone --depth=1 \
-				https://github.com/myx/myx.distro-system.git \
+				https://github.com/myx/myx.distro-.local.git \
 				"$DISTRO_DIR" >&2
 		fi
 	  ;;
 
-	web-fetch)
+	--web-fetch)
 		# running in subshell to cleanup it's temp upon arm exit
 		(
 			echo "workspace-install: • setting up temporary directory" >&2
@@ -161,15 +163,15 @@ if [ "$BOOT_UPDATE" -eq 1 ] || [ ! -d "$LOCAL_BASE" ]; then
 			trap 'rm -rf "$WORKTMP"' EXIT INT TERM
 
 			echo "workspace-install: • downloading ZIP…" >&2
-			DLOAD_CMD "$WORKTMP/boot.zip" "https://github.com/myx/myx.distro-system/archive/refs/heads/main.zip"
+			DLOAD_CMD "$WORKTMP/boot.zip" "https://github.com/myx/myx.distro-.local/archive/refs/heads/main.zip"
 
 			echo "workspace-install: • unpacking ZIP…" >&2
 			UNZIP_CMD "$WORKTMP/boot.zip" "$WORKTMP"
 
-			# find the extracted folder (GitHub names it myx.distro-system-main)
-			SRC_DIR=$(find "$WORKTMP" -maxdepth 1 -type d -name 'myx.distro-system-*' | head -1)
+			# find the extracted folder (GitHub names it myx.distro-.local-main)
+			SRC_DIR=$(find "$WORKTMP" -maxdepth 1 -type d -name 'myx.distro-.local-*' | head -1)
 
-			echo "workspace-install: • syncing files to $DISTRO_DIR…" >&2
+			echo "workspace-install: • syncing files to $DISTRO_DIR" >&2
 			rsync -a --delete "$SRC_DIR"/ "$DISTRO_DIR"/
 		)
 	  ;;
@@ -181,8 +183,17 @@ fi
 # ─── LOAD WORKSPACE CONFIG ────────────────────────────────────────────────────
 
 # supports both: stdin and file specification
-CONFIG_CONTENT=$( cat $BOOT_CONFIG )
-
+CONFIG_CONTENT=$(
+  # 1) drop blank lines & comments  
+  grep -E -v '^[[:space:]]*($|#)' "$BOOT_CONFIG" |
+  # 2) trim leading/trailing space, squeeze inner spaces to one  
+  sed \
+    -e 's/^[[:space:]]*//' \
+    -e 's/[[:space:]]*$//' \
+    -e 's/[[:space:]]\{1,\}/ /g' |
+  # 3) only keep lines with ≥3 fields (i.e. two spaces)  
+  grep -E '^([^[:space:]]+ +){2}.*'
+)
 
 # ─── DETECT & INSTALL NEEDED SYSTEMS ─────────────────────────────────────────
 INSTALL_SYSTEMS=
@@ -197,40 +208,50 @@ done
 
 if [ -n "$INSTALL_SYSTEMS" ]; then
   echo "workspace-install: DistroLocalTools.fn.sh $INSTALL_SYSTEMS" >&2
-  bash .local/myx/myx.distro-system/sh-scripts/DistroLocalTools.fn.sh $INSTALL_SYSTEMS
+  bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh $INSTALL_SYSTEMS
 fi
 
 ## 6 - do 'source' commands
 {
-	ROOT_LIST=$(printf '%s\n' "$CONFIG_CONTENT" \
+	ROOT_LIST=$(
+		printf '%s\n' "$CONFIG_CONTENT" \
 		| awk '/^source[[:space:]]+root[[:space:]]/ { print $3 }' \
-		| tr '\n' ' ')
+		| tr '\n' ' '
+	)
 
 	# split third field on first two “:”, keeping “url” intact
-	REPO_LIST=$(printf '%s\n' "$CONFIG_CONTENT" \
+	REPO_LIST=$(
+		printf '%s\n' "$CONFIG_CONTENT" \
 		| awk '/^source[[:space:]]+pull[[:space:]]/ { print $3 }' \
-		| sed -E 's#([^:]+):([^:]+):(.*)#\1\t\3\t\2#')
+		| sed -E 's#([^:]+):([^:]+):(.*)#\1\t\3\t\2#' \
+		| awk '!x[$0]++'
+	) 
 
-	EXTRA_CMDS=$(printf '%s\n' "$CONFIG_CONTENT" \
-		| sed -n -E 's/^source[[:space:]]+exec[[:space:]]+(.+)/Source \1/p')
+	EXTRA_CMDS=$(
+		printf '%s\n' "$CONFIG_CONTENT" \
+		| sed -n -E 's/^source[[:space:]]+exec[[:space:]]+(.+)/Source \1/p'
+	)
 
 	if [ -n "$ROOT_LIST$REPO_LIST$EXTRA_CMDS" ]; then
 		sed -e 's/^[[:space:]]*//' -e '/^#/d' -e '/^$/d' \
 			| ./DistroSourceConsole.sh --non-interactive <<EOF
-		set -ex
+
+		set -e
 
 		echo "SourceInstall: Register repository roots..." >&2
 		Source DistroSourceTools --register-repository-roots $ROOT_LIST
 
 		echo "SourceInstall: Pull initial repositories..." >&2
-		Source DistroImageSync --execute-from-stdin-repo-list <<REPO_LIST
-			$REPO_LIST
-		REPO_LIST
+		set -x
+		printf "%s\n" "$REPO_LIST" | Source DistroImageSync --execute-from-stdin-repo-list
+		set +x
 
 		echo "SourceInstall: Running extra commands..." >&2
+		set -x
 		$EXTRA_CMDS
 
 		echo "SourceInstall: All Source Console tasks done." >&2
+
 EOF
 	fi
 }

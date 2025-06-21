@@ -72,35 +72,6 @@ GitClonePull(){
 }
 
 
-# this part supposed to install, import or update the workspace on possible non-prepared machine
-case "$1" in
-	--install-workspace-from-stdin-config)
-		: "${TGT_APP_PATH:?⛔ ERROR: TGT_APP_PATH env must be set}"
-		MMDAPP=$TGT_APP_PATH
-		case $MMDAPP in
-			"~"*) MMDAPP=$HOME${MMDAPP#\~} ;;
-		esac
-		case $MMDAPP in
-			/*) ;;
-			*)  MMDAPP=$PWD/$MMDAPP ;;
-		esac
-			
-		export MMDAPP ; mkdir -p "$MMDAPP" ; cd "$MMDAPP"
-		echo "$0: Workspace root: $PWD" >&2
-		
-		if [ ! -d ".local/myx" ] ; then
-			echo "Install: .local system, pulling system packages..." >&2
-			mkdir -p ".local/myx" ; ( cd ".local/myx" ; rm -rf "myx.distro-.local" ; git clone git@github.com:myx/myx.distro-.local.git )
-		fi
-
-		echo "Install: DistroLocalTools.fn.sh --stdin-workspace-config-parse..." >&2
-		cat | bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --stdin-workspace-config-parse
-
-		echo "Install: DistroLocalTools.fn.sh done" >&2
-		exit 0
-	;;
-esac
-
 if [ -z "$MMDAPP" ] ; then
 	set -e
 	export MMDAPP="$( cd $(dirname "$0")/../../../.. ; pwd )"
@@ -165,33 +136,6 @@ DistroLocalTools(){
 				shift
 
 				return 0
-			;;
-			--stdin-workspace-config-parse)
-				shift
-				cat
-				return 0
-				local cmds
-				cmds+="$(
-					echo ': "${TGT_APP_PATH:?⛔ ERROR: TGT_APP_PATH env must be set}"'
-					echo 'MMDAPP=$TGT_APP_PATH'
-					echo 'case $MMDAPP in'
-					echo '"~"*) MMDAPP=$HOME${MMDAPP#\~} ;;'
-					echo 'esac'
-					echo 'case $MMDAPP in'
-					echo '  /*) ;;'
-					echo '  *)  MMDAPP=$PWD/$MMDAPP ;;'
-					echo 'esac'
-					echo 
-					echo 'export MMDAPP ; mkdir -p "$MMDAPP" ; cd "$MMDAPP"'
-					echo 'echo "$0: Workspace root: $PWD" >&2'
-					echo 
-					echo 'if [ ! -d ".local/myx" ] ; then'
-					echo '	echo "Install: .local system, pulling system packages..." >&2'
-					echo '	mkdir -p ".local/myx" ; ( cd ".local/myx" ; rm -rf "myx.distro-.local" ; git clone git@github.com:myx/myx.distro-.local.git )'
-					echo 'fi'
-					echo 'cat | '
-				)"
-
 			;;
 			--install-distro-*)
 				# update '.local' when running scripts from locally editable 'source'
