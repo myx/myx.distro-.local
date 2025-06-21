@@ -228,35 +228,40 @@ fi
 
 	EXEC_CMDS=$(
 		printf '%s\n' "$CONFIG_CONTENT" \
-		| sed -n -E 's/^source[[:space:]]+exec[[:space:]]+(.+)/\1/p'
+		| sed -n -E 's/^source[[:space:]]+exec[[:space:]]+(.+)/\1/p' \
+		| while read -r COMMAND_LINE ; do
+			echo "echo '🎬 workspace-install: executing: $COMMAND_LINE' >&2"
+			echo "$COMMAND_LINE"
+		done
 	#	| sed -n -E 's/^source[[:space:]]+exec[[:space:]]+(.+)/Source \1/p'
 	)
 
-	# printf "%s\n\n%s\n\n%s\n\n" "$ROOT_LIST" "$REPO_LIST" "$EXEC_CMDS"
+	# printf "ROOTS: %s\n" "$ROOT_LIST"
+	# printf "REPOS: %s\n" "$REPO_LIST"
+	# printf "EXECS: %s\n" "$EXEC_CMDS"
 
 	if [ -n "$ROOT_LIST$REPO_LIST$EXEC_CMDS" ]; then
-		sed -e 's/^[[:space:]]*//' -e '/^#/d' -e '/^$/d' \
-			| ./DistroSourceConsole.sh --non-interactive --verbose <<EOF
+		FULL_CODE="$(
+			echo 'set -e'
+			if [ -n "$ROOT_LIST" ] ; then
+				echo "echo '📝 workspace-install: Register repository roots ($ROOT_LIST)...' >&2"
+				echo "Source DistroSourceTools --register-repository-roots $ROOT_LIST"
+			fi
+			if [ -n "$REPO_LIST" ] ; then
+				echo "echo '⬇️ workspace-install: Pull workspace-initial git repositories...' >&2"
+				echo "printf '%s\n' '$REPO_LIST' | Source DistroImageSync --execute-from-stdin-repo-list"
+			fi
 
-		set -e
+			if [ -n "$EXEC_CMDS" ] ; then
+				echo "echo '🖥️ workspace-install: Running extra commands...' >&2"
+				echo "$EXEC_CMDS"
+			fi
 
-		if [ -n "$ROOT_LIST" ] ; then
-			echo "📝 workspace-install: Register repository roots ($ROOT_LIST)..."
-			Source DistroSourceTools --register-repository-roots $ROOT_LIST
-		fi
+			echo 'echo "✅ workspace-install: All Source Console tasks done." >&2'
+		)"
 
-		if [ -n "$REPO_LIST" ] ; then
-			echo "⬇️ workspace-install: Pull workspace-initial git repositories..." >&2
-			printf "%s\n" "$REPO_LIST" | Source DistroImageSync --execute-from-stdin-repo-list
-		fi
+		printf "WHOLE: %s\n" "$FULL_CODE"
 
-		if [ -n "$EXEC_CMDS" ] ; then
-			echo "🖥️ workspace-install: Running extra commands..." >&2
-			$EXEC_CMDS
-		fi
-
-		echo "SourceInstall: All Source Console tasks done." >&2
-
-EOF
+		echo "$FULL_CODE" | ./DistroSourceConsole.sh --non-interactive --verbose
 	fi
 }
