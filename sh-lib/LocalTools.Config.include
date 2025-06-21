@@ -9,7 +9,7 @@
 case "$1" in
   --*-config-option)
     local config_file system_file user_file
-    local cmd key val ifval curr tmp new
+    local cmd key val ifval curr tmp
 
     system_file="$MMDAPP/.local/MDLT.settings.env"
     user_file="$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
@@ -39,9 +39,6 @@ case "$1" in
     cmd=$1; shift
 
     # prepare temp‐files & ensure cleanup
-    tmp="$config_file.$$"
-    new="$config_file.new.$$"
-    trap 'rm -f -- "$tmp" "$new"' EXIT
 
     case "$cmd" in
       --select-all)
@@ -72,9 +69,13 @@ case "$1" in
       --upsert)
         key=$1; val=$2
 		shift ; shift
-        grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
-        printf '%s=%s\n' "$key" "$val" >>"$tmp"
-        mv "$tmp" "$config_file"
+		(
+			tmp="$config_file.$$"
+			trap 'rm -f -- "$tmp"' EXIT
+			grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
+			printf '%s=%s\n' "$key" "$val" >>"$tmp"
+			mv "$tmp" "$config_file"
+		)
         ;;
 
       --upsert-if)
@@ -83,17 +84,25 @@ case "$1" in
         curr=$({ grep -h "^$key=" "$config_file" || :; } \
                | tail -n1 | cut -d= -f2-)
         if [ "$curr" = "$ifval" ]; then
-          grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
-          printf '%s=%s\n' "$key" "$val" >>"$tmp"
-          mv "$tmp" "$config_file"
+			(
+				tmp="$config_file.$$"
+				trap 'rm -f -- "$tmp"' EXIT
+				grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
+				printf '%s=%s\n' "$key" "$val" >>"$tmp"
+				mv "$tmp" "$config_file"
+			)
         fi
         ;;
 
       --delete)
         key=$1
 		shift
-        grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
-        mv "$tmp" "$config_file"
+		(
+			tmp="$config_file.$$"
+			trap 'rm -f -- "$tmp"' EXIT
+			grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
+			mv "$tmp" "$config_file"
+		)
         ;;
 
       --delete-if)
@@ -102,8 +111,12 @@ case "$1" in
         curr=$({ grep -h "^$key=" "$config_file" || :; } \
                | tail -n1 | cut -d= -f2-)
         if [ "$curr" = "$ifval" ]; then
-          grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
-          mv "$tmp" "$config_file"
+			(
+				tmp="$config_file.$$"
+				trap 'rm -f -- "$tmp"' EXIT
+				grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
+				mv "$tmp" "$config_file"
+			)
         fi
         ;;
 
