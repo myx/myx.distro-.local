@@ -207,17 +207,17 @@ DistroLocalTools(){
 				(
 					. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.CatMarkdown.include"
 					DistroLocalCatMarkdown "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools-install-unix-bare.md" >&2
-					exit 1;
 				)
+				return 0
 			;;
-			''|--help|--help-syntax)
+			--help|--help-syntax)
 				echo "syntax: DistroLocalTools.fn.sh --upgrade-local-tools" >&2
 				echo "syntax: DistroLocalTools.fn.sh <option>" >&2
 				echo "syntax: DistroLocalTools.fn.sh [--help]" >&2
 				if [ "$1" = "--help" ] ; then
 					cat "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools.text" >&2
 				fi
-				set +e ; return 1
+				return 0
 			;;
 			--verbose)
 				shift
