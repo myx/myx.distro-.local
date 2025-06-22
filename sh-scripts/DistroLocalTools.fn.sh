@@ -117,21 +117,6 @@ DistroLocalTools(){
 				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Config.include"
 				return 0
 			;;
-			--help-install-unix-bare)
-				(
-					. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.CatMarkdown.include"
-					DistroLocalCatMarkdown "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools-install-unix-bare.md" >&2
-					exit 1;
-				)
-			;;
-			''|--help)
-				echo "syntax: DistroLocalTools.fn.sh <option>" >&2
-				echo "syntax: DistroLocalTools.fn.sh [--help]" >&2
-				if [ "$1" = "--help" ] ; then
-					cat "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools.text" >&2
-				fi
-				set +e ; return 1
-			;;
 			--init-distro-workspace)
 				shift
 
@@ -218,6 +203,22 @@ DistroLocalTools(){
 
 				return 0
 			;;
+			--help-install-unix-bare)
+				(
+					. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.CatMarkdown.include"
+					DistroLocalCatMarkdown "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools-install-unix-bare.md" >&2
+					exit 1;
+				)
+			;;
+			''|--help|--help-syntax)
+				echo "syntax: DistroLocalTools.fn.sh --upgrade-local-tools" >&2
+				echo "syntax: DistroLocalTools.fn.sh <option>" >&2
+				echo "syntax: DistroLocalTools.fn.sh [--help]" >&2
+				if [ "$1" = "--help" ] ; then
+					cat "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools.text" >&2
+				fi
+				set +e ; return 1
+			;;
 			--verbose)
 				shift
 				export MDSC_DETAIL="true"
@@ -240,9 +241,9 @@ case "$0" in
 				echo "syntax: DistroLocalTools.fn.sh --install-distro-deploy" >&2
 				echo "syntax: DistroLocalTools.fn.sh --install-distro-remote" >&2
 			else
-				cat "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools.text" >&2
-				set +e ; return 1
+				DistroLocalTools "${1:-"--help-syntax"}"
 			fi
+			exit 1
 		fi
 
 		set -e
