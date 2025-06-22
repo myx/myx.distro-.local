@@ -6,31 +6,34 @@
 ###	 . "$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
 ###   fi
 ###
+while true ; do
 case "$1" in
   --*-config-option)
-	local config_file system_file user_file
+	local config_file
 	local cmd key val ifval curr tmp
-
-	system_file="$MMDAPP/.local/MDLT.settings.env"
-	user_file="$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
 
 	# pick target & ensure stub files exist
 	case "$1" in
-	  --system-config-option)
-		config_file=$system_file
-		mkdir -p "${config_file%/*}" || return 1
-		touch "$config_file"
+		--system-config-option)
+			config_file="$MMDAPP/.local/MDLT.settings.env"
+			mkdir -p "${config_file%/*}" || return 1
+			touch "$config_file"
 		;;
-	  --custom-config-option)
-		config_file=$user_file
-		mkdir -p "${config_file%/*}" || return 1
-		touch "$config_file"
-		# bootstrap empty system‐file on first custom touch
-		[ -f "$system_file" ] || { mkdir -p "${system_file%/*}"; touch "$system_file"; }
+		--custom-config-option)
+			config_file="$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
+			mkdir -p "${config_file%/*}" || return 1
+			touch "$config_file"
 		;;
-	  --*-config-option)
-		echo "⛔ ERROR: unsupported config scope '$1'" >&2
-		return 1
+		--remote-config-option)
+			: ${2:?"⛔ ERROR: $1 requires remote-id argument to follow!"}
+			key="$2" ; shift
+			config_file="$MMDAPP/remote/static/${key}.remote.env"
+			mkdir -p "${config_file%/*}" || return 1
+			touch "$config_file"
+		;;
+		--*-config-option)
+			echo "⛔ ERROR: unsupported config scope '$1'" >&2
+			return 1
 		;;
 	esac
 
@@ -122,7 +125,7 @@ case "$1" in
 
 	  *)
 		echo "⛔ ERROR: unknown config operation '$cmd'" >&2
-		return 1
+		set +e ; return 1
 		;;
 	esac
 
@@ -133,3 +136,4 @@ case "$1" in
 	return 0
 	;;
 esac
+done
