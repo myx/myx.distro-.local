@@ -230,7 +230,7 @@ fi
 		printf '%s\n' "$CONFIG_CONTENT" \
 		| sed -n -E 's/^source[[:space:]]+exec[[:space:]]+(.+)/\1/p' \
 		| while read -r COMMAND_LINE ; do
-			echo "echo '🎬 workspace-install: executing: $COMMAND_LINE' >&2"
+			echo "echo '🖥️ workspace-install: executing: $COMMAND_LINE' >&2"
 			echo "$COMMAND_LINE"
 		done
 	#	| sed -n -E 's/^source[[:space:]]+exec[[:space:]]+(.+)/Source \1/p'
@@ -256,10 +256,9 @@ fi
 				echo "printf '%s\n' '$REPO_LIST' | Source DistroImageSync --execute-from-stdin-repo-list"
 			fi
 
-			if [ -n "$EXEC_CMDS" ] ; then
-				echo "echo '🖥️ workspace-install: Running extra commands...' >&2"
-				echo "$EXEC_CMDS"
-			fi
+			echo
+			echo "$EXEC_CMDS"
+			echo
 
 			echo 'echo "✅ workspace-install: All Source Console tasks done." >&2'
 
@@ -277,7 +276,7 @@ fi
 		printf '%s\n' "$CONFIG_CONTENT" \
 		| sed -n -E 's/^remote[[:space:]]+exec[[:space:]]+(.+)/\1/p' \
 		| while read -r COMMAND_LINE ; do
-			echo "echo '🎬 workspace-install: executing: $COMMAND_LINE' >&2"
+			echo "echo '🖥️ workspace-install: executing: $COMMAND_LINE' >&2"
 			echo "$COMMAND_LINE"
 		done
 	)
@@ -289,12 +288,9 @@ fi
 
 			echo 'set -e'
 			echo ': ${MDSC_DETAIL:=true}'
-
-			if [ -n "$EXEC_CMDS" ] ; then
-				echo "echo '🖥️ workspace-install: Running extra commands...' >&2"
-				echo "$EXEC_CMDS"
-			fi
-
+			echo
+			echo "$EXEC_CMDS"
+			echo
 			echo 'echo "✅ workspace-install: All Remote Console tasks done." >&2'
 
 		)"
@@ -311,7 +307,7 @@ fi
 		printf '%s\n' "$CONFIG_CONTENT" \
 		| sed -n -E 's/^deploy[[:space:]]+exec[[:space:]]+(.+)/\1/p' \
 		| while read -r COMMAND_LINE ; do
-			echo "echo '🎬 workspace-install: executing: $COMMAND_LINE' >&2"
+			echo "echo '🖥️ workspace-install: executing: $COMMAND_LINE' >&2"
 			echo "$COMMAND_LINE"
 		done
 	)
@@ -323,12 +319,9 @@ fi
 
 			echo 'set -e'
 			echo ': ${MDSC_DETAIL:=true}'
-
-			if [ -n "$EXEC_CMDS" ] ; then
-				echo "echo '🖥️ workspace-install: Running extra commands...' >&2"
-				echo "$EXEC_CMDS"
-			fi
-
+			echo
+			echo "$EXEC_CMDS"
+			echo
 			echo 'echo "✅ workspace-install: All Deploy Console tasks done." >&2'
 
 		)"
@@ -345,10 +338,9 @@ fi
 		printf '%s\n' "$CONFIG_CONTENT" \
 		| sed -n -E 's/^.local[[:space:]]+exec[[:space:]]+(.+)/\1/p' \
 		| while read -r COMMAND_LINE ; do
-			echo "echo '🎬 workspace-install: executing: $COMMAND_LINE' >&2"
+			echo "echo '🖥️ workspace-install: executing: $COMMAND_LINE' >&2"
 			echo "$COMMAND_LINE"
 		done
-	#	| sed -n -E 's/^source[[:space:]]+exec[[:space:]]+(.+)/Source \1/p'
 	)
 
 	# printf 'EXECS: %s\n' "$EXEC_CMDS"
@@ -358,12 +350,9 @@ fi
 
 			echo 'set -e'
 			echo ': ${MDSC_DETAIL:=true}'
-
-			if [ -n "$EXEC_CMDS" ] ; then
-				echo "echo '🖥️ workspace-install: Running extra commands...' >&2"
-				echo "$EXEC_CMDS"
-			fi
-
+			echo
+			echo "$EXEC_CMDS"
+			echo
 			echo 'echo "✅ workspace-install: All Local Console tasks done." >&2'
 
 		)"
