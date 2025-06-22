@@ -211,9 +211,9 @@ DistroLocalTools(){
 				return 0
 			;;
 			--help|--help-syntax)
-				echo "syntax: DistroLocalTools.fn.sh --upgrade-local-tools" >&2
-				echo "syntax: DistroLocalTools.fn.sh <option>" >&2
-				echo "syntax: DistroLocalTools.fn.sh [--help]" >&2
+				echo "📘 syntax: DistroLocalTools.fn.sh --upgrade-local-tools" >&2
+				echo "📘 syntax: DistroLocalTools.fn.sh <option>" >&2
+				echo "📘 syntax: DistroLocalTools.fn.sh [--help]" >&2
 				if [ "$1" = "--help" ] ; then
 					cat "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools.text" >&2
 				fi
@@ -237,9 +237,9 @@ case "$0" in
 
 		if [ -z "$1" ] || [ "$1" = "--help" ] ; then
 			if [ -z "$1" ] || [ ! -f "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools.text" ] ; then
-				echo "syntax: DistroLocalTools.fn.sh --install-distro-source" >&2
-				echo "syntax: DistroLocalTools.fn.sh --install-distro-deploy" >&2
-				echo "syntax: DistroLocalTools.fn.sh --install-distro-remote" >&2
+				echo "📘 syntax: DistroLocalTools.fn.sh --install-distro-source" >&2
+				echo "📘 syntax: DistroLocalTools.fn.sh --install-distro-deploy" >&2
+				echo "📘 syntax: DistroLocalTools.fn.sh --install-distro-remote" >&2
 			else
 				DistroLocalTools "${1:-"--help-syntax"}"
 			fi

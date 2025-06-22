@@ -54,10 +54,10 @@ while [ $# -gt 0 ]; do
 	--config-stdin)
 		BOOT_CONFIG= ; shift ;;
 	--config-file)
-		[ $# -lt 2 ] && { echo "⛔ ERROR: workspace-install: $1 needs argument" >&2; exit 1; }
+		[ $# -lt 2 ] && { echo "⛔) ERROR: workspace-install: $1 needs argument" >&2; exit 1; }
 		BOOT_CONFIG=$2 ; shift ; shift ;;
 	*)
-		echo "⛔ ERROR: workspace-install: invalid option: $1" >&2
+		echo "⛔) ERROR: workspace-install: invalid option: $1" >&2
 		exit 1
   esac
 done
@@ -86,7 +86,7 @@ case "$BOOT_METHOD" in
 
   --git-clone)
 	if ! command -v git >/dev/null 2>&1; then
-	  echo "⛔ ERROR: workspace-install: git is required for --git-clone" >&2
+	  echo "⛔) ERROR: workspace-install: git is required for --git-clone" >&2
 	  exit 1
 	fi
 	;;
@@ -100,7 +100,7 @@ case "$BOOT_METHOD" in
 	elif command -v fetch >/dev/null 2>&1; then
 		DLOAD_CMD() { fetch -q -o "$1" "$2"; }
 	else
-		echo "⛔ ERROR: workspace-install: need curl, wget or fetch" >&2; 
+		echo "⛔) ERROR: workspace-install: need curl, wget or fetch" >&2; 
 		exit 1
 	fi
 
@@ -110,19 +110,19 @@ case "$BOOT_METHOD" in
 	elif command -v bsdtar >/dev/null 2>&1; then
 	  UNZIP_CMD() { bsdtar -C "$2" -x -f "$1"; }
 	else
-	  echo "⛔ ERROR: workspace-install: need unzip or bsdtar for --web-fetch" >&2
+	  echo "⛔) ERROR: workspace-install: need unzip or bsdtar for --web-fetch" >&2
 	  exit 1
 	fi
 
 	# rsync (we'll use it to sync the fetched archive)
 	if ! command -v rsync >/dev/null 2>&1; then
-	  echo "⛔ ERROR: workspace-install: rsync is required for --web-fetch" >&2
+	  echo "⛔) ERROR: workspace-install: rsync is required for --web-fetch" >&2
 	  exit 1
 	fi
 	;;
 
   *)
-	echo "⛔ ERROR: workspace-install: unsupported boot mode: $BOOT_METHOD" >&2
+	echo "⛔) ERROR: workspace-install: unsupported boot mode: $BOOT_METHOD" >&2
 	exit 1
 	;;
 esac
@@ -132,7 +132,7 @@ LOCAL_BASE="$MMDAPP/.local/myx"
 DISTRO_DIR="$LOCAL_BASE/myx.distro-.local"
 
 if [ "$BOOT_UPDATE" -eq 1 ] || [ ! -d "$LOCAL_BASE" ] || [ ! -f "$DISTRO_DIR/sh-scripts/workspace-install.sh" ] ; then
-  echo "📜 workspace-install: → Bootstrapping distro-.local via $BOOT_METHOD" >&2
+  echo "📜) workspace-install: → Bootstrapping distro-.local via $BOOT_METHOD" >&2
   mkdir -p "$LOCAL_BASE"
 
   case "$BOOT_METHOD" in
@@ -141,11 +141,11 @@ if [ "$BOOT_UPDATE" -eq 1 ] || [ ! -d "$LOCAL_BASE" ] || [ ! -f "$DISTRO_DIR/sh-
 		# mkdir -p ".local/myx" ; ( cd ".local/myx" ; rm -rf "myx.distro-.local" ; git clone git@github.com:myx/myx.distro-.local.git )
 
 		if [ -d "$DISTRO_DIR" ]; then
-			echo "🌏 workspace-install: • updating existing clone…" >&2
+			echo "🌏) workspace-install: • updating existing clone…" >&2
 			git -C "$DISTRO_DIR" fetch --depth=1 origin main \
 				&& git -C "$DISTRO_DIR" reset --hard FETCH_HEAD
 		else
-			echo "🌏 workspace-install: • git clone…" >&2
+			echo "🌏) workspace-install: • git clone…" >&2
 			git clone --depth=1 \
 				https://github.com/myx/myx.distro-.local.git \
 				"$DISTRO_DIR" >&2
@@ -161,16 +161,16 @@ if [ "$BOOT_UPDATE" -eq 1 ] || [ ! -d "$LOCAL_BASE" ] || [ ! -f "$DISTRO_DIR/sh-
 			WORKTMP=$(mktemp -d "$TMPBASE")
 			trap 'rm -rf "$WORKTMP"' EXIT INT TERM
 
-			echo "🌏 workspace-install: • downloading ZIP…" >&2
+			echo "🌏) workspace-install: • downloading ZIP…" >&2
 			DLOAD_CMD "$WORKTMP/boot.zip" "https://github.com/myx/myx.distro-.local/archive/refs/heads/main.zip"
 
-			echo "🗂️ workspace-install: • unpacking ZIP…" >&2
+			echo "🗂️) workspace-install: • unpacking ZIP…" >&2
 			UNZIP_CMD "$WORKTMP/boot.zip" "$WORKTMP"
 
 			# find the extracted folder (GitHub names it myx.distro-.local-main)
 			SRC_DIR=$(find "$WORKTMP" -maxdepth 1 -type d -name 'myx.distro-.local-*' | head -1)
 
-			echo "🔂 workspace-install: • syncing files to $DISTRO_DIR" >&2
+			echo "🔂) workspace-install: • syncing files to $DISTRO_DIR" >&2
 			rsync -a --delete "$SRC_DIR"/ "$DISTRO_DIR"/
 		)
 	  ;;
@@ -206,7 +206,7 @@ for sys in $(printf '%s\n' "$CONFIG_CONTENT" \
 done
 
 if [ -n "$INSTALL_SYSTEMS" ]; then
-  echo "🛠️ workspace-install: DistroLocalTools.fn.sh $INSTALL_SYSTEMS" >&2
+  echo "🛠️) workspace-install: DistroLocalTools.fn.sh $INSTALL_SYSTEMS" >&2
   bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh $INSTALL_SYSTEMS
 fi
 
@@ -230,7 +230,7 @@ fi
 		printf '%s\n' "$CONFIG_CONTENT" \
 		| sed -n -E 's/^source[[:space:]]+exec[[:space:]]+(.+)/\1/p' \
 		| while read -r COMMAND_LINE ; do
-			echo "echo '🖥️ workspace-install: executing: $COMMAND_LINE' >&2"
+			echo "echo '🖥️) workspace-install: executing: $COMMAND_LINE' >&2"
 			echo "$COMMAND_LINE"
 		done
 	#	| sed -n -E 's/^source[[:space:]]+exec[[:space:]]+(.+)/Source \1/p'
@@ -247,12 +247,12 @@ fi
 			echo ': ${MDSC_DETAIL:=true}'
 
 			if [ -n "$ROOT_LIST" ] ; then
-				echo "echo '📝 workspace-install: Register repository roots ($ROOT_LIST)...' >&2"
+				echo "echo '📝) workspace-install: Register repository roots ($ROOT_LIST)...' >&2"
 				echo "Source DistroSourceTools --register-repository-roots $ROOT_LIST"
 			fi
 
 			if [ -n "$REPO_LIST" ] ; then
-				echo "echo '⬇️ workspace-install: Pull workspace-initial git repositories...' >&2"
+				echo "echo '⬇️) workspace-install: Pull workspace-initial git repositories...' >&2"
 				echo "printf '%s\n' '$REPO_LIST' | Source DistroImageSync --execute-from-stdin-repo-list"
 			fi
 
@@ -260,7 +260,7 @@ fi
 			echo "$EXEC_CMDS"
 			echo
 
-			echo 'echo "✅ workspace-install: All Source Console tasks done." >&2'
+			echo 'echo "✅) workspace-install: All Source Console tasks done." >&2'
 
 		)"
 
@@ -276,7 +276,7 @@ fi
 		printf '%s\n' "$CONFIG_CONTENT" \
 		| sed -n -E 's/^remote[[:space:]]+exec[[:space:]]+(.+)/\1/p' \
 		| while read -r COMMAND_LINE ; do
-			echo "echo '🖥️ workspace-install: executing: $COMMAND_LINE' >&2"
+			echo "echo '🖥️) workspace-install: executing: $COMMAND_LINE' >&2"
 			echo "$COMMAND_LINE"
 		done
 	)
@@ -291,7 +291,7 @@ fi
 			echo
 			echo "$EXEC_CMDS"
 			echo
-			echo 'echo "✅ workspace-install: All Remote Console tasks done." >&2'
+			echo 'echo "✅) workspace-install: All Remote Console tasks done." >&2'
 
 		)"
 
@@ -307,7 +307,7 @@ fi
 		printf '%s\n' "$CONFIG_CONTENT" \
 		| sed -n -E 's/^deploy[[:space:]]+exec[[:space:]]+(.+)/\1/p' \
 		| while read -r COMMAND_LINE ; do
-			echo "echo '🖥️ workspace-install: executing: $COMMAND_LINE' >&2"
+			echo "echo '🖥️) workspace-install: executing: $COMMAND_LINE' >&2"
 			echo "$COMMAND_LINE"
 		done
 	)
@@ -322,7 +322,7 @@ fi
 			echo
 			echo "$EXEC_CMDS"
 			echo
-			echo 'echo "✅ workspace-install: All Deploy Console tasks done." >&2'
+			echo 'echo "✅) workspace-install: All Deploy Console tasks done." >&2'
 
 		)"
 
@@ -338,7 +338,7 @@ fi
 		printf '%s\n' "$CONFIG_CONTENT" \
 		| sed -n -E 's/^.local[[:space:]]+exec[[:space:]]+(.+)/\1/p' \
 		| while read -r COMMAND_LINE ; do
-			echo "echo '🖥️ workspace-install: executing: $COMMAND_LINE' >&2"
+			echo "echo '🖥️) workspace-install: executing: $COMMAND_LINE' >&2"
 			echo "$COMMAND_LINE"
 		done
 	)
@@ -353,7 +353,7 @@ fi
 			echo
 			echo "$EXEC_CMDS"
 			echo
-			echo 'echo "✅ workspace-install: All Local Console tasks done." >&2'
+			echo 'echo "✅) workspace-install: All Local Console tasks done." >&2'
 
 		)"
 
@@ -363,4 +363,4 @@ fi
 	fi
 }
 
-echo "🏁 workspace-install.sh: Installation finished." >&2
+echo "🏁) workspace-install.sh: Installation finished." >&2

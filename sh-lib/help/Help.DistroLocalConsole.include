@@ -4,17 +4,17 @@ echo >&2
 
 if type ConsoleSource >/dev/null 2>&1 ; then
 	echo "'ConsoleSource' launches or opens distro-source console." >&2
-	echo "syntax: ConsoleSource [<options>]" >&2
+	echo "📘 syntax: ConsoleSource [<options>]" >&2
 	echo >&2
 fi
 if type ConsoleDeploy >/dev/null 2>&1 ; then
 	echo "'ConsoleDeploy' launches or opens distro-deploy console." >&2
-	echo "syntax: ConsoleDeploy [<options>]" >&2
+	echo "📘 syntax: ConsoleDeploy [<options>]" >&2
 	echo >&2
 fi
 if type ConsoleRemote >/dev/null 2>&1 ; then
 	echo "'ConsoleRemote' launches or opens distro-remote console." >&2
-	echo "syntax: ConsoleRemote [<options>]" >&2
+	echo "📘 syntax: ConsoleRemote [<options>]" >&2
 	echo >&2
 fi
 
