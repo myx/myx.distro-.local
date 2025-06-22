@@ -7,7 +7,6 @@
 
 if ! type DistroLocalContext >/dev/null 2>&1 ; then
 	DistroLocalContext(){
-
 		case "$1" in
 			--is-spec-option)
 				case "$2" in
@@ -17,7 +16,7 @@ if ! type DistroLocalContext >/dev/null 2>&1 ; then
 				esac
 				set +e ; return 1
 			;;
-			--init-variables|--run-from-detect)
+			--init-variables|--run-from-detect|--distro-path-auto)
 				if [ -n "$MDLT_ORIGIN" ] && [ -n "$MDLT_OPTION" ] ; then
 					return 0
 				fi
@@ -25,7 +24,7 @@ if ! type DistroLocalContext >/dev/null 2>&1 ; then
 				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalContext.SetInputSpec.include"		
 				return 0
 			;;
-			*)
+			--distro-*|--run-from-*|--init-*)
 				if DistroLocalContext --is-spec-option "$1" ; then
 					local adpcChangeSpec="true"
 			
@@ -57,16 +56,19 @@ if ! type Require >/dev/null 2>&1 ; then
 			fi
 		done
 		source "${distroCommand%.fn.sh}.fn.sh"
-		return 0
 	}
 fi
 
 if ! type Local >/dev/null 2>&1 ; then
 	Local(){
+		if [[ -n "$COMP_LINE" || -n "$COMP_WORDS" ]] && [ "${1#--completion}" = "$1" ]; then
+			. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalConsole.CompletionFunction.include"
+			return 0
+		fi
 		case "$1" in
 			''|--*)
-				( . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalConsole.include" )
-				set +e ; return 1
+				( set -e ; . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalConsole.include" )
+				return 0
 			;;
 		esac
 		local distroCommand="$1" ; shift
@@ -78,17 +80,24 @@ if ! type Local >/dev/null 2>&1 ; then
 fi
 
 while true ; do
-	if [ "--verbose" = "$1" ] ; then
-		export MDSC_DETAIL="true"
-		shift
-		continue
-	fi 
-	if DistroLocalContext --is-spec-option "$1" ; then
-		[ -n "$MDSC_DETAIL" ] && echo "DistroLocalContext: input spec: $1" >&2
-		. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalContext.SetInputSpec.include"		
-		shift
-		continue
-	fi
-	break
+	case "$1" in
+		'')
+			return 0
+		;;
+		--verbose)
+			export MDSC_DETAIL=true ; shift
+			continue
+		;;
+		--distro-*|--run-from-*|--init-*)
+			if DistroLocalContext --is-spec-option "$1" ; then
+				[ -n "$MDSC_DETAIL" ] && echo "DistroLocalContext: input spec: $1" >&2
+				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalContext.SetInputSpec.include"		
+				shift
+				continue
+			fi
+			break
+		;;
+	esac
+	return 0
 done
 
