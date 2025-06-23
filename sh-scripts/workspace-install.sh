@@ -79,7 +79,7 @@ esac
 export MMDAPP
 mkdir -p "$MMDAPP"
 cd "$MMDAPP"
-echo "$0: Workspace root: $PWD" >&2
+echo "🫣) workspace-install: Workspace root: $PWD" >&2
 
 # ─── 3) VALIDATE TOOLS FOR CHOSEN BOOT_METHOD ────────────────────────────────
 case "$BOOT_METHOD" in
