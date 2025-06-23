@@ -184,7 +184,7 @@ fi
 # supports both: stdin and file specification
 CONFIG_CONTENT=$(
   # 1) drop blank lines & comments  
-  grep -E -v '^[[:space:]]*($|#)' "$BOOT_CONFIG" |
+  grep -E -v '^[[:space:]]*($|#)' "${BOOT_CONFIG:-"-"}" |
   # 2) trim leading/trailing space, squeeze inner spaces to one  
   sed \
     -e 's/^[[:space:]]*//' \
