@@ -155,7 +155,7 @@ if [ "$BOOT_UPDATE" -eq 1 ] || [ ! -d "$LOCAL_BASE" ] || [ ! -f "$DISTRO_DIR/sh-
 	--web-fetch)
 		# running in subshell to cleanup it's temp upon arm exit
 		(
-			TMPBASE="${TMPDIR:-$MMDAPP/.local/tmp}/boot-web-fetch.XXXXXXXXXX"
+			TMPBASE="${TMPDIR:-$MMDAPP/.local/temp}/boot-web-fetch.XXXXXXXXXX"
 
 			# created, used and deleted within this arm only
 			WORKTMP=$(mktemp -d "$TMPBASE")
