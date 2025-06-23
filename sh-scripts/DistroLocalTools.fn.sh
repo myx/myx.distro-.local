@@ -103,7 +103,7 @@ Prefix(){
 
 DistroLocalTools(){
 	local MDSC_CMD='DistroLocalTools'
-	[ -z "$MDSC_DETAIL" ] || echo "> $MDSC_CMD $@" >&2
+	[ -z "$MDSC_DETAIL" ] || echo "> $MDSC_CMD" $MDSC_NO_CACHE $MDSC_NO_INDEX "$@" >&2
 
 	set -e
 
