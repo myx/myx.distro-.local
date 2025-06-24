@@ -165,7 +165,7 @@ DistroLocalTools(){
 								echo 'Prefix "distro-system" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
 								echo 'Prefix "distro-source" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" &'
 								echo 'mkdir -p "$MMDAPP/source" # make sure `source` directory exists'
-								echo 'touch "$MMDAPP/.local/MDSC.source.settings.env" # make sure workspace source env file exists'
+								echo 'touch "$MMDAPP/.local/MDSC.source.settings.env" # make sure workspace deploy env file exists'
 							)"
 						;;
 						--install-distro-.local)
