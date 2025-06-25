@@ -56,6 +56,8 @@ while [ $# -gt 0 ]; do
 	--config-file)
 		[ $# -lt 2 ] && { echo "⛔) ERROR: workspace-install: $1 needs argument" >&2; exit 1; }
 		BOOT_CONFIG=$2 ; shift ; shift ;;
+	--verbose)
+		MDSC_DETAIL=true; shift ;;
 	*)
 		echo "⛔) ERROR: workspace-install: invalid option: $1" >&2
 		exit 1
