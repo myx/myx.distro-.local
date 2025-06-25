@@ -76,5 +76,7 @@ complete -W "\` Local --completion-all \`" "which"
 complete -W "\` Local --completion-require \`" "Require"
 complete -W "\` Local --completion-.local \`" "Local"
 
+export LANG=en_US.UTF-8
+
 PROMPT_COMMAND='set +e ; history -w; history -r ; PS1="$( Local --shell-prompt )"'
 export PROMPT_COMMAND PATH
