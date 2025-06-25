@@ -200,7 +200,7 @@ for sys in $(printf '%s\n' "$CONFIG_CONTENT" \
              | awk '$1!~/^#/ && NF {print $1}' \
              | sort -u); do
   # if --force OR the target sub‐directory doesn’t exist
-  if [ "$BOOT_UPDATE" -eq 1 ] || [ ! -d "$sys" ]; then
+  if [ "$BOOT_UPDATE" -eq 1 ] || [ ! -d "$sys/myx/myx.distro-$sys/sh-lib" ]; then
     INSTALL_SYSTEMS="$INSTALL_SYSTEMS --install-distro-$sys"
   fi
 done
