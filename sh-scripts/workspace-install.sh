@@ -76,7 +76,9 @@ case "$MMDAPP" in
   *)  MMDAPP="$PWD/$MMDAPP" ;;
 esac
 
-export MMDAPP
+MDLT_ORIGIN="$MMDAPP/.local"
+
+export MMDAPP MDLT_ORIGIN
 mkdir -p "$MMDAPP"
 cd "$MMDAPP"
 echo "🫣) workspace-install: Workspace root: $PWD" >&2
