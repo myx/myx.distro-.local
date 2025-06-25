@@ -257,6 +257,7 @@ fi
 
 			if [ -n "$REPO_LIST" ] ; then
 				echo "echo '⬇️) workspace-install: Pull workspace-initial git repositories...' >&2"
+				[ -z "$MDSC_DETAIL" ] || printf '⬇️) workspace-install: initial source list: \n\n%s\n\n' "$REPO_LIST" >&2
 				echo "printf '%s\n' '$REPO_LIST' | Source DistroImageSync --execute-from-stdin-repo-list"
 			fi
 
