@@ -45,6 +45,7 @@ set -euo pipefail
 BOOT_METHOD=--web-fetch
 BOOT_UPDATE=0
 BOOT_CONFIG=
+: "${MDSC_DETAIL:=}"
 while [ $# -gt 0 ]; do
   case "$1" in
 	--web-fetch|--git-clone)
@@ -57,7 +58,7 @@ while [ $# -gt 0 ]; do
 		[ $# -lt 2 ] && { echo "⛔) ERROR: workspace-install: $1 needs argument" >&2; exit 1; }
 		BOOT_CONFIG=$2 ; shift ; shift ;;
 	--verbose)
-		MDSC_DETAIL=true; shift ;;
+		export MDSC_DETAIL=true; shift ;;
 	*)
 		echo "⛔) ERROR: workspace-install: invalid option: $1" >&2
 		exit 1
