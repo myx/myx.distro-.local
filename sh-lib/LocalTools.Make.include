@@ -58,7 +58,7 @@ case "$1" in
 	--make-console-script)
 		shift
 
-		cat << 'DISTROCONSOLE'
+		cat <<- 'DISTROCONSOLE'
 			#!/usr/bin/env bash
 
 			set -e
