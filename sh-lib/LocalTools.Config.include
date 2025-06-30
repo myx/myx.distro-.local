@@ -60,7 +60,7 @@ case "$1" in
 
 	  --select-default)
 		key=$1; val=$2 ; 
-		shift ; shift
+		shift 2
 		if grep -q "^$key=" "$config_file" 2>/dev/null; then
 		  { grep -h "^$key=" "$config_file" || :; } \
 			| tail -n1 | cut -d= -f2-
@@ -71,7 +71,7 @@ case "$1" in
 
 	  --upsert)
 		key=$1; val=$2
-		shift ; shift
+		shift 2
 		(
 			tmp="$config_file.$$"
 			trap 'rm -f -- "$tmp"' EXIT
@@ -83,7 +83,7 @@ case "$1" in
 
 	  --upsert-if)
 		key=$1 ; val=$2 ; ifval=$3
-		shift ; shift ; shift
+		shift 3
 		curr=$(
 			{ grep -h "^$key=" "$config_file" || :; } \
 			| tail -n1 | cut -d= -f2-
@@ -110,7 +110,7 @@ case "$1" in
 
 	  --delete-if)
 		key=$1 ; ifval=$2
-		shift ; shift
+		shift 2
 		curr=$(
 			{ grep -h "^$key=" "$config_file" || :; } \
 			| tail -n1 | cut -d= -f2-
