@@ -55,7 +55,7 @@ while [ $# -gt 0 ]; do
 	--config-stdin)
 		BOOT_CONFIG= ; shift ;;
 	--config-file)
-		[ $# -lt 2 ] && { echo "⛔) ERROR: workspace-install: $1 needs argument" >&2; exit 1; }
+		[ $# -gt 1 ] || { echo "⛔) ERROR: workspace-install: $1 needs argument" >&2; exit 1; }
 		BOOT_CONFIG=$2 ; shift 2 ;;
 	--verbose)
 		export MDSC_DETAIL=true; shift ;;
