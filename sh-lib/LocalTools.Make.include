@@ -122,6 +122,36 @@ DISTROCONSOLE
 
 		return 0
 	;;
+	--make-clean-fs-garbage)
+		# myx.common remove/fileJunk --quiet --any-xattrs "${1:-$MMDAPP/}"
+
+		# 1. Find & delete known junk files
+		find "${1:-$MMDAPP/}" -type f \( \
+		-name '.DS_Store' -o \
+		-name '._*' -o \
+		-name '.AppleDouble' -o \
+		-name 'Icon?' -o \
+		-name '.Trashes' \
+		\) ! -path '*/.git/*' -exec rm -f {} +
+
+		# 2. Remove junk directories
+		find "${1:-$MMDAPP/}" -type d \( \
+		-name '.Spotlight-V100' -o \
+		-name '.Trashes' -o \
+		-name '.AppleDouble' \
+		\) ! -path '*/.git/*' -exec rm -rf {} +
+
+		# 3. Remove extended attributes if supported (macOS/FreeBSD only)
+		if command -v xattr >/dev/null 2>&1; then
+		find "${1:-$MMDAPP/}" ! -path '*/.git/*' -exec xattr -c {} 2>/dev/null \;
+		elif command -v setfattr >/dev/null 2>&1; then
+		find "${1:-$MMDAPP/}" ! -path '*/.git/*' -exec setfattr -h -x user.* {} 2>/dev/null \;
+		fi
+
+		echo "✔️ Clean-up complete. Your workspace should be tidy now."
+
+		return 0
+	;;
 	*)
 		echo "⛔ ERROR: $MDSC_CMD: invalid option: $1" >&2
 		set +e ; return 1
