@@ -1,7 +1,6 @@
 #!/usr/bin/env sh
 set -euo pipefail
 
-set -x
 ###############################################################################
 #
 # This is 'boot' standalone installer script, that allows to bootstrap and install
