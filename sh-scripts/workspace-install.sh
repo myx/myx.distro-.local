@@ -58,7 +58,7 @@ while [ $# -gt 0 ]; do
 		[ $# -gt 1 ] || { echo "⛔) ERROR: workspace-install: $1 needs argument" >&2; exit 1; }
 		BOOT_CONFIG=$2 ; shift 2 ;;
 	--verbose)
-		export MDSC_DETAIL=true; shift ;;
+		export MDSC_DETAIL=${MDSC_DETAIL:-true}; shift ;;
 	*)
 		echo "⛔) ERROR: workspace-install: invalid option: $1" >&2
 		exit 1
