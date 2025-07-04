@@ -42,7 +42,8 @@ Following steps should be performed in the shell:
 
 		```cd /Volumes/disk2/hobby-set```
 
-3. While in workspace root directory, **Clone the Git repository** for `git@github.com:myx/myx.distro-.local.git` into `.local/myx/myx.distro-.local` using following commands:  
+3. While in workspace root directory, **Clone the Git repository** for `git@github.com:myx/myx.distro-.local.git` 
+   into `.local/myx/myx.distro-.local` using following commands:  
 
 	```mkdir -p .local/myx/```
 	
@@ -72,3 +73,4 @@ Following steps should be performed in the shell:
 
 5. Then you can **Enter Local Console** any time by running `DistroLocalConsole.sh` from
    your workspace directory. 
+
