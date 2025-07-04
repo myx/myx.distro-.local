@@ -6,19 +6,33 @@
 ##
 
 
+if [ -z "$MMDAPP" ] ; then
+	set -e
+	export MMDAPP="$( cd $(dirname "$0")/../../../.. ; pwd )"
+	echo "$0: Working in: $MMDAPP" >&2
+	[ -d "$MMDAPP/.local" ] || ( echo "⛔ ERROR: expecting '.local' directory." >&2 && exit 1 )
+fi
+
+: "${MDLT_ORIGIN:=$MMDAPP/.local}"
+export MDLT_ORIGIN
+
+: "${MYXROOT:="$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/share/myx.common"}"
+export MYXROOT
 
 ##
 ## To make this script self-sufficient, this copied from:
 ## `myx/myx.common/os-myx.common/host/share/myx.common/bin/git/clonePull`
 ##
-GitClonePull(){
+. "$MYXROOT/bin/git/clonePull" || GitClonePull(){
 	set -e
 
-	if [ -x "$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/share/myx.common/bin/git/clonePull" ] ; then 
+	if [ -x "$MYXROOT/bin/git/clonePull" ] ; then 
 		echo "😻 GitClonePull: executable found!" >&2
-		"$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/share/myx.common/bin/git/clonePull" "$@"
+		"$MYXROOT/bin/git/clonePull" "$@"
 		return 0
 	fi
+
+	echo "-- using embedded function"
 
 	: "${1:?⛔ ERROR: GitClonePull: tgtPath is required!}"
 	: "${2:?⛔ ERROR: GitClonePull: repoUrl is required!}"
@@ -72,28 +86,25 @@ GitClonePull(){
 }
 
 
-if [ -z "$MMDAPP" ] ; then
-	set -e
-	export MMDAPP="$( cd $(dirname "$0")/../../../.. ; pwd )"
-	echo "$0: Working in: $MMDAPP" >&2
-	[ -d "$MMDAPP/.local" ] || ( echo "⛔ ERROR: expecting '.local' directory." >&2 && exit 1 )
-fi
-
-: "${MDLT_ORIGIN:=$MMDAPP/.local}"
-export MDLT_ORIGIN
-
-
 ##
 ## To make this script self-sufficient, this copied IN SIMPLIFIED FORM from:
 ## `myx/myx.common/os-myx.common/host/share/myx.common/bin/lib/prefix`
 ##
-Prefix(){
+. "$MYXROOT/bin/lib/prefix" || Prefix(){
+	set -e
+
+	if [ -x "$MYXROOT/bin/lib/prefix" ] ; then 
+		echo "😻 Prefix: executable found!" >&2
+		"$MYXROOT/bin/lib/prefix" "$@"
+		return 0
+	fi
+
+	echo "-- using embedded function"
+
 	local PREFTEXT="$1"
 	shift
 
 	PREFTEXT="$( printf %s "$PREFTEXT" | tr '^' '-' | tr -d '\n' )"
-	
-	set -e
 
     ( "$@" 2>&1 \
     		|| ( EXITCODE=$? ; set +x ; echo "⛔ ERROR: exited with error status ($EXITCODE)" ; exit $EXITCODE ) \
@@ -101,6 +112,87 @@ Prefix(){
    	
 }
 
+##
+## To make this script self-sufficient, this copied from:
+## `myx/myx.common/os-myx.common/host/share/myx.common/bin/lib/catMarkdown`
+##
+. "$MYXROOT/bin/lib/catMarkdown" || CatMarkdown() {
+	set -e
+
+	if [ -x "$MYXROOT/bin/lib/catMarkdown" ] ; then 
+		echo "😻 CatMarkdown: executable found!" >&2
+		"$MYXROOT/bin/lib/catMarkdown" "$@"
+		return 0
+	fi
+
+	echo "-- using embedded function"
+
+	local fromFile="$1"
+	if [ -n "$fromFile" ] ; then
+		if [ ! -f "$fromFile" ] ; then
+			echo "⛔ ERROR: CatMarkdown: file not found: $fromFile" >&2
+			set +e ; return 1
+		fi
+		shift
+		cat "$fromFile" | CatMarkdown
+		return 0
+	fi
+
+	# detect “real” TTY
+	if     [ -t 1 ] \
+		&& [ -z "${NO_COLOR-}" ] \
+		&& [ -n "${TERM-}" ] && [ "$TERM" != dumb ] \
+		&& tput colors >/dev/null 2>&1 \
+		&& [ "$(tput colors)" -ge 8 ] \
+	; then
+		USE_COLOR=1
+	fi
+
+	if [ "${USE_COLOR-}" ]; then
+		# ANSI codes
+		esc=$(printf '\033')
+		reset="${esc}[0m"
+		bold_on="${esc}[1m"   bold_off="${esc}[22m"
+		ital_on="${esc}[3m"   ital_off="${esc}[23m"
+		code_on="${esc}[96m"  code_off="${reset}"
+		quote_on="${esc}[90m" quote_off="${reset}"
+		bullet_on="${esc}[32m" bullet_off="${reset}"
+		hdr1_on="${esc}[95m"  hdr2_on="${esc}[94m"  hdr3_on="${esc}[92m"
+		hdr_off="${reset}"
+
+		sed -E \
+		-e "s/^###### (.*)/${hdr1_on}\1${hdr_off}/" \
+		-e "s/^##### (.*)/${hdr1_on}\1${hdr_off}/" \
+		-e "s/^#### (.*)/${hdr2_on}\1${hdr_off}/" \
+		-e "s/^### (.*)/${hdr2_on}\1${hdr_off}/" \
+		-e "s/^## (.*)/${hdr3_on}\1${hdr_off}/" \
+		-e "s/^# (.*)/${hdr3_on}\1${hdr_off}/" \
+		-e "s/^([[:space:]]*)> +(.*)/\1${quote_on}> ${quote_off}\2/" \
+		-e "s/^([[:space:]]*)([0-9]+)\. +(.*)/\1${bullet_on}○ ${bullet_off}\3/" \
+		-e "s/^([[:space:]]*)[-*] +(.*)/\1${bullet_on}• ${bullet_off}\2/" \
+		-e "s/\*\*([^*]+)\*\*/${bold_on}\1${bold_off}/g" \
+		-e "s/_([^_]+)_/${ital_on}\1${ital_off}/g" \
+		-e "s/\`([^\`]+)\`/${code_on}\1${code_off}/g" \
+		-e '/^[[:space:]]*\|?[-:]+(\|[-:]+)+\|?[[:space:]]*$/d'
+	else
+		sed -E \
+		-e 's/^#{1,6} //g' \
+		-e 's/^([[:space:]]*)> +(.*)/\1\2/' \
+		-e 's/^([[:space:]]*)([0-9]+)\. +(.*)/\1- \3/' \
+		-e 's/^([[:space:]]*)[-*] +(.*)/\1- \2/' \
+		-e 's/\*\*([^*]+)\*\*/\1/g' \
+		-e 's/_([^_]+)_/\1/g' \
+		-e 's/\`([^`]+)\`/\1/g' \
+		-e '/^[[:space:]]*\|?[-:]+(\|[-:]+)+\|?[[:space:]]*$/d'
+	fi | column -s '|' -t
+}
+
+
+##
+##
+##		DistroLocalTools
+##
+##
 DistroLocalTools(){
 	local MDSC_CMD='DistroLocalTools'
 	[ -z "$MDSC_DETAIL" ] || echo "> $MDSC_CMD" $MDSC_NO_CACHE $MDSC_NO_INDEX "$@" >&2
@@ -127,6 +219,8 @@ DistroLocalTools(){
 				[ "$MDLC_INMODE" != "source" ] || local MDLT_ORIGIN="$MMDAPP/.local"
 				local cmds
 				cmds+="$(
+					# echo '. "$( myx.common which lib/prefix )"'' ## included statically above
+					# echo '. "$( myx.common which git/clonePull )"'' ## included statically above
 					echo
 					echo 'set -e'
 					echo "export MMDAPP='$MMDAPP'"
@@ -207,8 +301,8 @@ DistroLocalTools(){
 			;;
 			--help-install-unix-bare)
 				(
-					. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.CatMarkdown.include"
-					DistroLocalCatMarkdown "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools-install-unix-bare.md" >&2
+					# . "$( myx.common which lib/catMarkdown )" ## included statically above
+					CatMarkdown "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools-install-unix-bare.md" >&2
 				)
 				return 0
 			;;

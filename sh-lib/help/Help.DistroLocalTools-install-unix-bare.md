@@ -1,9 +1,8 @@
+
 # myx.distro-.local, Workspace Utility
 
 This utility facilitates **myx.distro** workspace (directory) creation and allows installation of  
 `myx.distro-remote`, `myx.distro-deploy` or `myx.distro-source` applications in any **myx.distro** workspace.
-
----
 
 ## Installation (Variant: Unix, Bare)
 
