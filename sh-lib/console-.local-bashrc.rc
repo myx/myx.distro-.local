@@ -10,6 +10,8 @@ DistroLocalContext --run-from-detect
 # search: 1) previous path; 2) distro {.local|system|deploy|source} scripts.
 
 if [ -x "$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/bin/myx.common" ] ; then
+	: ${MYXROOT:=$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/share/myx.common}
+	export MYXROOT
 	PATH="$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/bin:$PATH"
 fi
 
