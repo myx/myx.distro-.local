@@ -23,7 +23,7 @@ export MYXROOT
 ## To make this script self-sufficient, this copied from:
 ## `myx/myx.common/os-myx.common/host/share/myx.common/bin/git/clonePull`
 ##
-. "$MYXROOT/bin/git/clonePull" || GitClonePull(){
+. "$MYXROOT/bin/git/clonePull" 2>/dev/null || . "$( myx.common which git/clonePull )" 2>/dev/null || GitClonePull(){
 	set -e
 
 	if [ -x "$MYXROOT/bin/git/clonePull" ] ; then 
@@ -90,7 +90,7 @@ export MYXROOT
 ## To make this script self-sufficient, this copied IN SIMPLIFIED FORM from:
 ## `myx/myx.common/os-myx.common/host/share/myx.common/bin/lib/prefix`
 ##
-. "$MYXROOT/bin/lib/prefix" || Prefix(){
+. "$MYXROOT/bin/lib/prefix" 2>/dev/null || . "$( myx.common which lib/prefix )" 2>/dev/null || Prefix(){
 	set -e
 
 	if [ -x "$MYXROOT/bin/lib/prefix" ] ; then 
@@ -116,7 +116,7 @@ export MYXROOT
 ## To make this script self-sufficient, this copied from:
 ## `myx/myx.common/os-myx.common/host/share/myx.common/bin/lib/catMarkdown`
 ##
-. "$MYXROOT/bin/lib/catMarkdown" || CatMarkdown() {
+. "$MYXROOT/bin/lib/catMarkdown" 2>/dev/null || . "$( myx.common which lib/catMarkdown )" 2>/dev/null || CatMarkdown() {
 	set -e
 
 	if [ -x "$MYXROOT/bin/lib/catMarkdown" ] ; then 
