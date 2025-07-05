@@ -16,14 +16,23 @@ fi
 : "${MDLT_ORIGIN:=$MMDAPP/.local}"
 export MDLT_ORIGIN
 
-: "${MYXROOT:="$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/share/myx.common"}"
-export MYXROOT
+if   [ -d "$MYXROOT" ] && [ -f "$MYXROOT/share/myx.common/bin/lib/catMarkdown" ]; then
+	export MYXROOT
+elif   [ -f "$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/share/myx.common/bin/lib/catMarkdown" ]; then
+	export MYXROOT="$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/share/myx.common"
+elif [ -f "/usr/local/share/myx.common/bin/lib/catMarkdown" ]; then
+	export MYXROOT="/usr/local/share/myx.common"
+elif command -v myx.common 2>/dev/null && myx.common which lib/catMarkdown 2>/dev/null ; then
+	export MYXROOT="$( myx.common which lib/catMarkdown | sed -e 's|/bin/lib/catMarkdown$||' )"
+else
+	export MYXROOT=''
+fi
 
 ##
 ## To make this script self-sufficient, this copied from:
 ## `myx/myx.common/os-myx.common/host/share/myx.common/bin/git/clonePull`
 ##
-. "$MYXROOT/bin/git/clonePull" 2>/dev/null || . "$( myx.common which git/clonePull 2>/dev/null )" 2>/dev/null || GitClonePull(){
+[ -f "$MYXROOT/bin/git/clonePull" ] && . "$MYXROOT/bin/git/clonePull" || GitClonePull(){
 	set -e
 
 	if [ -x "$MYXROOT/bin/git/clonePull" ] ; then 
@@ -90,7 +99,7 @@ export MYXROOT
 ## To make this script self-sufficient, this copied IN SIMPLIFIED FORM from:
 ## `myx/myx.common/os-myx.common/host/share/myx.common/bin/lib/prefix`
 ##
-. "$MYXROOT/bin/lib/prefix" 2>/dev/null || . "$( myx.common which lib/prefix 2>/dev/null )" 2>/dev/null || Prefix(){
+[ -f "$MYXROOT/bin/lib/prefix" ] && . "$MYXROOT/bin/lib/prefix" || Prefix(){
 	set -e
 
 	if [ -x "$MYXROOT/bin/lib/prefix" ] ; then 
@@ -116,7 +125,7 @@ export MYXROOT
 ## To make this script self-sufficient, this copied from:
 ## `myx/myx.common/os-myx.common/host/share/myx.common/bin/lib/catMarkdown`
 ##
-. "$MYXROOT/bin/lib/catMarkdown" 2>/dev/null || . "$( myx.common which lib/catMarkdown 2>/dev/null )" 2>/dev/null || CatMarkdown() {
+[ -f "$MYXROOT/bin/lib/catMarkdown" ] && . "$MYXROOT/bin/lib/catMarkdown" || CatMarkdown() {
 	set -e
 
 	if [ -x "$MYXROOT/bin/lib/catMarkdown" ] ; then 
@@ -229,7 +238,10 @@ DistroLocalTools(){
 					echo 'set +e # for pulls (when no changes)'
 					echo 'Prefix "os-myx.common" GitClonePull "$MDLT_ORIGIN/myx/myx.common/os-myx.common" "git@github.com:myx/os-myx.common.git" &'
 					echo 'Prefix "distro-.local" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &'
+					echo 'set -e'
+					echo
 					echo 'touch "$MMDAPP/.local/MDLT.settings.env" # make sure workspace env file exists'
+					echo 'export MYXROOT="$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/share/myx.common"'
 				)"
 
 				while true ; do
