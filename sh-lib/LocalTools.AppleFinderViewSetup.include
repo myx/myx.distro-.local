@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# no extra ident, for here-docs
+AppleFinderViewSetup(){
+
+local WORKSPACE="" PROJECT_NAME="" PROJECT_TITLE="" FINDER_LAYOUT="" ASSET_DIR
+
+while [[ $# -gt 0 ]]; do case "$1" in
+	--project-name)  PROJECT_NAME="$2"; shift 2;;
+	--project-title) PROJECT_TITLE="$2"; shift 2;;
+	--finder-layout) FINDER_LAYOUT=true; shift;;
+	*)               WORKSPACE="$1"; shift;;
+esac; done
+
+# guards
+[ "$(uname)" = "Darwin" ] || { echo "AppleFinderViewSetup: 😉 nothing to do here - macOS only." >&2 && return 0; }
+[[ -n "$PROJECT_NAME" && -n "$PROJECT_TITLE" && -n "$WORKSPACE" ]] || { echo "AppleFinderViewSetup: ⛔️ Missing --project-name, --project-title or workspace" >&2; set +e ; return 1; }
+[[ -d "$WORKSPACE/.local" ]] || { echo "AppleFinderViewSetup: ⛔️ Error: $WORKSPACE/.local not found" >&2; set +e; return 1; }
+
+echo "AppleFinderViewSetup: 🛠 Injecting Finder view into: $WORKSPACE" >&2
+
+rm -f "$WORKSPACE/.DS_Store"
+
+ASSET_DIR="$WORKSPACE/.local/assets"; mkdir -p "$ASSET_DIR"
+# decode background image
+cat <<'BG' | base64 -d >"$ASSET_DIR/background.png"
+iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhPAAEGAJPHExijAAAAAElFTkSuQmCC
+BG
+
+local icon
+for name in source output remote distro export; do
+	[[ -d "$WORKSPACE/$name" ]] || continue
+	case "$name" in 
+		source) icon=GenericDocumentIcon.icns ;;
+		output) icon=GenericApplicationIcon.icns ;;
+		remote) icon=SidebarNetwork.icns ;;
+		distro) icon=InstallerIcon.icns ;;
+		export) icon=GenericExportIcon.icns ;;
+		*) continue ;;
+	esac
+	local ICON_SRC="/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/$icon"
+	cp "$ICON_SRC" "$ASSET_DIR/$name.icns"
+	cp "$ASSET_DIR/$name.icns" "$WORKSPACE/$name/Icon"$'\r'
+	# compute a 32-byte big-endian blob with only the C bit set
+	xattr -wx com.apple.FinderInfo "$(printf '%064x' $((1<<12)))" "$WORKSPACE/$name"
+	xattr -w com.apple.metadata:kMDItemFinderComment "Open $name folder" "$WORKSPACE/$name"
+	# SetFile -a C "$WORKSPACE/$name"                             # mark custom icon
+done
+
+# osascript
+
+# cat <<EOF
+[ -z "$FINDER_LAYOUT" ] || { killall Finder ; osascript >/dev/null || echo "AppleFinderViewSetup: ❌ osascript failed!" >&2 ; } <<EOF
+tell application "Finder"
+	launch
+	
+	-- open workspace and grab its window
+	set targetFolder to POSIX file "$WORKSPACE" as alias
+	open targetFolder
+	delay 0.2
+	set theWin to window 1
+
+	-- center & half-size on screen
+	set dsBounds to bounds of window of desktop
+	set sw to item 3 of dsBounds
+	set sh to item 4 of dsBounds
+	set bounds of theWin to {sw/4, sh/4-sh/13, sw*3/4, sh*3/4+sh/13}
+
+
+	-- switch to list view & style it
+	set current view of theWin to list view
+	tell list view options of theWin
+		set text size to 13
+
+		repeat with colObj in list view columns
+			if kind of colObj is name column then set hidden of colObj to false
+			if kind of colObj is comment column then set hidden of colObj to false
+			if kind of colObj is kind column then set hidden of colObj to false
+
+			if kind of colObj is size column then set hidden of colObj to true
+			if kind of colObj is label column then set hidden of colObj to true
+			if kind of colObj is date created column then set hidden of colObj to true
+			if kind of colObj is date modified column then set hidden of colObj to true
+			if kind of colObj is date last opened column then set hidden of colObj to true
+		end repeat
+ 	end tell
+
+	delay 0.2
+	activate theWin
+	--close theWin
+	activate
+end tell
+EOF
+
+echo "AppleFinderViewSetup: ✅ AppleFinderViewSetup completed." >&2
+
+}

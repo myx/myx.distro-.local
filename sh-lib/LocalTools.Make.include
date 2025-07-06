@@ -4,6 +4,13 @@
 : "${MDLT_ORIGIN:=$MMDAPP/.local}"
 
 case "$1" in
+	--make-setup-mac-finder-view)
+		shift
+		(
+			. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.AppleFinderViewSetup.include" 
+			AppleFinderViewSetup "$@" "$MMDAPP"
+		)
+	;;
 	--make-workspace-integration-files)
 		shift
 
@@ -28,6 +35,8 @@ case "$1" in
 				)
 			fi
 		done
+
+		[ "$(uname)" != "Darwin" ] || DistroLocalTools --make-setup-mac-finder-view
 
 		if [ "$1" != "--quiet" ] ; then
 			local consoles="$( ls $MMDAPP/Distro*Console.sh | sed 's|^|	|g' )"
