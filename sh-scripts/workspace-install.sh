@@ -252,8 +252,8 @@ fi
 			echo ': ${MDSC_DETAIL:=true}'
 
 			if [ -n "$ROOT_LIST" ] ; then
-				echo "echo '📝) workspace-install: Register repository roots ($ROOT_LIST)...' >&2"
-				echo "Source DistroSourceTools --register-repository-roots $ROOT_LIST"
+				echo "echo '📝) workspace-install: Register namespace roots ($ROOT_LIST)...' >&2"
+				echo "Source DistroSourceTools --register-namespace-roots $ROOT_LIST"
 			fi
 
 			if [ -n "$REPO_LIST" ] ; then
