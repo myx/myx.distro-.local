@@ -15,7 +15,8 @@ esac; done
 
 # guards
 [ "$(uname)" = "Darwin" ] || { echo "AppleFinderViewSetup: 😉 nothing to do here - macOS only." >&2 && return 0; }
-[[ -n "$PROJECT_NAME" && -n "$PROJECT_TITLE" && -n "$WORKSPACE" ]] || { echo "AppleFinderViewSetup: ⛔️ Missing --project-name, --project-title or workspace" >&2; set +e ; return 1; }
+[ -n "$WORKSPACE" ] || { echo "AppleFinderViewSetup: ⛔️ Missing workspace path." >&2; set +e ; return 1; }
+#[[ -n "$PROJECT_NAME" && -n "$PROJECT_TITLE" ]] || { echo "AppleFinderViewSetup: ⛔️ Missing --project-name or --project-title" >&2; set +e ; return 1; }
 [[ -d "$WORKSPACE/.local" ]] || { echo "AppleFinderViewSetup: ⛔️ Error: $WORKSPACE/.local not found" >&2; set +e; return 1; }
 
 echo "AppleFinderViewSetup: 🛠 Injecting Finder view into: $WORKSPACE" >&2
