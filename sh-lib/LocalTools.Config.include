@@ -6,134 +6,137 @@
 ###	 . "$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
 ###   fi
 ###
-while true ; do
-case "$1" in
-  --*-config-option)
-	local config_file
-	local cmd key val ifval curr tmp
-
-	# pick target & ensure stub files exist
-	case "$1" in
-		--system-config-option)
-			config_file="$MMDAPP/.local/MDLT.settings.env"
-			mkdir -p "${config_file%/*}" || return 1
-			touch "$config_file"
-		;;
-		--custom-config-option)
-			config_file="$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
-			mkdir -p "${config_file%/*}" || return 1
-			touch "$config_file"
-		;;
-		--remote-config-option)
-			: ${2:?"⛔ ERROR: $1 requires remote-id argument to follow!"}
-			key="$2" ; shift
-			config_file="$MMDAPP/remote/static/${key}.remote.env"
-			mkdir -p "${config_file%/*}" || return 1
-			touch "$config_file"
-		;;
-		--*-config-option)
-			echo "⛔ ERROR: unsupported config scope '$1'" >&2
-			return 1
-		;;
-	esac
-
-	# shift past the scope flag, grab the sub-command
-	shift
-	cmd=$1; shift
-
-	# prepare temp‐files & ensure cleanup
-
-	case "$cmd" in
-	  --select-all)
-		grep -h '^[^#].*=' "$config_file" || :
-		;;
-
-	  --select)
-		if [ "$1" = --all ]; then
-		  grep -h '^[^#].*=' "$config_file" || :
-		else
-		  { grep -h "^$1=" "$config_file" || :; } \
-			| tail -n1 | cut -d= -f2-
-		fi
-		shift
-		;;
-
-	  --select-default)
-		key=$1; val=$2 ; 
-		shift 2
-		if grep -q "^$key=" "$config_file" 2>/dev/null; then
-		  { grep -h "^$key=" "$config_file" || :; } \
-			| tail -n1 | cut -d= -f2-
-		else
-		  printf '%s\n' "$val"
-		fi
-		;;
-
-	  --upsert)
-		key=$1; val=$2
-		shift 2
-		(
-			tmp="$config_file.$$"
-			trap 'rm -f -- "$tmp"' EXIT
-			grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
-			printf '%s=%s\n' "$key" "$val" >>"$tmp"
-			mv "$tmp" "$config_file"
-		)
-		;;
-
-	  --upsert-if)
-		key=$1 ; val=$2 ; ifval=$3
-		shift 3
-		curr=$(
-			{ grep -h "^$key=" "$config_file" || :; } \
-			| tail -n1 | cut -d= -f2-
-		)
-		[ "$curr" != "$ifval" ] || (
-			tmp="$config_file.$$"
-			trap 'rm -f -- "$tmp"' EXIT
-			grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
-			printf '%s=%s\n' "$key" "$val" >>"$tmp"
-			mv "$tmp" "$config_file"
-		)
-		;;
-
-	  --delete)
-		key=$1
-		shift
-		(
-			tmp="$config_file.$$"
-			trap 'rm -f -- "$tmp"' EXIT
-			grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
-			mv "$tmp" "$config_file"
-		)
-		;;
-
-	  --delete-if)
-		key=$1 ; ifval=$2
-		shift 2
-		curr=$(
-			{ grep -h "^$key=" "$config_file" || :; } \
-			| tail -n1 | cut -d= -f2-
-		)
-		[ "$curr" != "$ifval" ] || (
-			tmp="$config_file.$$"
-			trap 'rm -f -- "$tmp"' EXIT
-			grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
-			mv "$tmp" "$config_file"
-		)
-		;;
-
-	  *)
-		echo "⛔ ERROR: unknown config operation '$cmd'" >&2
-		set +e ; return 1
-		;;
-	esac
-
-	return 0
+while true ; do case "$1" in
+	--.local-config-option-select-default)
+		# key=$2; val=$3; shift 3
+		{ grep -m1 "^$2=" /dev/null $( ls -1d "$MMDAPP/.local/"{home/$(id -un)/,}MDLT.settings.env 2>/dev/null || : ) || echo "=$3"; } | cut -d= -f2-
+		shift 3; return 0
 	;;
+	--*-config-option)
+		local config_file
+		local cmd key val ifval curr tmp
 
-  *)
-	return 0
-	;;
-esac
-done
+		# pick target & ensure stub files exist
+		case "$1" in
+			--system-config-option)
+				config_file="$MMDAPP/.local/MDLT.settings.env"
+				mkdir -p "${config_file%/*}" || return 1
+				touch "$config_file"
+			;;
+			--custom-config-option)
+				config_file="$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
+				mkdir -p "${config_file%/*}" || return 1
+				touch "$config_file"
+			;;
+			--remote-config-option)
+				: ${2:?"⛔ ERROR: $1 requires remote-id argument to follow!"}
+				key="$2" ; shift
+				config_file="$MMDAPP/remote/static/${key}.remote.env"
+				mkdir -p "${config_file%/*}" || return 1
+				touch "$config_file"
+			;;
+			--*-config-option)
+				echo "⛔ ERROR: unsupported config scope '$1'" >&2
+				return 1
+			;;
+		esac
+
+		# shift past the scope flag, grab the sub-command
+		shift
+		cmd=$1; shift
+
+		# prepare temp‐files & ensure cleanup
+
+		case "$cmd" in
+		--select-all)
+			grep -h '^[^#].*=' "$config_file" || :
+			;;
+
+		--select)
+			if [ "$1" = --all ]; then
+			grep -h '^[^#].*=' "$config_file" || :
+			else
+			{ grep -h "^$1=" "$config_file" || :; } \
+				| tail -n1 | cut -d= -f2-
+			fi
+			shift
+			;;
+
+		--select-default)
+			key=$1; val=$2 ; 
+			shift 2
+			if grep -q "^$key=" "$config_file" 2>/dev/null; then
+			{ grep -h "^$key=" "$config_file" || :; } \
+				| tail -n1 | cut -d= -f2-
+			else
+			printf '%s\n' "$val"
+			fi
+			;;
+
+		--upsert)
+			key=$1; val=$2
+			shift 2
+			(
+				tmp="$config_file.$$"
+				trap 'rm -f -- "$tmp"' EXIT
+				grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
+				printf '%s=%s\n' "$key" "$val" >>"$tmp"
+				mv "$tmp" "$config_file"
+			)
+			;;
+
+		--upsert-if)
+			key=$1 ; val=$2 ; ifval=$3
+			shift 3
+			curr=$(
+				{ grep -h "^$key=" "$config_file" || :; } \
+				| tail -n1 | cut -d= -f2-
+			)
+			[ "$curr" != "$ifval" ] || (
+				tmp="$config_file.$$"
+				trap 'rm -f -- "$tmp"' EXIT
+				grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
+				printf '%s=%s\n' "$key" "$val" >>"$tmp"
+				mv "$tmp" "$config_file"
+			)
+			;;
+
+		--delete)
+			key=$1
+			shift
+			(
+				tmp="$config_file.$$"
+				trap 'rm -f -- "$tmp"' EXIT
+				grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
+				mv "$tmp" "$config_file"
+			)
+			;;
+
+		--delete-if)
+			key=$1 ; ifval=$2
+			shift 2
+			curr=$(
+				{ grep -h "^$key=" "$config_file" || :; } \
+				| tail -n1 | cut -d= -f2-
+			)
+			[ "$curr" != "$ifval" ] || (
+				tmp="$config_file.$$"
+				trap 'rm -f -- "$tmp"' EXIT
+				grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
+				mv "$tmp" "$config_file"
+			)
+			;;
+
+		*)
+			echo "⛔ ERROR: unknown config operation '$cmd'" >&2
+			set +e ; return 1
+			;;
+		esac
+
+		return 0
+		;;
+
+	*)
+		return 0
+		;;
+esac done

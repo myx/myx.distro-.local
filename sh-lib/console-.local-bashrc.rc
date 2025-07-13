@@ -71,6 +71,42 @@ Help(){
 	set +e ; return 1
 }
 
+
+[ "$USER" = "$( id -un )" ] || {
+	export USER="$( id -un )"
+}
+
+
+while true; do 
+	case "$(
+		set -- --.local-config-option-select-default MDLT_CONSOLE_HISTORY default
+		. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Config.include"
+	)" in
+		workspace-personal|default)
+			mkdir -p "$MMDAPP/.local/home/${USER}"
+			export HISTFILE="$MMDAPP/.local/home/${USER}/.bash_history" ;;
+		workspace-separate)
+			mkdir -p "$MMDAPP/.local/home/${USER}"
+			export HISTFILE="$MMDAPP/.local/home/${USER}/.bash_history_.local" ;;
+		local-machine-home)
+			export HISTFILE="$HOME/.bash_history_${MMDAPP##*/}" ;;
+		workspace-shared)
+			export HISTFILE="$MMDAPP/.local/.common_bash_history" ;;
+		bash-default)
+			export HISTFILE="$HOME/.bash_history"; break ;;
+		user-default) 
+			break ;;
+		*)
+			echo "⛔ ERROR: unknown MDSC_HISTORY: $MDSC_HISTORY" >&2; exit 1 ;;
+	esac 
+	export HISTCONTROL=ignoredups:erasedups
+	export HISTSIZE=999
+	export HISTFILESIZE=99999
+	shopt -s histappend 2>/dev/null || :
+	break
+done
+
+
 complete -W "\` Local --completion-all \`" ""
 complete -W "\` Local --completion-all \`" "*"
 complete -W "\` Local --completion-all \`" "which"
