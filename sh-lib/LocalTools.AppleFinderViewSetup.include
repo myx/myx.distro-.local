@@ -41,6 +41,7 @@ for name in source output remote distro export; do
 		*) continue ;;
 	esac
 	local ICON_SRC="/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/$icon"
+	[[ -f "$ICON_SRC" ]] || continue
 	cp "$ICON_SRC" "$ASSET_DIR/$name.icns"
 	cp "$ASSET_DIR/$name.icns" "$WORKSPACE/$name/Icon"$'\r'
 	# compute a 32-byte big-endian blob with only the C bit set
