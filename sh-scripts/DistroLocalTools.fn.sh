@@ -16,28 +16,30 @@ fi
 : "${MDLT_ORIGIN:=$MMDAPP/.local}"
 export MDLT_ORIGIN
 
-if   [ -d "$MYXROOT" ] && [ -f "$MYXROOT/share/myx.common/bin/lib/catMarkdown" ]; then
+if   [ -d "$MYXROOT" ] && [ -f "$MYXROOT/share/myx.common/bin/lib/catMarkdown.Common" ]; then
 	export MYXROOT
-elif   [ -f "$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/share/myx.common/bin/lib/catMarkdown" ]; then
+elif   [ -f "$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/share/myx.common/bin/lib/catMarkdown.Common" ]; then
 	export MYXROOT="$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/share/myx.common"
-elif [ -f "/usr/local/share/myx.common/bin/lib/catMarkdown" ]; then
+elif [ -f "/usr/local/share/myx.common/bin/lib/catMarkdown.Common" ]; then
 	export MYXROOT="/usr/local/share/myx.common"
 elif command -v myx.common 2>/dev/null && myx.common which lib/catMarkdown 2>/dev/null ; then
-	export MYXROOT="$( myx.common which lib/catMarkdown | sed -e 's|/bin/lib/catMarkdown$||' )"
+	export MYXROOT="$( myx.common which lib/catMarkdown | sed -e 's|/bin/lib/catMarkdown.*$||' )"
 else
 	export MYXROOT=''
 fi
 
+[ -n "${MYXUNIX-}" ] || export MYXUNIX="$(uname -s)"
+
 ##
 ## To make this script self-sufficient, this copied from:
-## `myx/myx.common/os-myx.common/host/share/myx.common/bin/git/clonePull`
+## `myx/myx.common/os-myx.common/host/share/myx.common/bin/git/clonePull.Common`
 ##
-[ -f "$MYXROOT/bin/git/clonePull" ] && . "$MYXROOT/bin/git/clonePull" || GitClonePull(){
+[ -f "$MYXROOT/bin/git/clonePull.Common" ] && . "$MYXROOT/bin/git/clonePull.Common" || GitClonePull(){
 	set -e
 
-	if [ -x "$MYXROOT/bin/git/clonePull" ] ; then 
+	if [ -x "$MYXROOT/bin/git/clonePull.Common" ] ; then 
 		echo "😻 GitClonePull: executable found!" >&2
-		"$MYXROOT/bin/git/clonePull" "$@"
+		"$MYXROOT/bin/git/clonePull.Common" "$@"
 		return 0
 	fi
 
@@ -97,14 +99,14 @@ fi
 
 ##
 ## To make this script self-sufficient, this copied IN SIMPLIFIED FORM from:
-## `myx/myx.common/os-myx.common/host/share/myx.common/bin/lib/prefix`
+## `myx/myx.common/os-myx.common/host/share/myx.common/bin/lib/prefix.Common`
 ##
-[ -f "$MYXROOT/bin/lib/prefix" ] && . "$MYXROOT/bin/lib/prefix" || Prefix(){
+[ -f "$MYXROOT/bin/lib/prefix.Common" ] && . "$MYXROOT/bin/lib/prefix.Common" || Prefix(){
 	set -e
 
-	if [ -x "$MYXROOT/bin/lib/prefix" ] ; then 
+	if [ -x "$MYXROOT/bin/lib/prefix.Common" ] ; then 
 		echo "😻 Prefix: executable found!" >&2
-		"$MYXROOT/bin/lib/prefix" "$@"
+		"$MYXROOT/bin/lib/prefix.Common" "$@"
 		return 0
 	fi
 
@@ -123,14 +125,14 @@ fi
 
 ##
 ## To make this script self-sufficient, this copied from:
-## `myx/myx.common/os-myx.common/host/share/myx.common/bin/lib/catMarkdown`
+## `myx/myx.common/os-myx.common/host/share/myx.common/bin/lib/catMarkdown.Common`
 ##
-[ -f "$MYXROOT/bin/lib/catMarkdown" ] && . "$MYXROOT/bin/lib/catMarkdown" || CatMarkdown() {
+[ -f "$MYXROOT/bin/lib/catMarkdown.Common" ] && . "$MYXROOT/bin/lib/catMarkdown.Common" || CatMarkdown() {
 	set -e
 
-	if [ -x "$MYXROOT/bin/lib/catMarkdown" ] ; then 
+	if [ -x "$MYXROOT/bin/lib/catMarkdown.Common" ] ; then 
 		echo "😻 CatMarkdown: executable found!" >&2
-		"$MYXROOT/bin/lib/catMarkdown" "$@"
+		"$MYXROOT/bin/lib/catMarkdown.Common" "$@"
 		return 0
 	fi
 
