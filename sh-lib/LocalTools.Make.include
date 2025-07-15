@@ -19,7 +19,6 @@ case "$1" in
 		fi
 
 		DistroLocalTools --make-console-command --quiet
-
 		local ITEM NAME FILE
 		for ITEM in "System" "Source" "Deploy" "Remote" ; do
 			NAME="$( printf '%s' "$ITEM" | tr '[:upper:]' '[:lower:]' )"
