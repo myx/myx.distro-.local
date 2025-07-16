@@ -318,7 +318,7 @@ DistroLocalTools(){
 				DistroLocalTools $(
 					for ITEM in "deploy" "source" "remote" ; do
 						[ -d "$MDLT_ORIGIN/myx/myx.distro-$ITEM/sh-scripts" ] || continue
-						echo --install-distro-$ITEM
+						printf ' --install-distro-%s' "$ITEM"
 					done
 				)
 				return 0
