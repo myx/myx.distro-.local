@@ -46,8 +46,7 @@ BOOT_METHOD=--web-fetch
 BOOT_UPDATE=0
 BOOT_CONFIG=
 : "${MDSC_DETAIL:=}"
-while [ $# -gt 0 ]; do
-  case "$1" in
+while [ $# -gt 0 ]; do case "$1" in
 	--web-fetch|--git-clone)
 		BOOT_METHOD=$1; shift ;;
 	--force)
@@ -62,8 +61,7 @@ while [ $# -gt 0 ]; do
 	*)
 		echo "⛔) ERROR: workspace-install: invalid option: $1" >&2
 		exit 1
-  esac
-done
+esac done
 
 # ─── 2) NORMALIZE WORKSPACE ROOT ─────────────────────────────────────────────
 MMDAPP="$TGT_APP_PATH"
