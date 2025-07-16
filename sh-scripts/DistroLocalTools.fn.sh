@@ -321,7 +321,6 @@ DistroLocalTools(){
 						echo --install-distro-$ITEM
 					done
 				)
-				DistroLocalTools --make-workspace-integration-files
 				return 0
 			;;
 			--help-install-unix-bare)
