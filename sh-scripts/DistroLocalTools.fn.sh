@@ -313,6 +313,16 @@ DistroLocalTools(){
 
 				return 0
 			;;
+			--upgrade-installed-tools)
+				DistroLocalTools $(
+					for ITEM in "deploy" "source" "remote" ; do
+						if [ -d "$MDLT_ORIGIN/myx/myx.distro-$ITEM/sh-scripts" ] ; then
+							echo --install-distro-$ITEM
+						fi
+					done
+				)
+				DistroLocalTools --make-workspace-integration-files
+			;;
 			--help-install-unix-bare)
 				(
 					# . "$( myx.common which lib/catMarkdown )" ## included statically above
