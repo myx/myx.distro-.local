@@ -317,12 +317,12 @@ DistroLocalTools(){
 				shift
 				DistroLocalTools $(
 					for ITEM in "deploy" "source" "remote" ; do
-						if [ -d "$MDLT_ORIGIN/myx/myx.distro-$ITEM/sh-scripts" ] ; then
-							echo --install-distro-$ITEM
-						fi
+						[ -d "$MDLT_ORIGIN/myx/myx.distro-$ITEM/sh-scripts" ] || continue
+						echo --install-distro-$ITEM
 					done
 				)
 				DistroLocalTools --make-workspace-integration-files
+				return 0
 			;;
 			--help-install-unix-bare)
 				(
