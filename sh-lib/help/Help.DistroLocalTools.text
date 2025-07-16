@@ -11,6 +11,10 @@
 			Installs basic system tools into designated workspace directory that allows
 			to enter workspace console or otherwise work with workspace data and commands.
 
+		--upgrade-installed-tools
+			Upgrade all/any (remote, deploy, source, .local) installed packages with latest 
+			`master` versions.
+
 		--install-distro-.local
 			Upgrades local .local packages with latest `master` version.
 
