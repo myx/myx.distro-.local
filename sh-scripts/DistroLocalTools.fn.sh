@@ -314,6 +314,7 @@ DistroLocalTools(){
 				return 0
 			;;
 			--upgrade-installed-tools)
+				shift
 				DistroLocalTools $(
 					for ITEM in "deploy" "source" "remote" ; do
 						if [ -d "$MDLT_ORIGIN/myx/myx.distro-$ITEM/sh-scripts" ] ; then
