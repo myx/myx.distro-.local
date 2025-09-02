@@ -9,7 +9,7 @@
 while true ; do case "$1" in
 	--.local-config-option-select-default)
 		# key=$2; val=$3; shift 3
-		{ grep -m1 "^$2=" /dev/null $( ls -1d "$MMDAPP/.local/"{home/$(id -un)/,}MDLT.settings.env 2>/dev/null || : ) || echo "=$3"; } | cut -d= -f2-
+		{ grep -m1 "^$2=" /dev/null $( ls -1Ud "$MMDAPP/.local/"{home/$(id -un)/,}MDLT.settings.env 2>/dev/null || : ) || echo "=$3"; } | cut -d= -f2-
 		shift 3; return 0
 	;;
 	--*-config-option)
