@@ -212,12 +212,12 @@ DistroLocalTools(){
 
 	while true ; do
 		case "$1" in
-			--make-*)
-				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Make.include"
-				return 0
-			;;
 			--*-config-option|--*-config-option)
 				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Config.include"
+				return 0
+			;;
+			--make-*)
+				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Make.include"
 				return 0
 			;;
 			--init-distro-workspace)
