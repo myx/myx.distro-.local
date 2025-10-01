@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# ^^^ for syntax checking in the editor only
+
 set -euo pipefail
 
 # no extra ident, for here-docs

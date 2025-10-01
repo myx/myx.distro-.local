@@ -2,3 +2,6 @@ Name: myx.distro-.local
 Title: Common (distro-*) tools installer
 Augments: developer-sdk:recommended
 Provides: myx/myx.distro-.local
+Declares: \
+	distro-image-sync:source-prepare-pull:repo:myx/myx.distro-.local:main:git@github.com:myx/myx.distro-.local.git \
+

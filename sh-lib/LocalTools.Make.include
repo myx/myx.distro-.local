@@ -4,11 +4,21 @@
 : "${MDLT_ORIGIN:=$MMDAPP/.local}"
 
 case "$1" in
+	--make-setup-mac)
+		DistroLocalTools --make-setup-mac-finder-view
+		DistroLocalTools --make-setup-mac-quicklook-bindings
+	;;
 	--make-setup-mac-finder-view)
 		shift
 		(
-			. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.AppleFinderViewSetup.include" 
+			. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.AppleFinderViewSetup.fn.include" 
 			AppleFinderViewSetup "$@" "$MMDAPP"
+		)
+	;;
+	--make-setup-mac-quicklook-bindings)
+		shift
+		(
+			. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.AppleOsxQuickLookSetup.include" 
 		)
 	;;
 	--make-workspace-integration-files)
@@ -29,13 +39,13 @@ case "$1" in
 						echo "Distro${ITEM}Tools(){"
 						echo "	. '$FILE'"
 						echo "}"
-						echo "Distro${ITEM}Tools --make-workspace-integration-files --quiet || true"
+						echo "Distro${ITEM}Tools --make-workspace-integration-files --quiet || :"
 					)"
 				)
 			fi
 		done
 
-		[ "$(uname)" != "Darwin" ] || DistroLocalTools --make-setup-mac-finder-view
+		[ "$(uname)" != "Darwin" ] || DistroLocalTools --make-setup-mac
 
 		if [ "$1" != "--quiet" ] ; then
 			local consoles="$( ls $MMDAPP/Distro*Console.sh | sed 's|^|	|g' )"

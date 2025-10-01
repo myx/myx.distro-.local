@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# ^^^ for syntax checking in the editor only
+
+APP="$MMDAPP/.local/.macosx/Applications/PlainTextUTI.app"
+
+if [ "$1" = --uninstall ]; then
+	rm -rf "$APP"
+	/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -r "$APP"
+	/usr/bin/qlmanage -r
+	/usr/bin/qlmanage -r cache
+	killall Finder 2>/dev/null || :
+	return 0
+fi
+
+PLIST="$APP/Contents/Info.plist"
+
+# make bundle skeleton
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+
+# write minimal Info.plist that declares .inf and .sh as conforming to public.plain-text
+cat >"$PLIST" <<'PL' 
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key>
+  <string>local.plaintext.uti.claim</string>
+  <key>CFBundleName</key>
+  <string>PlainTextUTI</string>
+  <key>CFBundleVersion</key>
+  <string>1.0</string>
+  <key>CFBundleExecutable</key>
+  <string>PlainTextUTI</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeName</key>
+      <string>Plain Text (inf, sh)</string>
+      <key>LSItemContentTypes</key>
+      <array>
+        <string>public.plain-text</string>
+      </array>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>inf</string>
+        <string>sh</string>
+        <string>md</string>
+        <string>fn.include</string>
+      </array>
+      <key>LSHandlerRank</key>
+      <string>Owner</string>
+    </dict>
+  </array>
+</dict>
+</plist>
+PL
+
+# create a tiny no-op executable so the bundle is valid
+cat >"$APP/Contents/MacOS/PlainTextUTI" <<'SH'
+#!/bin/sh
+# no-op app to satisfy LaunchServices; does nothing if launched
+exit 0
+SH
+chmod +x "$APP/Contents/MacOS/PlainTextUTI"
+
+# register the bundle with LaunchServices and refresh Quick Look
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$APP"
+/usr/bin/qlmanage -r
+/usr/bin/qlmanage -r cache
+
+# restart Finder so Open With / Quick Look mapping takes effect
+killall Finder 2>/dev/null || true
+
+echo "Done: bundle installed at $APP and registered. Try Quick Look or Preview on a .inf or .sh file now."
