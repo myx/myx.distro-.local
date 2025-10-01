@@ -82,4 +82,4 @@ chmod +x "$APP/Contents/MacOS/PlainTextUTI"
 # restart Finder so Open With / Quick Look mapping takes effect
 killall Finder 2>/dev/null || true
 
-echo "Done: bundle installed at $APP and registered. Try Quick Look or Preview on a .inf or .sh file now."
+echo "AppleOsxQuickLookSetup: bundle installed at ${APP#$MMDAPP/} and registered. Try Quick Look or Preview on a .inf or .sh file now."
