@@ -12,6 +12,14 @@ if [ "$1" = --uninstall ]; then
 	return 0
 fi
 
+# Exit if .inf already mapped to public.plain-text in LaunchServices
+if /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -dump \
+  | awk '/exts:/{exts=1} /bindings:/{exts=0} { if (exts && tolower($0) ~ /\.inf/) print NR ":" $0 }' \
+  | tr '[:upper:]' '[:lower:]' | grep -q 'public.plain-text'; then
+  printf '%s\n' ".inf already mapped to public.plain-text. Exiting."
+  exit 0
+fi
+
 PLIST="$APP/Contents/Info.plist"
 
 # make bundle skeleton
