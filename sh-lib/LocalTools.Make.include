@@ -5,8 +5,9 @@
 
 case "$1" in
 	--make-setup-mac)
-		DistroLocalTools --make-setup-mac-finder-view
-		DistroLocalTools --make-setup-mac-quicklook-bindings
+		shift
+		DistroLocalTools --make-setup-mac-finder-view "$@"
+		DistroLocalTools --make-setup-mac-quicklook-bindings "$@"
 	;;
 	--make-setup-mac-finder-view)
 		shift
