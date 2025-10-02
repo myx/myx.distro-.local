@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # ^^^ for syntax checking in the editor only
 
+# must allow macosx QuockLook preview show app text files as text.
+
+
 APP="$MMDAPP/.local/.macosx/Applications/PlainTextUTI.app"
 
 if [ "$1" = --uninstall ]; then
@@ -63,6 +66,78 @@ cat >"$PLIST" <<'PL'
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
 
+  <!-- Export local UTIs for each extension to force LaunchServices to record extension -> UTI bindings -->
+  <key>UTExportedTypeDeclarations</key>
+  <dict>
+    <key>local.plaintext.inf</key>
+    <dict>
+      <key>UTTypeIdentifier</key>
+      <string>local.plaintext.inf</string>
+      <key>UTTypeConformsTo</key>
+      <array><string>public.plain-text</string></array>
+      <key>UTTypeDescription</key>
+      <string>Plain text INF file</string>
+      <key>UTTypeTagSpecification</key>
+      <dict>
+        <key>public.filename-extension</key>
+        <string>inf</string>
+        <key>public.mime-type</key>
+        <string>text/plain</string>
+      </dict>
+    </dict>
+
+    <key>local.plaintext.sh</key>
+    <dict>
+      <key>UTTypeIdentifier</key>
+      <string>local.plaintext.sh</string>
+      <key>UTTypeConformsTo</key>
+      <array><string>public.plain-text</string></array>
+      <key>UTTypeDescription</key>
+      <string>Shell script</string>
+      <key>UTTypeTagSpecification</key>
+      <dict>
+        <key>public.filename-extension</key>
+        <string>sh</string>
+        <key>public.mime-type</key>
+        <string>text/x-sh</string>
+      </dict>
+    </dict>
+
+    <key>local.plaintext.md</key>
+    <dict>
+      <key>UTTypeIdentifier</key>
+      <string>local.plaintext.md</string>
+      <key>UTTypeConformsTo</key>
+      <array><string>public.plain-text</string></array>
+      <key>UTTypeDescription</key>
+      <string>Markdown</string>
+      <key>UTTypeTagSpecification</key>
+      <dict>
+        <key>public.filename-extension</key>
+        <string>md</string>
+        <key>public.mime-type</key>
+        <string>text/markdown</string>
+      </dict>
+    </dict>
+
+    <key>local.plaintext.include</key>
+    <dict>
+      <key>UTTypeIdentifier</key>
+      <string>local.plaintext.include</string>
+      <key>UTTypeConformsTo</key>
+      <array><string>public.plain-text</string></array>
+      <key>UTTypeDescription</key>
+      <string>Include file</string>
+      <key>UTTypeTagSpecification</key>
+      <dict>
+        <key>public.filename-extension</key>
+        <string>include</string>
+        <key>public.mime-type</key>
+        <string>text/plain</string>
+      </dict>
+    </dict>
+  </dict>
+
   <key>CFBundleDocumentTypes</key>
   <array>
     <dict>
@@ -77,6 +152,10 @@ cat >"$PLIST" <<'PL'
       </array>
       <key>LSItemContentTypes</key>
       <array>
+        <string>local.plaintext.inf</string>
+        <string>local.plaintext.sh</string>
+        <string>local.plaintext.md</string>
+        <string>local.plaintext.include</string>
         <string>public.plain-text</string>
       </array>
       <key>CFBundleTypeRole</key>
