@@ -262,6 +262,8 @@ DistroLocalTools(){
 								echo
 								echo 'Prefix "distro-system" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
 								echo 'Prefix "distro-deploy" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-deploy/" "git@github.com:myx/myx.distro-deploy.git" &'
+								echo 'Prefix "libs: xz pack" GitClonePull "$MDLT_ORIGIN/lib/lib.tukaani-xz-java/" "git@github.com:myx-distro-libs/lib.tukaani-xz-java.git" &'
+								echo 'Prefix "libs: commons" GitClonePull "$MDLT_ORIGIN/lib/lib.apache-commons-compress/" "git@github.com:myx-distro-libs/lib.apache-commons-compress.git" &'
 								echo 'mkdir -p "$MMDAPP/distro" # make sure `distro` directory exists'
 								echo 'touch "$MMDAPP/.local/MDSC.deploy.settings.env" # make sure workspace deploy env file exists'
 							)"
