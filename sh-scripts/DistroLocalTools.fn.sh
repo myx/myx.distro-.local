@@ -238,8 +238,8 @@ DistroLocalTools(){
 					echo "export MDLT_ORIGIN='${MDLT_ORIGIN:-$MMDAPP/.local}'"
 					echo
 					echo 'set +e # for pulls (when no changes)'
-					echo 'Prefix "os-myx.common" GitClonePull "$MDLT_ORIGIN/myx/myx.common/os-myx.common" "git@github.com:myx/os-myx.common.git" &'
-					echo 'Prefix "distro-.local" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &'
+					echo 'Prefix -o "os-myx.common" GitClonePull "$MDLT_ORIGIN/myx/myx.common/os-myx.common" "git@github.com:myx/os-myx.common.git" &'
+					echo 'Prefix -o "distro-.local" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &'
 					echo 'set -e'
 					echo
 					echo 'touch "$MMDAPP/.local/MDLT.settings.env" # make sure workspace env file exists'
@@ -252,7 +252,7 @@ DistroLocalTools(){
 							shift
 							cmds+="$(
 								echo
-								echo 'Prefix "distro-remote" GitClonePull "$MMDAPP/.local/myx/myx.distro-remote/" "git@github.com:myx/myx.distro-remote.git" &'
+								echo 'Prefix -o "distro-remote" GitClonePull "$MMDAPP/.local/myx/myx.distro-remote/" "git@github.com:myx/myx.distro-remote.git" &'
 								echo 'mkdir -p "$MMDAPP/remote" # make sure `remote` directory exists'
 							)"
 						;;
@@ -260,10 +260,10 @@ DistroLocalTools(){
 							shift
 							cmds+="$(
 								echo
-								echo 'Prefix "distro-system" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
-								echo 'Prefix "distro-deploy" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-deploy/" "git@github.com:myx/myx.distro-deploy.git" &'
-								echo 'Prefix "libs: xz pack" GitClonePull "$MDLT_ORIGIN/lib/lib.tukaani-xz-java/" "git@github.com:myx-distro-libs/lib.tukaani-xz-java.git" &'
-								echo 'Prefix "libs: commons" GitClonePull "$MDLT_ORIGIN/lib/lib.apache-commons-compress/" "git@github.com:myx-distro-libs/lib.apache-commons-compress.git" &'
+								echo 'Prefix -o "distro-system" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
+								echo 'Prefix -o "distro-deploy" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-deploy/" "git@github.com:myx/myx.distro-deploy.git" &'
+								echo 'Prefix -o "libs: xz pack" GitClonePull "$MDLT_ORIGIN/lib/lib.tukaani-xz-java/" "git@github.com:myx-distro-libs/lib.tukaani-xz-java.git" &'
+								echo 'Prefix -o "libs: commons" GitClonePull "$MDLT_ORIGIN/lib/lib.apache-commons-compress/" "git@github.com:myx-distro-libs/lib.apache-commons-compress.git" &'
 								echo 'mkdir -p "$MMDAPP/distro" # make sure `distro` directory exists'
 								echo 'touch "$MMDAPP/.local/MDSC.deploy.settings.env" # make sure workspace deploy env file exists'
 							)"
@@ -272,8 +272,8 @@ DistroLocalTools(){
 							shift
 							cmds+="$(
 								echo
-								echo 'Prefix "distro-system" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
-								echo 'Prefix "distro-source" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" &'
+								echo 'Prefix -o "distro-system" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
+								echo 'Prefix -o "distro-source" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" &'
 								echo 'mkdir -p "$MMDAPP/source" # make sure `source` directory exists'
 								echo 'touch "$MMDAPP/.local/MDSC.source.settings.env" # make sure workspace deploy env file exists'
 							)"
