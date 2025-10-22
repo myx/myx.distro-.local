@@ -110,7 +110,11 @@ fi
 		return 0
 	fi
 
-	echo "-- using embedded function"
+	echo "-- using embedded function" >&2
+
+	if [ "-o" = "$1"]; then
+		shift
+	fi
 
 	local PREFTEXT="$1"
 	shift
