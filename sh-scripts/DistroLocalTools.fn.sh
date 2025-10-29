@@ -112,7 +112,7 @@ fi
 
 	echo "-- using embedded function" >&2
 
-	if [ "-o" = "$1"]; then
+	if [ "-o" = "$1" ]; then
 		shift
 	fi
 
