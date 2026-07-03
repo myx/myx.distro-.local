@@ -332,7 +332,7 @@ DistroLocalTools(){
 			--help-install-unix-bare)
 				(
 					# . "$( myx.common which lib/catMarkdown )" ## included statically above
-					CatMarkdown "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools-install-unix-bare.md" >&2
+					CatMarkdown "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools-install-unix-bare.help.md" >&2
 				)
 				return 0
 			;;
@@ -341,7 +341,7 @@ DistroLocalTools(){
 				echo "📘 syntax: DistroLocalTools.fn.sh <option>" >&2
 				echo "📘 syntax: DistroLocalTools.fn.sh [--help]" >&2
 				if [ "$1" = "--help" ] ; then
-					cat "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools.text" >&2
+					CatMarkdown "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools.help.md" >&2
 				fi
 				return 0
 			;;
@@ -362,7 +362,7 @@ case "$0" in
 	*/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh)
 
 		if [ -z "$1" ] || [ "$1" = "--help" ] ; then
-			if [ -z "$1" ] || [ ! -f "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools.text" ] ; then
+			if [ -z "$1" ] || [ ! -f "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools.help.md" ] ; then
 				echo "📘 syntax: DistroLocalTools.fn.sh --install-distro-source" >&2
 				echo "📘 syntax: DistroLocalTools.fn.sh --install-distro-deploy" >&2
 				echo "📘 syntax: DistroLocalTools.fn.sh --install-distro-remote" >&2

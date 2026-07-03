@@ -1,4 +1,15 @@
-echo "'Local' command provides/lists commands related to distro-.local operations." >&2
-echo "Syntax: Local <distro-.local-command-name>" >&2
+echo "'Local' command runs local-stage distro commands in current Local context." >&2
+echo "📘 syntax: Local <distro-.local-command-name> [<arguments>...]" >&2
+echo "📘 syntax: Local --help" >&2
+echo "📘 syntax: Local --info" >&2
+echo >&2
+echo "	Options:" >&2
+echo "		--help  Print this help text." >&2
+echo "		--info  Print current Local context variables." >&2
+echo >&2
+echo "	Info:" >&2
+echo "		MMDAPP ROOT: $MMDAPP" >&2
+echo "		MDLT_ORIGIN: ${MDLT_ORIGIN:-"Not Set"}" >&2
+echo "		MDSC_INMODE: ${MDSC_INMODE:-"Not Set"}" >&2
 echo >&2
 set +e ; return 1
