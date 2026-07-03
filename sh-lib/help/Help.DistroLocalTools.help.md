@@ -7,25 +7,26 @@
 ##  Options:
 
 		--help-install-unix-bare
-			Displays instructions for barest unix install.
+			Displays instructions for barest unix install and exits.
 
 		--install-distro-remote
 		--install-distro-deploy
 		--install-distro-source
 			Installs basic system tools into designated workspace directory that allows
-			to enter workspace console or otherwise work with workspace data and commands.
+			to enter workspace console or otherwise work with workspace data and commands,
+			and exits.
 
 		--upgrade-installed-tools
 			Upgrade all/any (remote, deploy, source, .local) installed packages with latest 
-			`master` versions.
+			`master` versions and exits.
 
 		--install-distro-.local
-			Upgrades local .local packages with latest `master` version.
+			Upgrades local .local packages with latest `master` version and exits.
 
 		--system-config-option <arguments...>
 		--custom-config-option <arguments...>
 			Sets the workspace environment parameter. 'system' is common for workspace and
-			'custom' is for current workspace user.
+			'custom' is for current workspace user. Performs requested config operation and exits.
 
 			Following operations (arguments) are supported:
 
@@ -47,8 +48,8 @@
 					Deletes a variable. Optionally, deletes the variable only if it's value
 					is set to given value.
 
-			Following options are defined (list of basic ones, option names are not limited
-			to this list, but these options are actively used by scripts of this package):
+			Shared config variables (implemented in LocalTools.Config.include and consumed
+			across distro consoles):
 
 				MDLT_CONSOLE_ORIGIN
 					Supports values of ".local", "source" or absolute path to whatever workspace's 
@@ -81,13 +82,47 @@
 					Shell command to wrap shell actions to execute. Allows to run actions on
 					remote runner machine or add extra logging/notification, etc...
 
-		--make-console-command
+		--make-console-command [--quiet]
 			Re-Creates `DistroLocalConsole.sh` script to be used as a command to quickly enter workspace 
-			console.
+			console and exits.
 
-		--make-workspace-integration-files
+			Won't output helpful information on files created and how to use those files, when
+			`--quiet` option specified.
+
+		--make-console-script
+			Prints local console script body (used by --make-console-command) and exits.
+
+		--make-workspace-integration-files [--quiet]
 			Re-Creates `Distro*Console.sh` scripts for all components installes to be used as commands to 
-			quickly enter workspace console.
+			quickly enter workspace console and exits.
+
+			Won't output helpful information on files created and how to use those files, when
+			`--quiet` option specified.
+
+		--make-clean-fs-garbage [<path>]
+			Removes known filesystem junk files/dirs and xattrs under workspace or given path and exits.
+
+		--make-setup-mac
+			Applies macOS workspace integration setup (Finder view presets, etc.) and exits.
+
+##  Environment Variables:
+
+		Context variables used by local tools:
+
+			MMDAPP
+				Workspace root path.
+
+			MDLT_ORIGIN
+				Source root for distro command libraries and scripts.
+
+			MDLC_INMODE
+				Detected console input mode (.local, source, extern).
+
+			MDSC_DETAIL
+				Debug verbosity control (<empty>, true, full).
+
+			MYXROOT
+				Resolved myx.common root used by embedded helper fallbacks.
 
 ##  Examples (in Local Console, within workspace context):
 
