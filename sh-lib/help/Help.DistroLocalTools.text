@@ -64,7 +64,7 @@
 					– workspace-personal: each user gets their own file under <workspace>/.local/home/$USER/.bash_history;
 					– local-machine-home: write to a per-workspace file in $HOME (e.g. ~/.bash_history_<workspace>);
 					– workspace-separate: each user gets separate own history files, one per each subsystem (if ant)
-						under <workspace>/.local/home/$USER/.bash_history_{source,deply,remote};
+						under <workspace>/.local/home/$USER/.bash_history_{source,deploy,remote};
 					– workspace-shared: everyone shares a single history at <workspace>/.local/.common_bash_history;
 					– bash-default: same as user-default, explicitly resets to Bash’s standard ~/.bash_history;
 					– user-default: leave history in the user’s default (whatever settings currently are, untouched).
