@@ -337,12 +337,7 @@ DistroLocalTools(){
 				return 0
 			;;
 			--help|--help-syntax)
-				echo "📘 syntax: DistroLocalTools.fn.sh --upgrade-local-tools" >&2
-				echo "📘 syntax: DistroLocalTools.fn.sh <option>" >&2
-				echo "📘 syntax: DistroLocalTools.fn.sh [--help]" >&2
-				if [ "$1" = "--help" ] ; then
-					CatMarkdown "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools.help.md" >&2
-				fi
+				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools.include"
 				return 0
 			;;
 			--verbose)

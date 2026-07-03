@@ -1,5 +1,9 @@
 📘 syntax: DistroLocalTools.fn.sh --{system|custom}-config-option <operation>
 
+##  Arguments:
+
+		None. This command is option-driven.
+
 ##  Options:
 
 		--help-install-unix-bare
