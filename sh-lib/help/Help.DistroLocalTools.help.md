@@ -1,6 +1,6 @@
 📘 syntax: DistroLocalTools.fn.sh --{system|custom}-config-option <operation>
 
-	Options:
+##  Options:
 
 		--help-install-unix-bare
 			Displays instructions for barest unix install.
@@ -85,25 +85,38 @@
 			Re-Creates `Distro*Console.sh` scripts for all components installes to be used as commands to 
 			quickly enter workspace console.
 
-	Examples (in Local Console, within workspace context):
+##  Examples (in Local Console, within workspace context):
 
-		DistroLocalTools.fn.sh --install-distro-source
-		DistroLocalTools.fn.sh --install-distro-deploy
-		DistroLocalTools.fn.sh --install-distro-remote
+		# Install source subsystem tools into current workspace
+		`DistroLocalTools.fn.sh --install-distro-source`
+		# Install deploy subsystem tools into current workspace
+		`DistroLocalTools.fn.sh --install-distro-deploy`
+		# Install remote subsystem tools into current workspace
+		`DistroLocalTools.fn.sh --install-distro-remote`
 
-		DistroLocalTools.fn.sh --help
+		# Show DistroLocalTools detailed help
+		`DistroLocalTools.fn.sh --help`
 
-		DistroLocalTools.fn.sh --install-distro-source --install-distro-deploy
-		DistroLocalTools.fn.sh --install-distro-source --install-distro-deploy --install-distro-remote
+		# Install source and deploy toolsets in one run
+		`DistroLocalTools.fn.sh --install-distro-source --install-distro-deploy`
+		# Install source, deploy, and remote toolsets in one run
+		`DistroLocalTools.fn.sh --install-distro-source --install-distro-deploy --install-distro-remote`
 
-		Distro DistroSourceTools --system-config-option --upsert-if MDLT_CONSOLE_ORIGIN source ""
-		Distro DistroSourceTools --system-config-option --delete-if MDLT_CONSOLE_ORIGIN source
-		DistroSourceTools.fn.sh --system-config-option --select-all
+		# Set MDLT_CONSOLE_ORIGIN to source only when currently empty
+		`Distro DistroSourceTools --system-config-option --upsert-if MDLT_CONSOLE_ORIGIN source ""`
+		# Remove MDLT_CONSOLE_ORIGIN only when it equals source
+		`Distro DistroSourceTools --system-config-option --delete-if MDLT_CONSOLE_ORIGIN source`
+		# Print all configured source-tool options
+		`DistroSourceTools.fn.sh --system-config-option --select-all`
 
-	Examples (in OS default shell):
+##  Examples (in OS default shell):
 
-		bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --install-distro-source --install-distro-deploy --install-distro-remote
+		# Install source, deploy, and remote toolsets from the OS shell
+		`bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --install-distro-source --install-distro-deploy --install-distro-remote`
 
-		bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh
-		bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --help
-		bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --help-install-unix-bare
+		# Show syntax/help from the OS shell
+		`bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh`
+		# Show full help from the OS shell
+		`bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --help`
+		# Open bare Unix install instructions from the OS shell
+		`bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --help-install-unix-bare`
