@@ -159,3 +159,70 @@ feature flags—that all requiring projects automatically inherit.
 	```Keywords=test1 test1```
 	```Declares=build-source-tools:actions user-ext-myx:admin```
 
+##  🔗 Requires ↔ Provides Dependency Matching
+
+	The dependency graph between projects is resolved by matching `Requires` tokens against
+	`Provides` tokens — **not** by matching against `Name`. Project A depends on project B if
+	any one of A's `Requires` tokens exactly equals any one of B's `Provides` tokens (subject to
+	the colon-modifier fallback below).
+
+	A project's own `Name` value is always an implicit member of its own `Provides` set, even
+	if that value isn't separately repeated inside the project's `Provides:` line.
+
+###    Example (real, from myx.common/os-myx.common-macosx and myx.common/os-myx.common)
+
+	`os-myx.common-macosx/project.inf`:
+
+	```
+	Name: os-myx.common-macosx
+	Requires: os-myx.common
+	Provides: \
+		os.any os.macosx os-myx.common-macosx myx/os-myx.common-macosx myx.common/os-myx.common-macosx \
+		deploy-export:sh-scripts/install-myx.common-macosx.sh:raw.githubusercontent.com/myx/os-myx.common-macosx/master/sh-scripts/install-myx.common-macosx.sh \
+	```
+
+	`os-myx.common/project.inf`:
+
+	```
+	Name: os-myx.common
+	Requires: 
+	Provides: \
+		os-myx.common myx.common/os-myx.common myx/myx.common/os-myx.common \
+		...
+	```
+
+	`os-myx.common-macosx`'s `Requires: os-myx.common` resolves against `os-myx.common`'s
+	`Provides` list, where `os-myx.common` appears explicitly (it would still resolve even if it
+	didn't, via the implicit-Name rule above).
+
+###    Colon-modifier suffix on Requires tokens
+
+	Some `Requires` tokens carry a trailing `:modifier` that is **not** part of the identity
+	being matched — a role/group-membership qualifier layered on top of the base requirement.
+
+	Match rule: try an exact token match first; if that fails, and the token has a trailing
+	`:something` with no further `/` in that segment, retry the match against the substring
+	before the last colon.
+
+	Real example (`ndm/infra/accounts-ndm/group.ndm-admins/project.inf`):
+
+	```
+	Name: group.ndm-admins
+	Requires: \
+		accounts/user.ndm-eliseev:admins \
+		accounts/user.ndm-zerobug \
+		...
+	```
+
+	`accounts/user.ndm-eliseev:admins` matches `user.ndm-eliseev/project.inf`'s
+	`Provides: accounts/user.ndm-eliseev ...` — the `:admins` suffix is dropped for matching
+	purposes, it is not part of the identity. (`accounts/user.ndm-zerobug`, with no colon,
+	matches directly with no fallback needed.)
+
+	This is distinct from *structured* Provides-only tokens that legitimately contain multiple
+	colons as part of one literal token, e.g.
+	`deploy-export:sh-scripts/install-x.sh:raw.githubusercontent.com/...` — those are Provides-side
+	build/deploy-export markers matched as one whole token, and are not typically referenced back
+	via Requires. So the colon-stripping fallback applies **only** on the Requires side, and only
+	after an exact match attempt has already failed.
+
