@@ -13,7 +13,7 @@ while true ; do case "$1" in
 		shift 3; return 0
 	;;
 	--*-config-option)
-		local config_file
+		local config_file config_mode
 		local cmd key val ifval curr tmp
 
 		# pick target & ensure stub files exist
@@ -34,6 +34,19 @@ while true ; do case "$1" in
 				config_file="$MMDAPP/remote/static/${key}.remote.env"
 				mkdir -p "${config_file%/*}" || return 1
 				touch "$config_file"
+			;;
+			--agent-config-option)
+				## One flat file, no per-entity split (unlike --remote-config-option):
+				## DistroAgentsTools' keys (SLACK_BOT_TOKEN, TRELLO_KEY, etc.) are
+				## already globally unique, same shape as --system-config-option's
+				## single settings file, just credential-bearing -- hence the extra
+				## chmod hardening the other scopes don't need.
+				config_file="$MMDAPP/.local/.agents/MDAT.settings.env"
+				config_mode="600"
+				mkdir -p "${config_file%/*}" || return 1
+				chmod 700 "${config_file%/*}" || return 1
+				touch "$config_file"
+				chmod "$config_mode" "$config_file" || return 1
 			;;
 			--*-config-option)
 				echo "⛔ ERROR: unsupported config scope '$1'" >&2
@@ -79,7 +92,20 @@ while true ; do case "$1" in
 			(
 				tmp="$config_file.$$"
 				trap 'rm -f -- "$tmp"' EXIT
-				grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
+				## Create+harden the temp file BEFORE writing content into it,
+				## so a credential-bearing scope (config_mode set) never has
+				## even a brief window where its replacement file is
+				## world/group-readable. `mv`/rename(2) carries the SOURCE
+				## file's own permission bits onto the destination path, so
+				## a chmod applied only once at scope-setup time (on the
+				## original file) gets silently wiped by the very first
+				## mutation -- confirmed live: dir came out 700 correctly,
+				## but the file itself landed 644 after a real --upsert run,
+				## because the old code chmod'd the touched file, not the
+				## temp file that actually replaces it.
+				: > "$tmp"
+				[ -z "$config_mode" ] || chmod "$config_mode" "$tmp"
+				grep -v "^$key=" "$config_file" >>"$tmp" 2>/dev/null || :
 				printf '%s=%s\n' "$key" "$val" >>"$tmp"
 				mv "$tmp" "$config_file"
 			)
@@ -95,7 +121,9 @@ while true ; do case "$1" in
 			[ "$curr" != "$ifval" ] || (
 				tmp="$config_file.$$"
 				trap 'rm -f -- "$tmp"' EXIT
-				grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
+				: > "$tmp"
+				[ -z "$config_mode" ] || chmod "$config_mode" "$tmp"
+				grep -v "^$key=" "$config_file" >>"$tmp" 2>/dev/null || :
 				printf '%s=%s\n' "$key" "$val" >>"$tmp"
 				mv "$tmp" "$config_file"
 			)
@@ -107,7 +135,9 @@ while true ; do case "$1" in
 			(
 				tmp="$config_file.$$"
 				trap 'rm -f -- "$tmp"' EXIT
-				grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
+				: > "$tmp"
+				[ -z "$config_mode" ] || chmod "$config_mode" "$tmp"
+				grep -v "^$key=" "$config_file" >>"$tmp" 2>/dev/null || :
 				mv "$tmp" "$config_file"
 			)
 			;;
@@ -122,7 +152,9 @@ while true ; do case "$1" in
 			[ "$curr" != "$ifval" ] || (
 				tmp="$config_file.$$"
 				trap 'rm -f -- "$tmp"' EXIT
-				grep -v "^$key=" "$config_file" >"$tmp" 2>/dev/null || :
+				: > "$tmp"
+				[ -z "$config_mode" ] || chmod "$config_mode" "$tmp"
+				grep -v "^$key=" "$config_file" >>"$tmp" 2>/dev/null || :
 				mv "$tmp" "$config_file"
 			)
 			;;
