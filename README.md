@@ -2,8 +2,8 @@
 
 Workspace Utility. Common (distro-*) tools installer, updater and launcher.
 
-This utility facilitates **myx.distro** workspace (directory) creation and allows installation of  
-`myx.distro-remote`, `myx.distro-deploy` or `myx.distro-source` applications in any **myx.distro** workspace.
+Creates a **myx.distro** workspace (directory). Installs `myx.distro-remote`, `myx.distro-deploy`, or
+`myx.distro-source` into it.
 
 ---
 
@@ -23,6 +23,8 @@ This utility facilitates **myx.distro** workspace (directory) creation and allow
 ## Distro components: 
 
 [`Remote`: distro-remote](https://github.com/myx/myx.distro-remote?tab=readme-ov-file#myxdistro-remote)
+
+[`Agents`: distro-agents](https://github.com/myx/myx.distro-agents?tab=readme-ov-file#myxdistro-agents)
 
 [`Source`: distro-source](https://github.com/myx/myx.distro-source?tab=readme-ov-file#myxdistro-source)
 
