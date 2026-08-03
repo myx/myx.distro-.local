@@ -274,6 +274,36 @@ fi
 	fi
 }
 
+{
+	EXEC_CMDS=$(
+		printf '%s\n' "$CONFIG_CONTENT" \
+		| sed -n -E 's/^agents[[:space:]]+exec[[:space:]]+(.+)/\1/p' \
+		| while read -r COMMAND_LINE ; do
+			echo "echo '🖥️) workspace-install: executing: $COMMAND_LINE' >&2"
+			echo "$COMMAND_LINE"
+		done
+	)
+
+	# printf 'EXECS: %s\n' "$EXEC_CMDS"
+
+	if [ -n "$EXEC_CMDS" ]; then
+		FULL_CODE="$(
+
+			echo 'set -e'
+			echo ': ${MDSC_DETAIL:=true}'
+			echo
+			echo "$EXEC_CMDS"
+			echo
+			echo 'echo "✅) workspace-install: All Agents tasks done." >&2'
+
+		)"
+
+		# printf 'WHOLE: %s\n' "$FULL_CODE"
+
+		printf '%s\n' "$FULL_CODE" | ./DistroAgentsConsole.sh --non-interactive
+	fi
+}
+
 ## do 'remote' commands
 {
 	EXEC_CMDS=$(
