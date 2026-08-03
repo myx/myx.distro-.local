@@ -260,6 +260,14 @@ DistroLocalTools(){
 								echo 'mkdir -p "$MMDAPP/remote" # make sure `remote` directory exists'
 							)"
 						;;
+						--install-distro-agents)
+							shift
+							cmds+="$(
+								echo
+								echo 'Prefix -o "distro-agents" GitClonePull "$MMDAPP/.local/myx/myx.distro-agents/" "git@github.com:myx/myx.distro-agents.git" &'
+								echo 'mkdir -p "$MMDAPP/.local/agents" # make sure `agents` data directory exists (not secrets -- see .local/.agents/)'
+							)"
+						;;
 						--install-distro-deploy)
 							shift
 							cmds+="$(
@@ -322,7 +330,7 @@ DistroLocalTools(){
 			--upgrade-installed-tools)
 				shift
 				DistroLocalTools $(
-					for ITEM in "deploy" "source" "remote" ; do
+					for ITEM in "deploy" "source" "remote" "agents" ; do
 						[ -d "$MDLT_ORIGIN/myx/myx.distro-$ITEM/sh-scripts" ] || continue
 						printf ' --install-distro-%s' "$ITEM"
 					done
@@ -361,6 +369,7 @@ case "$0" in
 				echo "📘 syntax: DistroLocalTools.fn.sh --install-distro-source" >&2
 				echo "📘 syntax: DistroLocalTools.fn.sh --install-distro-deploy" >&2
 				echo "📘 syntax: DistroLocalTools.fn.sh --install-distro-remote" >&2
+				echo "📘 syntax: DistroLocalTools.fn.sh --install-distro-agents" >&2
 			else
 				DistroLocalTools "${1:-"--help-syntax"}"
 			fi

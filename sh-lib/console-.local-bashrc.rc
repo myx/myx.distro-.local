@@ -7,7 +7,7 @@
 . "${MDLT_ORIGIN:-$MMDAPP/.local}/myx/myx.distro-.local/sh-lib/LocalContext.include"
 DistroLocalContext --run-from-detect
 
-# search: 1) previous path; 2) distro {.local|system|deploy|source} scripts.
+# search: 1) previous path; 2) distro {.local|system|deploy|source|remote|agents} scripts.
 
 if [ -x "$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/bin/myx.common" ] ; then
 	export MYXROOT="$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/share/myx.common"
@@ -25,6 +25,10 @@ fi
 
 if [ -d "$MDLT_ORIGIN/myx/myx.distro-system/sh-scripts" ] ; then
 	PATH+=":$MDLT_ORIGIN/myx/myx.distro-system/sh-scripts"
+fi
+
+if [ -d "$MDLT_ORIGIN/myx/myx.distro-agents/sh-scripts" ] ; then
+	PATH+=":$MDLT_ORIGIN/myx/myx.distro-agents/sh-scripts"
 fi
 
 if [ -d "$MDLT_ORIGIN/myx/myx.distro-deploy/sh-scripts" ] ; then

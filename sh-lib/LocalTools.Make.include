@@ -31,7 +31,7 @@ case "$1" in
 
 		DistroLocalTools --make-console-command --quiet
 		local ITEM NAME FILE
-		for ITEM in "System" "Source" "Deploy" "Remote" ; do
+		for ITEM in "System" "Source" "Deploy" "Remote" "Agents" ; do
 			NAME="$( printf '%s' "$ITEM" | tr '[:upper:]' '[:lower:]' )"
 			FILE="$MDLT_ORIGIN/myx/myx.distro-${NAME}/sh-lib/${ITEM}Tools.Make.include"
 			if [ -f "$FILE" ] ; then

@@ -18,7 +18,7 @@ if ! type DistroLocalContext >/dev/null 2>&1 ; then
 			fi
 			
 			local ITEM
-			for ITEM in .local system source deploy remote ; do
+			for ITEM in .local system source deploy remote agents ; do
 				if [ -f "$MDLT_ORIGIN/myx/myx.distro-$ITEM/sh-scripts/${distroCommand%.fn.sh}.fn.sh" ] ; then
 					. "$MDLT_ORIGIN/myx/myx.distro-$ITEM/sh-scripts/${distroCommand%.fn.sh}.fn.sh"
 					return 0
