@@ -256,6 +256,7 @@ DistroLocalTools(){
 					echo 'set -e'
 					echo "export MMDAPP='$MMDAPP'"
 					echo "export MDLT_ORIGIN='${MDLT_ORIGIN:-$MMDAPP/.local}'"
+					echo 'export MYX_GIT_CLONE_PULL_ON_CONFLICT="stash"'
 					echo
 					echo 'set +e # for pulls (when no changes)'
 					echo 'Prefix -o "os-myx.common" GitClonePull "$MDLT_ORIGIN/myx/myx.common/os-myx.common" "git@github.com:myx/os-myx.common.git" &'
