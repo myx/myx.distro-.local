@@ -85,7 +85,23 @@ fi
 			if [ -n "$specificBranch" ] ; then
 				git checkout $specificBranch
 			fi
-			git pull --ff-only
+			if ! git pull --ff-only ; then
+				local targetBranch="$specificBranch"
+				[ -n "$targetBranch" ] || targetBranch="$( git rev-parse --abbrev-ref HEAD )"
+				[ "$targetBranch" != "HEAD" ] || targetBranch="main"
+
+				echo "GitClonePull: $tgtPath: pull conflict, stashing and resetting '$targetBranch'..." >&2
+				git fetch origin
+				if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$( git ls-files --others --exclude-standard )" ] ; then
+					git stash push -u -m "GitClonePull auto-stash before reset"
+				fi
+
+				if ! git checkout "$targetBranch" ; then
+					git checkout -b "$targetBranch" --track "origin/$targetBranch"
+				fi
+				git reset --hard "origin/$targetBranch"
+				git clean -fd
+			fi
 			cd "$currentPath"
 		fi
 	fi
@@ -216,7 +232,7 @@ DistroLocalTools(){
 
 	while true ; do
 		case "$1" in
-			--*-config-option|--*-config-option)
+			--*-config-option)
 				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Config.include"
 				return 0
 			;;
