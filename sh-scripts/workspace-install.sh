@@ -35,7 +35,7 @@ set -euo pipefail
 #
 #	# Executable commands to setup source sub-system
 #	source exec Source DistroSourceTools --system-config-option --upsert-if MDLT_CONSOLE_ORIGIN source ""
-#	source exec Source DistroImageSync --all-tasks --execute-source-prepare-pull
+#	source exec Distro DistroImageSync --all-tasks --execute-source-prepare-pull
 #
 ###############################################################################
 

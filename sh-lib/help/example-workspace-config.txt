@@ -14,4 +14,4 @@
 	source exec Source DistroSourceTools --system-config-option --upsert-if MDLT_CONSOLE_ORIGIN "source" ""
 
 	# (⬇️) Syncing all known project's git repositories...
-	source exec Source DistroImageSync --all-tasks --execute-source-prepare-pull
+	source exec Distro DistroImageSync --all-tasks --execute-source-prepare-pull
