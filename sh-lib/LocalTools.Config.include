@@ -108,6 +108,35 @@ while true ; do case "$1" in
 			)
 			;;
 
+		--upsert-from-stdin)
+			key=$1
+			shift
+			: ${key:?"⛔ ERROR: --upsert-from-stdin requires <key> argument to follow!"}
+			## value never touches argv; $( ) drops every trailing newline
+			val="$( cat )"
+			case "$val" in
+			"")
+				echo "⛔ ERROR: --upsert-from-stdin: empty value on stdin for key '$key'" >&2
+				set +e ; return 1
+			;;
+			esac
+			# check that value does not contains newline(s)
+			[ "${val%%$'\n'*}" = "$val" ] || {
+				echo "⛔ ERROR: --upsert-from-stdin: value for key '$key' contains a newline" >&2
+				set +e ; return 1
+			}
+			(
+				tmp="$config_file.$$"
+				trap 'rm -f -- "$tmp"' EXIT
+				## harden BEFORE content: mv carries the SOURCE file's bits
+				: > "$tmp"
+				[ -z "$config_mode" ] || chmod "$config_mode" "$tmp"
+				grep -v "^$key=" "$config_file" >>"$tmp" 2>/dev/null || :
+				printf '%s=%s\n' "$key" "$val" >>"$tmp"
+				mv "$tmp" "$config_file"
+			)
+			;;
+
 		--upsert-if)
 			key=$1 ; val=$2 ; ifval=$3
 			shift 3
