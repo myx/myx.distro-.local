@@ -217,11 +217,11 @@ fi
 
 ## do 'source' commands
 {
-	ROOT_LIST=$( echo $(
+	ROOT_LIST=$(
 		printf '%s\n' "$CONFIG_CONTENT" \
 		| awk '/^source[[:space:]]+root[[:space:]]/ { print $3 }' \
 		| tr '\n' ' '
-	) )
+	)
 
 	# split third field on first two “:”, keeping “url” intact
 	REPO_LIST=$(
