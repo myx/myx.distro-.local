@@ -18,7 +18,7 @@ set -euo pipefail
 #
 # You need to provide workspace config to stdin or as a file path on local filesystem.
 # workspace-config is a text file with columns, containing directives for installer.
-# First column is i{source|remote|deploy|system|.local} and identifies the system and 
+# First column is {source|remote|deploy|system|.local} and identifies the system and 
 # other columns are system-specific directives that installer translates to set of commands,
 # installs systems mentioned and then feeds these commands to each respective system's console.
 #
