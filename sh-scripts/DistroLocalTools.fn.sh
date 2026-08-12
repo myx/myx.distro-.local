@@ -95,6 +95,11 @@ fi
 				if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$( git ls-files --others --exclude-standard )" ] ; then
 					git stash push -u -m "GitClonePull auto-stash before reset"
 				fi
+				if [ -n "$( git rev-list "origin/$targetBranch..HEAD" )" ] ; then
+					local backupBranch="GitClonePull-backup/$targetBranch-$( date -u +%Y%m%dT%H%M%SZ )"
+					git branch "$backupBranch" HEAD
+					echo "GitClonePull: $tgtPath: local commit(s) not on origin/$targetBranch preserved on branch '$backupBranch'" >&2
+				fi
 
 				if ! git checkout "$targetBranch" ; then
 					git checkout -b "$targetBranch" --track "origin/$targetBranch"
