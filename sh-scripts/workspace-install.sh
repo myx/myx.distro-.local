@@ -159,6 +159,7 @@ if [ "$BOOT_UPDATE" -eq 1 ] || [ ! -d "$LOCAL_BASE" ] || [ ! -f "$DISTRO_DIR/sh-
 		# running in subshell to cleanup it's temp upon arm exit
 		(
 			TMPBASE="${TMPDIR:-$MMDAPP/.local/temp}/boot-web-fetch.XXXXXXXXXX"
+			mkdir -p "${TMPDIR:-$MMDAPP/.local/temp}"
 
 			# created, used and deleted within this arm only
 			WORKTMP=$(mktemp -d "$TMPBASE")
@@ -172,6 +173,7 @@ if [ "$BOOT_UPDATE" -eq 1 ] || [ ! -d "$LOCAL_BASE" ] || [ ! -f "$DISTRO_DIR/sh-
 
 			# find the extracted folder (GitHub names it myx.distro-.local-main)
 			SRC_DIR=$(find "$WORKTMP" -maxdepth 1 -type d -name 'myx.distro-.local-*' | head -1)
+			[ -n "$SRC_DIR" ] || { echo "⛔) ERROR: workspace-install: failed to locate extracted archive" >&2; exit 1; }
 
 			echo "🔂) workspace-install: • syncing files to $DISTRO_DIR" >&2
 			rsync -a --delete "$SRC_DIR"/ "$DISTRO_DIR"/
@@ -370,7 +372,7 @@ fi
 {
 	EXEC_CMDS=$(
 		printf '%s\n' "$CONFIG_CONTENT" \
-		| sed -n -E 's/^.local[[:space:]]+exec[[:space:]]+(.+)/\1/p' \
+		| sed -n -E 's/^\.local[[:space:]]+exec[[:space:]]+(.+)/\1/p' \
 		| while read -r COMMAND_LINE ; do
 			echo "echo '🖥️) workspace-install: executing: $COMMAND_LINE' >&2"
 			echo "$COMMAND_LINE"
