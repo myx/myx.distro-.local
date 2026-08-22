@@ -1,9 +1,7 @@
 # myx.distro-.local
 
-Creates a myx.distro workspace and installs the `myx.distro-*` toolsets into it —
-`myx.distro-source`, `myx.distro-deploy`, `myx.distro-remote`, `myx.distro-agents`,
-`myx.distro-system` and `myx.distro-.local` itself. It also generates the
-`Distro*Console.sh` launchers you start each toolset with.
+Creates a myx.distro workspace and installs the `myx.distro-*` toolsets into it.
+It also generates the `Distro*Console.sh` launchers you start each toolset with.
 
 Every installed package adds its own `sh-scripts/` directory to the console `PATH`.
 
@@ -14,6 +12,15 @@ Bootstrap a new workspace from scratch. `TGT_APP_PATH` is required:
 	export TGT_APP_PATH=~/Workspaces/ws-myx.devops
 	curl -fsSL https://raw.githubusercontent.com/myx/myx.distro-.local/refs/heads/main/sh-scripts/workspace-install.sh \
 		| bash -s -- --git-clone --force --config-file ./workspace-config.txt
+
+Bootstrap flags:
+
+- `--git-clone` — clone the packages over git.
+- `--web-fetch` — download and unpack a GitHub ZIP instead. Default.
+- `--force` — re-bootstrap even when the workspace is already present.
+- `--config-file <path>` — read the workspace config from a file.
+- `--config-stdin` — read the workspace config from stdin.
+- `--verbose` — print detail while installing.
 
 The workspace config is a text file of directives, one per line. The first column
 is the subsystem (`source`, `deploy`, `remote`, `system` or `.local`); the rest is
@@ -29,9 +36,6 @@ that subsystem's directive:
 	# Commands to run once the source subsystem is installed
 	source exec Source DistroSourceTools --system-config-option --upsert-if MDLT_CONSOLE_ORIGIN source ""
 	source exec Distro DistroImageSync --all-tasks --execute-source-prepare-pull
-
-Pass `--config-stdin` instead of `--config-file <path>` to pipe the config in.
-Use `--web-fetch` in place of `--git-clone` to bootstrap from a GitHub ZIP.
 
 For a machine with nothing installed yet, print the bare-Unix instructions:
 
@@ -59,7 +63,7 @@ Re-create the `Distro*Console.sh` launcher script for every installed toolset:
 
 	DistroLocalTools.fn.sh --make-workspace-integration-files
 
-Read and change workspace settings. `--system-` applies to the whole workspace,
+Read and change workspace settings — `--system-` applies to the whole workspace,
 `--custom-` to the current user:
 
 	DistroLocalTools.fn.sh --system-config-option --select-all
@@ -82,35 +86,44 @@ Open the local console:
 From there, `ConsoleSource`, `ConsoleDeploy` and `ConsoleRemote` open the other
 consoles for the same workspace.
 
+## Config operations
+
+Both `--system-config-option` and `--custom-config-option` take one of:
+
+- `--select <name>` — read one value.
+- `--select-default <name> <default>` — read one value, falling back to a default.
+- `--select-all` — read every value.
+- `--upsert <name> <value>` — set a value.
+- `--upsert-if <name> <value> <if-value>` — set it only when it currently equals `<if-value>`.
+- `--delete <name>` — remove a value.
+- `--delete-if <name> <if-value>` — remove it only when it currently equals `<if-value>`.
+
 ## Workspace settings
 
-Set these with `--system-config-option` or `--custom-config-option`:
-
-	MDLT_CONSOLE_ORIGIN    where consoles load their tools from: ".local", "source",
-	                       or an absolute path to another workspace's ".local"/"source"
-	MDLT_CONSOLE_SCRIPT    extra shell script sourced during console startup, after ~/.bashrc
-	MDLT_CONSOLE_HISTORY   where console shell history is stored; default workspace-personal
-	MDLT_ACTIONS_SH_WRAP   command used to wrap every action run — for remote runners or logging
-
-`MDLT_CONSOLE_HISTORY` accepts:
-
-	workspace-personal   per-user file under <workspace>/.local/home/$USER/.bash_history
-	workspace-separate   per-user, one file per subsystem (source, deploy, remote)
-	workspace-shared     one shared file at <workspace>/.local/.common_bash_history
-	local-machine-home   per-workspace file in $HOME, e.g. ~/.bash_history_<workspace>
-	bash-default         reset to Bash's standard ~/.bash_history
-	user-default         leave the user's current setting untouched
+- `MDLT_CONSOLE_ORIGIN` — where consoles load their tools from.
+	- `.local` — this workspace's installed copy.
+	- `source` — this workspace's own source tree.
+	- an absolute path to another workspace's `.local` or `source` directory.
+- `MDLT_CONSOLE_SCRIPT` — extra shell script sourced during console startup, after `~/.bashrc`.
+- `MDLT_CONSOLE_HISTORY` — where console shell history is stored. Default `workspace-personal`.
+	- `workspace-personal` — per-user file under `<workspace>/.local/home/$USER/.bash_history`.
+	- `workspace-separate` — per-user, one file per subsystem (source, deploy, remote).
+	- `workspace-shared` — one shared file at `<workspace>/.local/.common_bash_history`.
+	- `local-machine-home` — per-workspace file in `$HOME`, e.g. `~/.bash_history_<workspace>`.
+	- `bash-default` — reset to Bash's standard `~/.bash_history`.
+	- `user-default` — leave the user's current setting untouched.
+- `MDLT_ACTIONS_SH_WRAP` — command used to wrap every action run, for remote runners or logging.
 
 ## Commands
 
-- `DistroLocalTools.fn.sh` — install, upgrade, configure; generate console launchers and integration files.
+- `DistroLocalTools.fn.sh` — install, upgrade and configure toolsets; generate console launchers.
 - `workspace-install.sh` — standalone bootstrap that creates a whole workspace from a config file.
 
 ## Getting help
 
-- `DistroLocalTools.fn.sh --help` prints full syntax, options and examples.
-- `DistroLocalTools.fn.sh --help-install-unix-bare` prints bare-Unix install instructions.
-- `Local --help` and `Require --help` print the local-console dispatcher syntax.
+- `DistroLocalTools.fn.sh --help` — full syntax, options and examples.
+- `DistroLocalTools.fn.sh --help-install-unix-bare` — bare-Unix install instructions.
+- `Local --help` and `Require --help` — local-console dispatcher syntax.
 - Press TAB after a command name and a space for shell completion.
 - [DistroLocalTools command manual](https://github.com/myx/myx.distro-.local/blob/main/sh-lib/help/Help.DistroLocalTools.help.md)
 
@@ -121,4 +134,4 @@ Set these with `--system-config-option` or `--custom-config-option`:
 - [myx.distro-source](https://github.com/myx/myx.distro-source) — build source into a distro image.
 - [myx.distro-deploy](https://github.com/myx/myx.distro-deploy) — deploy a distro image to hosts.
 - [myx.distro-remote](https://github.com/myx/myx.distro-remote) — drive a workspace on another machine.
-- [myx.distro-agents](https://github.com/myx/myx.distro-agents) — start an AI-agent CLI console.
+- [myx.distro-agents](https://github.com/myx/myx.distro-agents) — the magic-team agents and their tooling.
