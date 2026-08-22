@@ -39,9 +39,16 @@ For a machine with nothing installed yet, print the bare-Unix instructions:
 
 ## Common tasks
 
-Install a toolset into an existing workspace. Several may be listed in one run:
+Install a toolset into an existing workspace:
 
-	DistroLocalTools.fn.sh --install-distro-source
+- `DistroLocalTools.fn.sh --install-distro-source` — the source build toolset.
+- `DistroLocalTools.fn.sh --install-distro-deploy` — the deploy toolset.
+- `DistroLocalTools.fn.sh --install-distro-remote` — the remote-workspace toolset.
+- `DistroLocalTools.fn.sh --install-distro-agents` — the agent team and its tooling.
+- `DistroLocalTools.fn.sh --install-distro-.local` — this package itself.
+
+Several may be listed in one run:
+
 	DistroLocalTools.fn.sh --install-distro-source --install-distro-deploy --install-distro-remote
 
 Update every installed toolset to its latest published version:
