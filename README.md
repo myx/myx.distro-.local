@@ -44,11 +44,11 @@ Install a toolset into an existing workspace. Several may be listed in one run:
 	DistroLocalTools.fn.sh --install-distro-source
 	DistroLocalTools.fn.sh --install-distro-source --install-distro-deploy --install-distro-remote
 
-Update every installed toolset to the latest `main`:
+Update every installed toolset to its latest published version:
 
 	DistroLocalTools.fn.sh --upgrade-installed-tools
 
-Re-create the console launcher scripts and editor integration files:
+Re-create the `Distro*Console.sh` launcher script for every installed toolset:
 
 	DistroLocalTools.fn.sh --make-workspace-integration-files
 
