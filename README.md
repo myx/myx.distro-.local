@@ -2,8 +2,11 @@
 
 Workspace Utility. Common (distro-*) tools installer, updater and launcher.
 
-Creates a **myx.distro** workspace (directory). Installs `myx.distro-remote`, `myx.distro-deploy`, or
-`myx.distro-source` into it.
+Creates a **myx.distro** workspace (directory). Installs the `myx.distro-*` packages into it —
+`myx.distro-source`, `myx.distro-deploy`, `myx.distro-remote`, `myx.distro-system`,
+`myx.distro-agents` and `myx.distro-.local`.
+
+Each installed package contributes its own `sh-scripts/` directory to a console's `PATH`.
 
 ---
 
