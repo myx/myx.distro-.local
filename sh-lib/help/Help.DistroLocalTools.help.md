@@ -1,10 +1,14 @@
-📘 syntax: DistroLocalTools.fn.sh --{system|custom}-config-option <operation>
+📘 syntax: DistroLocalTools.fn.sh --{system|custom|remote|agents}-config-option <operation>
 
 ##  Arguments:
 
 		None. This command is option-driven.
 
 ##  Options:
+
+		--verbose
+			Turns on detailed progress output for the rest of the command line, then keeps
+			parsing. Give it before the option it should apply to. Sets MDSC_DETAIL to 'true'.
 
 		--help-install-unix-bare
 			Displays instructions for barest unix install and exits.
@@ -13,20 +17,34 @@
 		--install-distro-deploy
 		--install-distro-source
 			Installs basic system tools into designated workspace directory that allows
-			to enter workspace console or otherwise work with workspace data and commands,
-			and exits.
+			to enter workspace console or otherwise work with workspace data and commands.
+
+			Any number of `--install-distro-*` options combine into a single install run:
+			they are collected first, installed together, and the command exits after the
+			last one. Any other option following them is rejected.
+
+		--install-distro-agents
+			Installs magic-team agents tools into designated workspace directory and
+			creates the workspace `agents` data directory.
 
 		--upgrade-installed-tools
-			Upgrade all/any (remote, deploy, source, .local) installed packages with latest 
-			`master` versions and exits.
+			Upgrades the installed deploy, source, remote and agents toolsets to latest
+			`master` versions and exits. Each one is included only when it is already
+			installed in this workspace. `os-myx.common` and `myx.distro-.local` are
+			refreshed by every install run regardless.
 
 		--install-distro-.local
-			Upgrades local .local packages with latest `master` version and exits.
+			Upgrades local .local packages with latest `master` version.
 
 		--system-config-option <arguments...>
 		--custom-config-option <arguments...>
-			Sets the workspace environment parameter. 'system' is common for workspace and
-			'custom' is for current workspace user. Performs requested config operation and exits.
+		--remote-config-option <remote-id> <arguments...>
+		--agents-config-option <entity-id> <arguments...>
+			Sets the workspace environment parameter. 'system' is common for workspace,
+			'custom' is for the current workspace user, 'remote' is for one registered
+			remote and 'agents' is for one agent entity, kept readable by its owner only.
+			'remote' and 'agents' require their id argument immediately after the scope
+			option. Performs requested config operation and exits.
 
 			Following operations (arguments) are supported:
 
@@ -42,6 +60,10 @@
 				--upsert-if <option-name> <value> <if-value>
 					Sets a variable. Optionally, sets variable only if it's current value
 					is set to given value.
+
+				--upsert-from-stdin <option-name>
+					Sets a variable, reading its value from standard input rather than the
+					command line. Rejects an empty value, or a value containing a newline.
 
 				--delete <option-name>
 				--delete-if <option-name> <if-value>

@@ -125,7 +125,6 @@ Both `--system-config-option` and `--custom-config-option` take one of:
 - `DistroLocalTools.fn.sh --help-install-unix-bare` — bare-Unix install instructions.
 - `Local --help` and `Require --help` — local-console dispatcher syntax.
 - Press TAB after a command name and a space for shell completion.
-- [DistroLocalTools command manual](https://github.com/myx/myx.distro-.local/blob/main/sh-lib/help/Help.DistroLocalTools.help.md)
 
 ## Related packages
 

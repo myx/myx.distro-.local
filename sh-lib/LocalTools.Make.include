@@ -82,6 +82,7 @@ case "$1" in
 		return 0
 	;;
 	--make-clean-fs-garbage)
+		shift
 		# myx.common remove/fileJunk --quiet --any-xattrs "${1:-$MMDAPP/}"
 
 		# 1. Find & delete known junk files
