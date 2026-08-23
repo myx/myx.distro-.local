@@ -38,6 +38,7 @@ case "$1" in
 				(
 					eval "$(
 						echo "Distro${ITEM}Tools(){"
+						echo "	local MDSC_CMD='Distro${ITEM}Tools'"
 						echo "	. '$FILE'"
 						echo "}"
 						echo "Distro${ITEM}Tools --make-workspace-integrations --quiet || :"
