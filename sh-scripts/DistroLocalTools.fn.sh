@@ -330,7 +330,7 @@ DistroLocalTools(){
 								echo
 								echo 'wait # wait for all the subprocesses to finish'
 								echo
-								echo 'DistroLocalTools --make-workspace-integration-files'
+								echo 'DistroLocalTools --make-workspace-integrations'
 							)"
 							break
 						;;

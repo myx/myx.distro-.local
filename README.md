@@ -61,7 +61,7 @@ Update every installed toolset to its latest published version:
 
 Re-create the `Distro*Console.sh` launcher script for every installed toolset:
 
-	DistroLocalTools.fn.sh --make-workspace-integration-files
+	DistroLocalTools.fn.sh --make-workspace-integrations
 
 Read and change workspace settings — `--system-` applies to the whole workspace,
 `--custom-` to the current user:

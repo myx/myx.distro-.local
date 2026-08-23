@@ -22,7 +22,7 @@ case "$1" in
 			. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.AppleOsxQuickLookSetup.include" 
 		)
 	;;
-	--make-workspace-integration-files)
+	--make-workspace-integrations)
 		shift
 
 		if [ "$MDLT_ORIGIN" = "$MMDAPP/.local" ] && [ ! -f "$MDLT_ORIGIN/MDLT.settings.env" ]; then
@@ -40,7 +40,7 @@ case "$1" in
 						echo "Distro${ITEM}Tools(){"
 						echo "	. '$FILE'"
 						echo "}"
-						echo "Distro${ITEM}Tools --make-workspace-integration-files --quiet || :"
+						echo "Distro${ITEM}Tools --make-workspace-integrations --quiet || :"
 					)"
 				)
 			fi

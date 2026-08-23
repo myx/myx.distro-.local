@@ -114,7 +114,7 @@
 		--make-console-script
 			Prints local console script body (used by --make-console-command) and exits.
 
-		--make-workspace-integration-files [--quiet]
+		--make-workspace-integrations [--quiet]
 			Re-Creates `Distro*Console.sh` scripts for all components installes to be used as commands to 
 			quickly enter workspace console and exits.
 

@@ -377,7 +377,7 @@ fi
 			echo "echo '🖥️) workspace-install: executing: $COMMAND_LINE' >&2"
 			echo "$COMMAND_LINE"
 		done
-		echo "Local DistroLocalTools --make-workspace-integration-files"
+		echo "Local DistroLocalTools --make-workspace-integrations"
 	)
 
 	# printf 'EXECS: %s\n' "$EXEC_CMDS"
