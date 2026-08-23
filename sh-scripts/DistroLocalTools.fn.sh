@@ -278,7 +278,7 @@ DistroLocalTools(){
 							shift
 							cmds+="$(
 								echo
-								echo 'Prefix -o "distro-remote" GitClonePull "$MMDAPP/.local/myx/myx.distro-remote/" "git@github.com:myx/myx.distro-remote.git" &'
+								echo 'Prefix -o "distro-remote" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-remote/" "git@github.com:myx/myx.distro-remote.git" &'
 								echo 'mkdir -p "$MMDAPP/remote" # make sure `remote` directory exists'
 							)"
 						;;
@@ -286,7 +286,7 @@ DistroLocalTools(){
 							shift
 							cmds+="$(
 								echo
-								echo 'Prefix -o "distro-agents" GitClonePull "$MMDAPP/.local/myx/myx.distro-agents/" "git@github.com:myx/myx.distro-agents.git" &'
+								echo 'Prefix -o "distro-agents" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-agents/" "git@github.com:myx/myx.distro-agents.git" &'
 								echo 'mkdir -p "$MMDAPP/.local/agents" # make sure `agents` data directory exists (not secrets -- see .local/.agents/)'
 							)"
 						;;
@@ -321,7 +321,7 @@ DistroLocalTools(){
 						;;
 						'')
 							if [ -z "$cmds" ] ; then
-								echo "⛔ ERROR: $MDSC_CMD: nothing to install, check arguments" >&2
+								echo "$MDSC_CMD: ⛔ ERROR: nothing to install, check arguments" >&2
 								set +e ; return 1
 							fi
 							cmds+="$(
@@ -335,7 +335,7 @@ DistroLocalTools(){
 							break
 						;;
 						*)
-							echo "⛔ ERROR: $MDSC_CMD: invalid option: $1" >&2
+							echo "$MDSC_CMD: ⛔ ERROR: invalid option: $1" >&2
 							set +e ; return 1
 						;;
 					esac
@@ -376,7 +376,7 @@ DistroLocalTools(){
 				continue
 			;;
 			*)
-				echo "⛔ ERROR: $MDSC_CMD: invalid option: $1" >&2
+				echo "$MDSC_CMD: ⛔ ERROR: invalid option: $1" >&2
 				set +e ; return 1
 			;;
 		esac
