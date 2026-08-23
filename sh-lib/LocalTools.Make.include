@@ -30,13 +30,15 @@ case "$1" in
 		fi
 
 		DistroLocalTools --make-console-command --quiet
-		local ITEM TOOL
+		local ITEM TOOL LOWER
 		for ITEM in "System" "Source" "Deploy" "Remote" "Agents" ; do
 			# each package's own dispatcher routes '--make-*' to its own '<Item>Tools.Make.include' and establishes its own MDSC_CMD
-			TOOL="$MDLT_ORIGIN/myx/myx.distro-$( printf '%s' "$ITEM" | tr '[:upper:]' '[:lower:]' )/sh-scripts/Distro${ITEM}Tools.fn.sh"
+			LOWER="$( printf '%s' "$ITEM" | tr '[:upper:]' '[:lower:]' )"
+			TOOL="$MDLT_ORIGIN/myx/myx.distro-$LOWER/sh-scripts/Distro${ITEM}Tools.fn.sh"
 			# subsystem not installed: skipped; one subsystem's failure must not abort the others
 			[ -f "$TOOL" ] || continue
-			( . "$TOOL" ; Distro${ITEM}Tools --make-workspace-integrations --quiet ) || :
+			# `Prefix` stamps every line with the subsystem, matching the pull block's label column
+			Prefix -o "distro-$LOWER" "$TOOL" --make-workspace-integrations --quiet || :
 		done
 
 		[ "$(uname)" != "Darwin" ] || DistroLocalTools --make-setup-mac
