@@ -16,6 +16,13 @@ fi
 : "${MDLT_ORIGIN:=$MMDAPP/.local}"
 export MDLT_ORIGIN
 
+##
+## This workspace's own myx.common always wins over any machine-global install.
+##
+[ -d "$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/bin" ] \
+	&& PATH="$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/bin:$PATH"
+export PATH
+
 if   [ -d "$MYXROOT" ] && [ -f "$MYXROOT/share/myx.common/bin/lib/catMarkdown.Common" ]; then
 	export MYXROOT
 elif   [ -f "$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/share/myx.common/bin/lib/catMarkdown.Common" ]; then
