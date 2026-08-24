@@ -277,6 +277,7 @@ DistroLocalTools(){
 					echo
 					echo 'touch "$MMDAPP/.local/MDLT.settings.env" # make sure workspace env file exists'
 					echo 'export MYXROOT="$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/share/myx.common"'
+					echo 'export PATH="$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/bin:$PATH"'
 				)"
 
 				while true ; do
