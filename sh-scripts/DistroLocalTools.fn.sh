@@ -287,7 +287,7 @@ DistroLocalTools(){
 							cmds+="$(
 								echo
 								echo 'Prefix -o "distro-agents" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-agents/" "git@github.com:myx/myx.distro-agents.git" &'
-								echo 'mkdir -p "$MMDAPP/.local/agents" # make sure `agents` data directory exists (not secrets -- see .local/.agents/)'
+								echo 'mkdir -p "$MMDAPP/.local/agents" # make sure `agents` data directory exists'
 							)"
 						;;
 						--install-distro-deploy)
