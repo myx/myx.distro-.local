@@ -79,6 +79,11 @@ feature flags—that all requiring projects automatically inherit.
 
 	- Leading whitespace on continued lines is ignored.
 
+	- Carry the backslash on every entry of a multi-valued property, the last one
+	  included, and close the list with a blank line. Leaving the final entry
+	  without one means adding an entry after it also edits it, so a one-line
+	  addition reads in the diff as touching a neighbour it did not mean to.
+
 ###    🔠 Escaping Special Characters
 
 	- \: → literal colon
