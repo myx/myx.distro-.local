@@ -231,3 +231,21 @@ feature flags—that all requiring projects automatically inherit.
 	via Requires. So the colon-stripping fallback applies **only** on the Requires side, and only
 	after an exact match attempt has already failed.
 
+##  🚫 Stage Selectors and Opting Out
+
+	Source and deploy tooling selects projects for a stage or an action by matching its
+	selector as an anchored prefix of a `Provides`, `Declares` or `Keywords` token: the token
+	is selected when it begins with that selector.
+
+	Prefixing a token with `--` opts the project out of whatever would otherwise have
+	selected it. No selector begins with `--`, so nothing matches the token. It stays indexed
+	and readable as the record of what the project would provide. Removing the prefix is the
+	whole of restoring the project to that stage.
+
+	This applies to every token any selector matches on.
+
+	The opt-out is emergent from the anchored prefix match rather than an implemented
+	feature: nothing recognises `--` as a marker and nothing enforces it. Any change to how
+	selectors match tokens keeps the property that a `--`-prefixed token matches no selector:
+	a selector that stopped anchoring its match at the token's first character would silently
+	re-select every project that had opted out.
