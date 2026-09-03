@@ -41,30 +41,38 @@ while true ; do case "$1" in
 		case "$1" in
 			--system-config-option)
 				config_file="$MMDAPP/.local/MDLT.settings.env"
-				mkdir -p "${config_file%/*}" || return 1
-				touch "$config_file"
+				if [ ! -f "$config_file" ] ; then
+					mkdir -p "${config_file%/*}" || return 1
+					touch "$config_file"
+				fi
 			;;
 			--custom-config-option)
 				config_file="$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
-				mkdir -p "${config_file%/*}" || return 1
-				touch "$config_file"
+				if [ ! -f "$config_file" ] ; then
+					mkdir -p "${config_file%/*}" || return 1
+					touch "$config_file"
+				fi
 			;;
 			--remote-config-option)
 				: ${2:?"⛔ ERROR: $1 requires remote-id argument to follow!"}
 				key="$2" ; shift
 				config_file="$MMDAPP/remote/static/${key}.remote.env"
-				mkdir -p "${config_file%/*}" || return 1
-				touch "$config_file"
+				if [ ! -f "$config_file" ] ; then
+					mkdir -p "${config_file%/*}" || return 1
+					touch "$config_file"
+				fi
 			;;
 			--agents-config-option)
 				: ${2:?"⛔ ERROR: $1 requires entity-id argument to follow!"}
 				key="$2" ; shift
 				config_file="$MMDAPP/.local/.agents/${key}.agent.env"
 				config_mode="600"
-				mkdir -p "${config_file%/*}" || return 1
-				chmod 700 "${config_file%/*}" || return 1
-				touch "$config_file"
-				chmod "$config_mode" "$config_file" || return 1
+				if [ ! -f "$config_file" ] ; then
+					mkdir -p "${config_file%/*}" || return 1
+					chmod 700 "${config_file%/*}" || return 1
+					touch "$config_file"
+					chmod "$config_mode" "$config_file" || return 1
+				fi
 			;;
 			--*-config-option)
 				echo "⛔ ERROR: unsupported config scope '$1'" >&2
