@@ -13,7 +13,7 @@ while true ; do case "$1" in
 		local cfgSelectKey="$2" cfgSelectFile cfgSelectLine cfgSelectFound=''
 		local cfgSelectUserFile=''
 		if [ -d "$MMDAPP/.local/home" ] ; then
-			cfgSelectUserFile="$MMDAPP/.local/home/$( id -un )/MDLT.settings.env"
+			cfgSelectUserFile="$MMDAPP/.local/home/${USER:=$( id -un )}/MDLT.settings.env"
 		fi
 		for cfgSelectFile in "$cfgSelectUserFile" "$MMDAPP/.local/MDLT.settings.env" ; do
 			[ -n "$cfgSelectFile" ] || continue
@@ -47,7 +47,7 @@ while true ; do case "$1" in
 				fi
 			;;
 			--custom-config-option)
-				config_file="$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
+				config_file="$MMDAPP/.local/home/${USER:=$( id -un )}/MDLT.settings.env"
 				if [ ! -f "$config_file" ] ; then
 					mkdir -p "${config_file%/*}" || return 1
 					touch "$config_file"
