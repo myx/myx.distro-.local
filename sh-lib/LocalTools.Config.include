@@ -135,14 +135,7 @@ while true ; do case "$1" in
 				## Create+harden the temp file BEFORE writing content into it,
 				## so a credential-bearing scope (config_mode set) never has
 				## even a brief window where its replacement file is
-				## world/group-readable. `mv`/rename(2) carries the SOURCE
-				## file's own permission bits onto the destination path, so
-				## a chmod applied only once at scope-setup time (on the
-				## original file) gets silently wiped by the very first
-				## mutation -- confirmed live: dir came out 700 correctly,
-				## but the file itself landed 644 after a real --upsert run,
-				## because the old code chmod'd the touched file, not the
-				## temp file that actually replaces it.
+				## world/group-readable.
 				: > "$tmp"
 				[ -z "$config_mode" ] || chmod "$config_mode" "$tmp"
 				while IFS= read -r cfgLine || [ -n "$cfgLine" ] ; do
