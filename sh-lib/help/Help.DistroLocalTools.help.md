@@ -42,9 +42,9 @@
 		--agents-config-option <entity-id> <arguments...>
 			Sets the workspace environment parameter. 'system' is common for workspace,
 			'custom' is for the current workspace user, 'remote' is for one registered
-			remote and 'agents' is for one agent entity, kept readable by its owner only.
-			'remote' and 'agents' require their id argument immediately after the scope
-			option. Performs requested config operation and exits.
+			remote and 'agents' is for one agent entity, kept accessible to its owner
+			and group only. 'remote' and 'agents' require their id argument immediately
+			after the scope option. Performs requested config operation and exits.
 
 			Following operations (arguments) are supported:
 
