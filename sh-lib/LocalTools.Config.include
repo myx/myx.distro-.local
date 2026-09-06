@@ -37,42 +37,23 @@ while true ; do case "$1" in
 		local cmd key val ifval curr tmp
 		local cfgLine cfgLast cfgFound
 
-		# pick target & ensure stub files exist
 		case "$1" in
 			--system-config-option)
 				config_file="$MMDAPP/.local/MDLT.settings.env"
-				if [ ! -f "$config_file" ] ; then
-					mkdir -p "${config_file%/*}" || return 1
-					touch "$config_file"
-				fi
 			;;
 			--custom-config-option)
 				config_file="$MMDAPP/.local/home/${USER:=$( id -un )}/MDLT.settings.env"
-				if [ ! -f "$config_file" ] ; then
-					mkdir -p "${config_file%/*}" || return 1
-					touch "$config_file"
-				fi
 			;;
 			--remote-config-option)
 				: ${2:?"⛔ ERROR: $1 requires remote-id argument to follow!"}
 				key="$2" ; shift
 				config_file="$MMDAPP/remote/static/${key}.remote.env"
-				if [ ! -f "$config_file" ] ; then
-					mkdir -p "${config_file%/*}" || return 1
-					touch "$config_file"
-				fi
 			;;
 			--agents-config-option)
 				: ${2:?"⛔ ERROR: $1 requires entity-id argument to follow!"}
 				key="$2" ; shift
 				config_file="$MMDAPP/.local/.agents/${key}.agent.env"
-				config_mode="600"
-				if [ ! -f "$config_file" ] ; then
-					mkdir -p "${config_file%/*}" || return 1
-					chmod 700 "${config_file%/*}" || return 1
-					touch "$config_file"
-					chmod "$config_mode" "$config_file" || return 1
-				fi
+				config_mode="660"
 			;;
 			--*-config-option)
 				echo "⛔ ERROR: unsupported config scope '$1'" >&2
@@ -80,11 +61,20 @@ while true ; do case "$1" in
 			;;
 		esac
 
-		# shift past the scope flag, grab the sub-command
-		shift
-		cmd=$1; shift
+		cmd=$2 ; shift 2
 
-		# prepare temp‐files & ensure cleanup
+		if [ ! -f "$config_file" ] ; then
+			case "$cmd" in
+			--select|--select-all) return 0 ;;
+			--select-default) printf '%s\n' "$2" ; return 0 ;;
+			esac
+			mkdir -p "${config_file%/*}" || return 1
+			: > "$config_file"
+			if [ -n "$config_mode" ] ; then
+				chmod 770 "${config_file%/*}" || return 1
+				chmod "$config_mode" "$config_file" || return 1
+			fi
+		fi
 
 		case "$cmd" in
 		--select-all)
@@ -135,7 +125,7 @@ while true ; do case "$1" in
 				## Create+harden the temp file BEFORE writing content into it,
 				## so a credential-bearing scope (config_mode set) never has
 				## even a brief window where its replacement file is
-				## world/group-readable.
+				## world-readable.
 				: > "$tmp"
 				[ -z "$config_mode" ] || chmod "$config_mode" "$tmp"
 				while IFS= read -r cfgLine || [ -n "$cfgLine" ] ; do

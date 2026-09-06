@@ -296,6 +296,9 @@ DistroLocalTools(){
 								echo
 								echo 'Prefix -o "distro-agents" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-agents/" "git@github.com:myx/myx.distro-agents.git" &'
 								echo 'mkdir -p "$MMDAPP/.local/agents" # make sure `agents` data directory exists'
+								echo 'mkdir -p "$MMDAPP/.local/.agents" # make sure agents config scope directory exists'
+								echo 'chmod 770 "$MMDAPP/.local/.agents" # unconditional: a store created before this owner+group policy is still owner-only'
+								echo 'for f in "$MMDAPP/.local/.agents"/*.agent.env ; do [ -e "$f" ] || continue ; chmod 660 "$f" ; done'
 							)"
 						;;
 						--install-distro-deploy)
