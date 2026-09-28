@@ -30,18 +30,23 @@ case "$1" in
 		fi
 
 		DistroLocalTools --make-console-command --quiet
-		local ITEM TOOL LOWER
+		local ITEM TOOL LOWER makeFailed=""
 		for ITEM in "System" "Source" "Deploy" "Remote" "Agents" ; do
 			# each package's own dispatcher routes '--make-*' to its own '<Item>Tools.Make.include' and establishes its own MDSC_CMD
 			LOWER="$( printf '%s' "$ITEM" | tr '[:upper:]' '[:lower:]' )"
 			TOOL="$MDLT_ORIGIN/myx/myx.distro-$LOWER/sh-scripts/Distro${ITEM}Tools.fn.sh"
-			# subsystem not installed: skipped; one subsystem's failure must not abort the others
+			# subsystem not installed: skipped; a failing subsystem does not stop the others, and fails the run at the end
 			[ -f "$TOOL" ] || continue
 			# `Prefix` stamps every line with the subsystem, matching the pull block's label column
-			Prefix -o "distro-$LOWER" "$TOOL" --make-workspace-integrations --quiet || :
+			Prefix -o "distro-$LOWER" "$TOOL" --make-workspace-integrations --quiet || makeFailed="$makeFailed distro-$LOWER"
 		done
 
 		[ "$(uname)" != "Darwin" ] || DistroLocalTools --make-setup-mac
+
+		if [ -n "$makeFailed" ] ; then
+			echo "$MDSC_CMD: ⛔ ERROR: --make-workspace-integrations: failed for:$makeFailed -- see the errors above" >&2
+			set +e ; return 1
+		fi
 
 		if [ "$1" != "--quiet" ] ; then
 			local consoles="$( ls $MMDAPP/Distro*Console.sh | sed 's|^|	|g' )"

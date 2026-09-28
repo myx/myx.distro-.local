@@ -250,7 +250,7 @@ DistroLocalTools(){
 			;;
 			--make-*)
 				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Make.include"
-				return 0
+				return $?
 			;;
 			--init-distro-workspace)
 				shift

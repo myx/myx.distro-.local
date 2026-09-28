@@ -115,11 +115,13 @@
 			Prints local console script body (used by --make-console-command) and exits.
 
 		--make-workspace-integrations [--quiet]
-			Re-Creates `Distro*Console.sh` scripts for all components installes to be used as commands to 
-			quickly enter workspace console and exits.
+			Sets the workspace up for use with every toolset installed in it and exits: a
+			`Distro*Console.sh` command in the workspace root for each console, the VS Code
+			`.code-workspace` file when source tools are installed, the magic-team agents'
+			VS Code and Claude Code setup when agents tools are installed, and Finder view
+			presets on macOS.
 
-			Won't output helpful information on files created and how to use those files, when
-			`--quiet` option specified.
+			With `--quiet`, doesn't list the console commands afterwards.
 
 		--make-clean-fs-garbage [<path>]
 			Removes known filesystem junk files/dirs and xattrs under workspace or given path and exits.
