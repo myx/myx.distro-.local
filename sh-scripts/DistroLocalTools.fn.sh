@@ -131,6 +131,7 @@ fi
 ##
 [ -f "$MYXROOT/bin/lib/prefix.Common" ] && . "$MYXROOT/bin/lib/prefix.Common" || Prefix(){
 	set -e
+	( set -o pipefail ) 2>/dev/null && set -o pipefail || :
 
 	if [ -x "$MYXROOT/bin/lib/prefix.Common" ] ; then 
 		echo "😻 Prefix: executable found!" >&2
@@ -151,7 +152,10 @@ fi
 
     ( "$@" 2>&1 \
     		|| ( EXITCODE=$? ; set +x ; echo "⛔ ERROR: exited with error status ($EXITCODE)" ; exit $EXITCODE ) \
-   	) | sed -l -e "s^\^^$PREFTEXT: ^" 1>&2
+   	) | case "$MYXUNIX" in
+   		Linux) stdbuf -oL -eL sed -u -e "s^\^^$PREFTEXT: ^" ;;
+   		*) sed -l -e "s^\^^$PREFTEXT: ^" ;;
+   	esac 1>&2
    	
 }
 
@@ -269,10 +273,11 @@ DistroLocalTools(){
 					echo "export MMDAPP='$MMDAPP'"
 					echo "export MDLT_ORIGIN='${MDLT_ORIGIN:-$MMDAPP/.local}'"
 					echo 'export MYX_GIT_CLONE_PULL_ON_CONFLICT="stash"'
+					echo 'installJobs="" installFailed=""'
 					echo
 					echo 'set +e # for pulls (when no changes)'
-					echo 'Prefix -o "os-myx.common" GitClonePull "$MDLT_ORIGIN/myx/myx.common/os-myx.common" "git@github.com:myx/os-myx.common.git" &'
-					echo 'Prefix -o "distro-.local" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" &'
+					echo 'Prefix -o "os-myx.common" GitClonePull "$MDLT_ORIGIN/myx/myx.common/os-myx.common" "git@github.com:myx/os-myx.common.git" & installJobs="$installJobs $!"'
+					echo 'Prefix -o "distro-.local" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-.local/" "git@github.com:myx/myx.distro-.local.git" & installJobs="$installJobs $!"'
 					echo 'set -e'
 					echo
 					echo 'touch "$MMDAPP/.local/MDLT.settings.env" # make sure workspace env file exists'
@@ -286,7 +291,7 @@ DistroLocalTools(){
 							shift
 							cmds+="$(
 								echo
-								echo 'Prefix -o "distro-remote" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-remote/" "git@github.com:myx/myx.distro-remote.git" &'
+								echo 'Prefix -o "distro-remote" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-remote/" "git@github.com:myx/myx.distro-remote.git" & installJobs="$installJobs $!"'
 								echo 'mkdir -p "$MMDAPP/remote" # make sure `remote` directory exists'
 							)"
 						;;
@@ -294,7 +299,7 @@ DistroLocalTools(){
 							shift
 							cmds+="$(
 								echo
-								echo 'Prefix -o "distro-agents" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-agents/" "git@github.com:myx/myx.distro-agents.git" &'
+								echo 'Prefix -o "distro-agents" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-agents/" "git@github.com:myx/myx.distro-agents.git" & installJobs="$installJobs $!"'
 								echo 'mkdir -p "$MMDAPP/.local/agents" # make sure `agents` data directory exists'
 								echo 'mkdir -p "$MMDAPP/.local/.agents" # make sure agents config scope directory exists'
 								echo 'chmod 770 "$MMDAPP/.local/.agents" # unconditional: a store created before this owner+group policy is still owner-only'
@@ -305,10 +310,10 @@ DistroLocalTools(){
 							shift
 							cmds+="$(
 								echo
-								echo 'Prefix -o "distro-system" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
-								echo 'Prefix -o "distro-deploy" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-deploy/" "git@github.com:myx/myx.distro-deploy.git" &'
-								echo 'Prefix -o "libs: xz pack" GitClonePull "$MDLT_ORIGIN/lib/lib.tukaani-xz-java/" "git@github.com:myx-distro-libs/lib.tukaani-xz-java.git" &'
-								echo 'Prefix -o "libs: commons" GitClonePull "$MDLT_ORIGIN/lib/lib.apache-commons-compress/" "git@github.com:myx-distro-libs/lib.apache-commons-compress.git" &'
+								echo 'Prefix -o "distro-system" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" & installJobs="$installJobs $!"'
+								echo 'Prefix -o "distro-deploy" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-deploy/" "git@github.com:myx/myx.distro-deploy.git" & installJobs="$installJobs $!"'
+								echo 'Prefix -o "libs: xz pack" GitClonePull "$MDLT_ORIGIN/lib/lib.tukaani-xz-java/" "git@github.com:myx-distro-libs/lib.tukaani-xz-java.git" & installJobs="$installJobs $!"'
+								echo 'Prefix -o "libs: commons" GitClonePull "$MDLT_ORIGIN/lib/lib.apache-commons-compress/" "git@github.com:myx-distro-libs/lib.apache-commons-compress.git" & installJobs="$installJobs $!"'
 								echo 'mkdir -p "$MMDAPP/distro" # make sure `distro` directory exists'
 								echo 'touch "$MMDAPP/.local/MDSC.deploy.settings.env" # make sure workspace deploy env file exists'
 							)"
@@ -317,8 +322,8 @@ DistroLocalTools(){
 							shift
 							cmds+="$(
 								echo
-								echo 'Prefix -o "distro-system" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" &'
-								echo 'Prefix -o "distro-source" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" &'
+								echo 'Prefix -o "distro-system" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-system/" "git@github.com:myx/myx.distro-system.git" & installJobs="$installJobs $!"'
+								echo 'Prefix -o "distro-source" GitClonePull "$MDLT_ORIGIN/myx/myx.distro-source/" "git@github.com:myx/myx.distro-source.git" & installJobs="$installJobs $!"'
 								echo 'mkdir -p "$MMDAPP/source" # make sure `source` directory exists'
 								echo 'touch "$MMDAPP/.local/MDSC.source.settings.env" # make sure workspace deploy env file exists'
 							)"
@@ -339,7 +344,8 @@ DistroLocalTools(){
 								echo
 								echo 'set -e # after pulls'
 								echo
-								echo 'wait # wait for all the subprocesses to finish'
+								echo 'for installJob in $installJobs ; do wait "$installJob" || installFailed="true" ; done'
+								echo '[ -z "$installFailed" ] || { echo "⛔ ERROR: a clone or pull above failed" >&2 ; exit 1 ; }'
 								echo
 								echo 'DistroLocalTools --make-workspace-integrations'
 							)"
@@ -352,11 +358,11 @@ DistroLocalTools(){
 					esac
 				done
 
-				cmds="$( echo "$cmds" | awk '!$0 || !seen[$0]++' )"
+				cmds="$( echo "$cmds" | awk '!$0 || $1 == "set" || !seen[$0]++' )"
 
 				printf "\n$MDSC_CMD: Will execute: \n%s\n\n" "$( echo "$cmds" | sed 's|^|    |' )" >&2
 
-				( eval "$cmds" )
+				( eval "$cmds" ) & wait $! || { set +e ; return 1 ; }
 
 				return 0
 			;;
@@ -367,7 +373,7 @@ DistroLocalTools(){
 						[ -d "$MDLT_ORIGIN/myx/myx.distro-$ITEM/sh-scripts" ] || continue
 						printf ' --install-distro-%s' "$ITEM"
 					done
-				)
+				) || { set +e ; return 1 ; }
 				return 0
 			;;
 			--help-install-unix-bare)

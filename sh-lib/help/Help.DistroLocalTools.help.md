@@ -28,10 +28,10 @@
 			creates the workspace `agents` data directory.
 
 		--upgrade-installed-tools
-			Upgrades the installed deploy, source, remote and agents toolsets to latest
-			`master` versions and exits. Each one is included only when it is already
-			installed in this workspace. `os-myx.common` and `myx.distro-.local` are
-			refreshed by every install run regardless.
+			Upgrades the deploy, source, remote and agents toolsets to latest `master`
+			versions and exits. Each one is included when its package is present under
+			`MDLT_ORIGIN`, whether or not this workspace has it installed. `os-myx.common`
+			and `myx.distro-.local` are refreshed by every install run regardless.
 
 		--install-distro-.local
 			Upgrades local .local packages with latest `master` version.
