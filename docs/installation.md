@@ -19,7 +19,7 @@ Bootstrap flags:
 - `--config-stdin` — read the workspace config from stdin.
 - `--verbose` — print detail while installing.
 
-For a machine with nothing installed yet, print the bare-Unix instructions:
+For a machine with nothing installed yet, read the [bare-Unix install instructions](../sh-lib/help/Help.DistroLocalTools-install-unix-bare.help.md), or print them:
 
 	bash .local/myx/myx.distro-.local/sh-scripts/DistroLocalTools.fn.sh --help-install-unix-bare
 

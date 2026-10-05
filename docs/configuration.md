@@ -46,3 +46,27 @@ Both `--system-config-option` and `--custom-config-option` take one of:
 	- `bash-default` — reset to Bash's standard `~/.bash_history`.
 	- `user-default` — leave the user's current setting untouched.
 - `MDLT_ACTIONS_SH_WRAP` — command used to wrap every action run, for remote runners or logging.
+
+
+## Config scopes
+
+The config operations come in four scopes:
+
+- `--system-config-option` — applies to the whole workspace.
+- `--custom-config-option` — applies to the current user.
+- `--remote-config-option <remote-id>` — applies to one registered remote.
+- `--agents-config-option <entity-id>` — applies to one agent entity. Only its owner and group can access it.
+
+`--remote-config-option` and `--agents-config-option` need their id straight after the scope option.
+
+To set a value without putting it on the command line, give the operation `--upsert-from-stdin <name>`. The tool reads the value from standard input. It rejects an empty value and a value that contains a newline.
+
+## Context variables
+
+The local tools use these variables:
+
+- `MMDAPP` — the workspace root path.
+- `MDLT_ORIGIN` — the source root for distro command libraries and scripts.
+- `MDLC_INMODE` — the detected console input mode: `.local`, `source` or `extern`.
+- `MDSC_DETAIL` — debug verbosity: empty, `true` or `full`.
+- `MYXROOT` — the resolved `myx.common` root, used by helper fallbacks.
