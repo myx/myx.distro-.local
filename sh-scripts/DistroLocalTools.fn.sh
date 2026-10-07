@@ -97,16 +97,12 @@ fi
 				[ -n "$targetBranch" ] || targetBranch="$( git rev-parse --abbrev-ref HEAD )"
 				[ "$targetBranch" != "HEAD" ] || targetBranch="main"
 
-				echo "GitClonePull: $tgtPath: pull conflict, stashing and resetting '$targetBranch'..." >&2
+				## An installed copy is a distribution: local edits and commits are illegal,
+				## so they are named once here and discarded, never stashed or branched.
+				echo "GitClonePull: $tgtPath: pull conflict, discarding local changes and resetting '$targetBranch'..." >&2
 				git fetch origin
-				if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$( git ls-files --others --exclude-standard )" ] ; then
-					git stash push -u -m "GitClonePull auto-stash before reset"
-				fi
-				if [ -n "$( git rev-list "origin/$targetBranch..HEAD" )" ] ; then
-					local backupBranch="GitClonePull-backup/$targetBranch-$( date -u +%Y%m%dT%H%M%SZ )"
-					git branch "$backupBranch" HEAD
-					echo "GitClonePull: $tgtPath: local commit(s) not on origin/$targetBranch preserved on branch '$backupBranch'" >&2
-				fi
+				git status --short | sed 's/^/GitClonePull: discarded: /' >&2
+				git log --oneline "origin/$targetBranch..HEAD" 2>/dev/null | sed 's/^/GitClonePull: discarded commit: /' >&2
 
 				if ! git checkout "$targetBranch" ; then
 					git checkout -b "$targetBranch" --track "origin/$targetBranch"
@@ -272,7 +268,7 @@ DistroLocalTools(){
 					echo 'set -e'
 					echo "export MMDAPP='$MMDAPP'"
 					echo "export MDLT_ORIGIN='${MDLT_ORIGIN:-$MMDAPP/.local}'"
-					echo 'export MYX_GIT_CLONE_PULL_ON_CONFLICT="stash"'
+					echo 'export MYX_GIT_CLONE_PULL_ON_CONFLICT="discard" # installed copies are distributions: local edits are illegal, never kept'
 					echo 'installJobs="" installFailed=""'
 					echo
 					echo 'set +e # for pulls (when no changes)'
