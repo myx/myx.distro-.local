@@ -47,10 +47,16 @@ fi
 	if [ -x "$MYXROOT/bin/git/clonePull.Common" ] ; then 
 		echo "😻 GitClonePull: executable found!" >&2
 		"$MYXROOT/bin/git/clonePull.Common" "$@"
-		return 0
+		return $?
 	fi
 
-	echo "-- using embedded function"
+	echo "-- using embedded function" >&2
+
+	## Never hang an install on an unreachable host or a credential prompt.
+	GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-ssh} -o ConnectTimeout=${MYX_GIT_CONNECT_TIMEOUT:-15} -o BatchMode=yes"
+	GIT_HTTP_LOW_SPEED_LIMIT="${MYX_GIT_HTTP_LOW_SPEED_LIMIT:-1000}"
+	GIT_HTTP_LOW_SPEED_TIME="${MYX_GIT_HTTP_LOW_SPEED_TIME:-30}"
+	export GIT_SSH_COMMAND GIT_HTTP_LOW_SPEED_LIMIT GIT_HTTP_LOW_SPEED_TIME
 
 	: "${1:?⛔ ERROR: GitClonePull: tgtPath is required!}"
 	: "${2:?⛔ ERROR: GitClonePull: repoUrl is required!}"
