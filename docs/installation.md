@@ -40,3 +40,13 @@ Several may be listed in one run:
 Update every installed toolset to its latest published version:
 
 	DistroLocalTools.fn.sh --upgrade-installed-tools
+
+## Upgrades discard local edits
+
+An installed copy under `.local/` is a distribution. Do not edit it.
+
+- Every install run updates each copy from its git repository.
+- When the update cannot fast-forward, the tool discards local edits and local commits in that copy. It names each discarded file and commit on stderr first.
+- Install and upgrade always write into `.local/`, even when the consoles run from `source`.
+
+Make your changes in the workspace `source/` tree instead.

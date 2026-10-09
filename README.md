@@ -5,6 +5,20 @@ It also generates the `Distro*Console.sh` launchers you start each toolset with.
 
 Every installed package adds its own `sh-scripts/` directory to the console `PATH`.
 
+Use it when you set up a new myx.distro workspace, or add, upgrade or configure a toolset in one.
+
+## First command
+
+On a new machine, bootstrap a workspace with `workspace-install.sh`. [Installation](docs/installation.md) shows the command.
+
+In an existing workspace, open the local console:
+
+	./DistroLocalConsole.sh
+
+## Before you upgrade
+
+Installed copies under `.local/` are distributions. An install or upgrade discards local edits and local commits in them. Make your changes in the source tree, not in `.local/`. [Installation](docs/installation.md) has the details.
+
 ## Documentation
 
 - [Installation](docs/installation.md) — requirements, install, upgrade and uninstall.

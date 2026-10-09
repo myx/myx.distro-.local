@@ -2,47 +2,40 @@
 
 Team-owned notes for the magic-* team. This package installs the others, so what a workspace actually exposes is recorded here.
 
+## Goal and where things live
+
+- The package creates a workspace, installs the other `myx.distro-*` toolsets into `.local/myx/`, and generates the `Distro*Console.sh` launchers. It carries no pipeline builders.
+- `sh-scripts/DistroLocalTools.fn.sh` is the tool. Its header says it must run without a distro context, because it installs the parts that context needs.
+- `sh-scripts/workspace-install.sh` is the stand-alone bootstrap. It reads the workspace config file and then calls `DistroLocalTools.fn.sh`.
+- `sh-lib/LocalTools.Config.include` handles every `--*-config-option` scope, including the remote profiles (`remote/static/<name>.remote.env`) and the agents scope (`.local/.agents/`).
+- `sh-lib/LocalTools.Make*.include` hold the `--make-*` operations. `sh-lib/console-.local-bashrc.rc` is this package's console.
+- `sh-lib/help/Man.Project.Inf.file.help.md` is the `project.inf` grammar for the whole family.
+
+## Installed copies are distributions
+
+- An install or upgrade exports `MYX_GIT_CLONE_PULL_ON_CONFLICT="discard"`. The comment beside it states the decision: local edits in an installed copy are illegal and are never kept.
+- The embedded `GitClonePull` fallback does the same. When `git pull --ff-only` fails, it lists each discarded file and commit on stderr, then runs `git reset --hard` and `git clean -fd`.
+- `--install-distro-*` always writes into `$MMDAPP/.local`. When the console runs from `source`, the tool switches `MDLT_ORIGIN` back to `.local` for the install.
+- User-facing warning: [Installation](docs/installation.md).
+
 ## Families are packages
 
 - A family is a package. The families are source, deploy, remote, system, agents and `.local`. They are separate sets.
-- Each installed `myx.distro-*` package contributes its own `sh-scripts/` directory to a console's `PATH`.
-- A console's `PATH` is set explicitly by that console's own rc file. Each rc hardcodes its own list; nothing is discovered dynamically.
-
-## Exposure is per console
-
-- Local and Agents consoles expose every family.
-- Source and Deploy consoles expose every family except remote.
-- Remote console exposes every family except agents.
-- Read `PATH` rather than assuming it. `command -v <Tool>.fn.sh` is the authority on whether a tool is reachable from where you stand.
-
-## Two faults, one check
-
-- A family's directory is on `PATH` and the command is missing: that package is not installed here.
-- The family's directory is absent from `PATH`: this console does not expose that family.
-- Tell the two apart before concluding a tool is broken or gone.
-
-## Completion is an offer, not authority
-
-- Consoles that register tab-completions register them for every family regardless of which ones their own `PATH` carries. A name that completes is not proof the command resolves.
-
-## A console pipeline returns 0 whatever it ran
-
-- A command failing inside a console prints `⛔ ERROR: exited with error status (1)` on stderr while the pipeline itself still returns 0. Exit status is therefore never the check for anything sent through a console.
-- Assert on the result instead — a non-empty answer, or the file the command was meant to produce — and read stderr for the error line.
+- Which console exposes which family, and how to tell a missing package from an unexposed family: [Troubleshooting](docs/troubleshooting.md). The same page covers tab completion and the console pipeline that returns 0.
 
 ## The prompt hook announces a change it cannot apply
 
 - `SourceConsole.include` and `DeployConsole.include` each carry a `--shell-prompt` arm that applies a pending working-directory change from `MDSC_INT_CD`, `cd`s to it, clears it, then prints the prompt string. It reaches the interactive shell through two nested subshells and therefore changes nothing in it: the console's own `Source()`/`Deploy()` wrapper sources the include inside `( … )`, and `PROMPT_COMMAND` calls that wrapper inside a `$( … )` substitution to build `PS1`.
 - The `cd` and the `export -n` both land in the innermost subshell. The working directory is unchanged on return and `MDSC_INT_CD` is still set, so the arm re-fires on every prompt.
-- **The arm prints `⤵️ <Console>: Changing directory: <path>` on stderr before applying nothing.** That announcement is why the mechanism reads as working: a hook that applied nothing silently would have been noticed, and this one reports success on every invocation.
-- Two controls establish it rather than one. With `MDSC_INT_CD` unset the announcement does not appear, so the populated run genuinely takes the branch; a plain `cd` at the same call depth does move the shell, so the observation can detect a working one.
-- `MDSC_INT_CD` is written only by `JumpTo.fn.sh`. Run as a script it changes its own process and exports into it, so neither the directory nor the variable reaches the caller — measured. Whether the `cd` at the end of the `JumpTo` function body moves a console that called it as a function is read from that file and not measured: a bare harness cannot test it, because `Distro ListDistroProjects` inside `JumpTo` needs a console `PATH` and fails without one, which is the documented bare-invocation gotcha rather than a fault in `JumpTo`.
+- **The arm prints `⤵️ <Console>: Changing directory: <path>` on stderr before applying nothing.** So the hook reports success on every invocation, and reads as working.
+- With `MDSC_INT_CD` unset, the announcement does not appear.
+- `MDSC_INT_CD` is written only by `JumpTo.fn.sh`. Run as a script, it changes its own process and exports into it, so neither the directory nor the variable reaches the caller. Open: whether the `cd` at the end of the `JumpTo` function body moves a console that called it as a function. A bare harness cannot test it, because `Distro ListDistroProjects` inside `JumpTo` needs a console `PATH`.
 - Nothing else reads `MDSC_INT_CD`, and no equivalent arm exists for any other console state.
-- **This arm is not a precedent to copy.** Anything modelled on it inherits the same two subshells and the same silent non-application — a `PATH` refresh written into it would announce and apply nothing, exactly as the directory change does. A design described as following it points a reader at a mechanism that has never applied anything.
+- **This arm is not a precedent to copy.** Anything modelled on it inherits the same two subshells and the same silent non-application — a `PATH` refresh written into it would announce and apply nothing, exactly as the directory change does.
 
 ## Console PATH is hand-authored, not generated from `project.inf`
 
-- Each console's `console-*-bashrc.rc` hand-lists its own family PATH additions (see "Exposure is per console" above) — no "generated by"/"DO NOT EDIT" marker anywhere, each family lists itself first and differs in what it appends. `--make-console-command`/`--make-console-script` regenerate only the thin launcher wrapper that invokes the rc file, never the rc's own PATH-building content — there is no operation today that regenerates a console's PATH from a project's `project.inf Declares:` tags. A settled, not-yet-built tag for a future such operation (`custom-commands-path:sh-scripts`, for a user-added custom project's own `sh-scripts/`) is recorded in `magic-devops`'s own `reference/myxdistro-pipeline.md` — read there for the full mechanism and the decision record it points to, not duplicated here.
+- Each console's `console-*-bashrc.rc` hand-lists its own family PATH additions — no "generated by"/"DO NOT EDIT" marker anywhere, each family lists itself first and differs in what it appends. Nothing adds a family later. `--make-console-command`/`--make-console-script` regenerate only the thin launcher wrapper that invokes the rc file, never the rc's own PATH-building content — there is no operation today that regenerates a console's PATH from a project's `project.inf Declares:` tags. A settled, not-yet-built tag for a future such operation (`custom-commands-path:sh-scripts`, for a user-added custom project's own `sh-scripts/`) is recorded in `magic-devops`'s own `reference/myxdistro-pipeline.md` — read there for the full mechanism and the decision record it points to, not duplicated here.
 
 ## `local` in the config include needs a function on the stack
 
