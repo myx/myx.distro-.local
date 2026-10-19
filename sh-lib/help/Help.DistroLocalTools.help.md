@@ -100,6 +100,10 @@
 					HISTSIZE, HISTFILESIZE and histappend to achieve the desired isolation or 
 					sharing.
 
+				MDLT_CONSOLE_SPACERS
+					The blank lines between the groups of the agents console screen's lists.
+					`disable` turns them off. The default is on.
+
 				MDLT_ACTIONS_SH_WRAP
 					Shell command to wrap shell actions to execute. Allows to run actions on
 					remote runner machine or add extra logging/notification, etc...

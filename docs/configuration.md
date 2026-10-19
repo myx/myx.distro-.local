@@ -45,6 +45,7 @@ Both `--system-config-option` and `--custom-config-option` take one of:
 	- `local-machine-home` — per-workspace file in `$HOME`, e.g. `~/.bash_history_<workspace>`.
 	- `bash-default` — reset to Bash's standard `~/.bash_history`.
 	- `user-default` — leave the user's current setting untouched.
+- `MDLT_CONSOLE_SPACERS` — the blank lines between the groups of the agents console screen's lists. `disable` turns them off. Default: on.
 - `MDLT_ACTIONS_SH_WRAP` — command used to wrap every action run, for remote runners or logging.
 
 
