@@ -33,8 +33,30 @@
 			`MDLT_ORIGIN`, whether or not this workspace has it installed. `os-myx.common`
 			and `myx.distro-.local` are refreshed by every install run regardless.
 
+		--uninstall-distro-remote
+		--uninstall-distro-deploy
+		--uninstall-distro-source
+		--uninstall-distro-agents
+			The mirror of `--install-distro-*`: removes the installed copy of the toolset from
+			`.local/myx` of the workspace, with the console command the install made for it,
+			`Distro<Name>Console.sh` at the workspace root. The data of the workspace (`remote`,
+			`distro`, `source`, `agents` and the settings) is never touched. Any number of
+			`--uninstall-distro-*` options combine in one run. A toolset that is not installed is
+			refused, and nothing is removed then. `--uninstall-distro-.local` and
+			`--uninstall-distro-system` are refused: `.local` installs the rest, and `system`
+			is shared by source and deploy and comes with either. The console's `Installed
+			Subsystems` offers these commands, and never the uninstall of its own subsystem.
+
 		--install-distro-.local
 			Upgrades local .local packages with latest `master` version.
+
+		--install-embedded-python [--uv-version <version>] [--from-folder <folder>]
+			Installs a pinned `uv` release, its archive checked against the checksum published beside it, and
+			a standalone CPython installed by that uv, into `.local/embedded-python/` of the workspace. Every
+			folder uv uses is in it, and nothing is written in the home folder, in a shell startup file or in
+			the system. Refused, with the reason, on FreeBSD and any system no standalone build covers. It is
+			an operation of its own and does not combine with `--install-distro-*`; its manual is
+			`DistroLocalTools.fn.sh --install-embedded-python --help`.
 
 		--system-config-option <arguments...>
 		--custom-config-option <arguments...>
@@ -103,6 +125,10 @@
 				MDLT_CONSOLE_SPACERS
 					The blank lines between the groups of the agents console screen's lists.
 					`disable` turns them off. The default is on.
+
+				MDLT_CONSOLE_MOUSE
+					The mouse of the agents console screen. `disable` leaves the mouse to the
+					terminal, so that its own selection copies text. The default is on.
 
 				MDLT_ACTIONS_SH_WRAP
 					Shell command to wrap shell actions to execute. Allows to run actions on

@@ -368,6 +368,41 @@ DistroLocalTools(){
 
 				return 0
 			;;
+			--uninstall-distro-*)
+				## The mirror of --install-distro-*: the installed copy of a toolset is removed from `.local/myx`, with the console command
+				## the install made for it. The workspace's data (`source`, `distro`, `agents`, the settings) is never touched. `.local` is the
+				## base that installs the rest and `system` is shared by source and deploy: neither is uninstalled by itself.
+				local uninstallName uninstallDir uninstallLauncher
+				while true ; do
+					case "$1" in
+						--uninstall-distro-remote|--uninstall-distro-deploy|--uninstall-distro-source|--uninstall-distro-agents)
+							uninstallName="${1#--uninstall-distro-}"
+							shift
+							uninstallDir="$MMDAPP/.local/myx/myx.distro-$uninstallName"
+							uninstallLauncher="$MMDAPP/Distro$( printf '%s' "${uninstallName:0:1}" | tr '[:lower:]' '[:upper:]' )${uninstallName:1}Console.sh"
+							if [ ! -d "$uninstallDir" ] ; then
+								echo "$MDSC_CMD: ⛔ ERROR: --uninstall-distro-$uninstallName: myx.distro-$uninstallName is not installed in this workspace (no $uninstallDir) -- nothing was removed" >&2
+								set +e ; return 1
+							fi
+							rm -rf -- "$uninstallDir" || { echo "$MDSC_CMD: ⛔ ERROR: --uninstall-distro-$uninstallName: $uninstallDir could not be removed" >&2 ; set +e ; return 1 ; }
+							[ ! -f "$uninstallLauncher" ] || rm -f -- "$uninstallLauncher"
+							echo "$MDSC_CMD: removed $uninstallDir" >&2
+						;;
+						--uninstall-distro-.local|--uninstall-distro-system)
+							echo "$MDSC_CMD: ⛔ ERROR: $1: this subsystem is not uninstalled by itself: .local installs the rest, and system is shared by source and deploy -- nothing was removed" >&2
+							set +e ; return 1
+						;;
+						'')
+							break
+						;;
+						*)
+							echo "$MDSC_CMD: ⛔ ERROR: invalid option: $1" >&2
+							set +e ; return 1
+						;;
+					esac
+				done
+				return 0
+			;;
 			--upgrade-installed-tools)
 				shift
 				DistroLocalTools $(
@@ -377,6 +412,11 @@ DistroLocalTools(){
 					done
 				) || { set +e ; return 1 ; }
 				return 0
+			;;
+			--install-embedded-python)
+				shift
+				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/python/LocalTools.EmbeddedPython.include"
+				return $?
 			;;
 			--help-install-unix-bare)
 				(

@@ -1,6 +1,6 @@
 #!/usr/bin/awk -f
 ##
-## AgentsMergeMdFiles.awk -- the markdown nesting engine behind --intern-merge-md-files
+## LocalMergeMdFiles.awk -- the markdown nesting engine behind --intern-merge-md-files
 ## (AgentsTools.InternMergeMdFiles.include, contract: MAGIC.md). Every file comes in by a mixin,
 ## which names the section it becomes; this awk reads the mixins itself, each file once, in one
 ## process, and prints the merged document on stdout.

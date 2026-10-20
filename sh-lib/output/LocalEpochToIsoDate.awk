@@ -2,7 +2,7 @@
 
 # Converts epoch seconds (UTC, one per input line, on stdin) to a calendar date
 # `YYYY-MM-DD`, printing one date per input line. The exact inverse of
-# sh-lib/output/AgentsIsoToEpoch.awk's own date half, and written for the same reason
+# sh-lib/output/LocalIsoToEpoch.awk's own date half, and written for the same reason
 # that file states: there is no portable epoch->date via date(1) either.
 # BSD spells it `date -r <epoch>`, GNU spells it `date -d @<epoch>`, and POSIX
 # specifies neither -- date(1) is standardised only as a reader of the CURRENT
@@ -53,7 +53,7 @@ function civilFromDays(z,   era, doe, yoe, y, doy, mp, d, m) {
 	## and the fraction dropped. Anything else is refused.
 	sub(/\.[0-9]*$/, "", value)
 	if (value !~ /^[0-9]+$/) {
-		printf("⛔ ERROR: AgentsEpochToIsoDate.awk: not a non-negative epoch-seconds value: %s\n", $0) > "/dev/stderr"
+		printf("⛔ ERROR: LocalEpochToIsoDate.awk: not a non-negative epoch-seconds value: %s\n", $0) > "/dev/stderr"
 		bad = 1
 		next
 	}

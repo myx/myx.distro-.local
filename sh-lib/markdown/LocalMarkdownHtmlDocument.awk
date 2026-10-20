@@ -3,7 +3,7 @@
 # A Markdown document (stdin) -> an HTML fragment (stdout): the document mode
 # beside AgentsEmailHtmlBuild.awk, which stays the email mode. Run as
 #
-#   LC_ALL=C awk -f AgentsMarkdownHtmlDocument.awk < document.md
+#   LC_ALL=C awk -f LocalMarkdownHtmlDocument.awk < document.md
 #
 # The output is body content only -- no <html>, <head>, <body> or <title>,
 # which the step that publishes it adds -- its top-level blocks joined by

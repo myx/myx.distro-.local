@@ -1,0 +1,208 @@
+#!/usr/bin/env bash
+# ^^^ for syntax checking in the editor only
+
+##
+## `DistroLocalTools.fn.sh --install-embedded-python [--uv-version <version>] [--from-folder <folder>]`
+##
+## A pinned `uv` release and a standalone CPython, installed by that uv, in the workspace's `.local/embedded-python/`,
+## for the tools that need a Python of their own. Sourced by the dispatcher, which hands over the arguments after the option.
+##
+##   uv/         the unpacked uv release (uv, uvx), its archive checked against the .sha256 published beside it
+##   python/     UV_PYTHON_INSTALL_DIR: the standalone CPython builds
+##   bin/        UV_PYTHON_BIN_DIR and UV_TOOL_BIN_DIR: the links uv makes to them
+##   cache/      UV_CACHE_DIR
+##   tools/      UV_TOOL_DIR
+##   tmp/        the temp folder of uv's own process
+##   downloads/  what an online run fetched: the uv archive and its .sha256, and uv's Python archive in python/. Copied to a
+##               host with no internet, it is what --from-folder installs from.
+## Nothing is written in the home folder, in a shell startup file or in the system. Where no standalone build covers the
+## system it refuses, says why, and writes nothing. It is safe to run again: what stands is left as it is.
+## On standard output it prints the Python it made, one line; everything else is said on standard error.
+##
+
+LocalToolsEmbeddedPythonRefuse(){ ## text -- why, on standard error; rc 1
+	echo "$MDSC_CMD: ⛔ ERROR: --install-embedded-python: $1" >&2
+	return 1
+}
+
+LocalToolsEmbeddedPythonSha256(){ ## file -- its sha256, on standard output
+	if command -v sha256sum > /dev/null 2>&1 ; then
+		sha256sum "$1" | awk '{ print $1 }'
+	elif command -v shasum > /dev/null 2>&1 ; then
+		shasum -a 256 "$1" | awk '{ print $1 }'
+	else
+		return 1
+	fi
+}
+
+LocalToolsEmbeddedPythonVerify(){ ## archive, its .sha256 file -- rc 0 where the archive is the one the checksum file names
+	local wanted found
+	wanted="$( awk 'NR == 1 { print tolower($1) }' "$2" 2> /dev/null )"
+	case "$wanted" in
+		''|*[!0-9a-f]*) LocalToolsEmbeddedPythonRefuse "no checksum to check $1 against: the first word of $2 is not a sha256" ; return 1 ;;
+	esac
+	[ "${#wanted}" = 64 ] || { LocalToolsEmbeddedPythonRefuse "no checksum to check $1 against: the first word of $2 is not a sha256" ; return 1 ; }
+	found="$( LocalToolsEmbeddedPythonSha256 "$1" )"
+	[ -n "$found" ] || { LocalToolsEmbeddedPythonRefuse "cannot compute the sha256 of $1: neither sha256sum nor shasum is here" ; return 1 ; }
+	[ "$found" = "$wanted" ] || { LocalToolsEmbeddedPythonRefuse "checksum mismatch for $1: $2 says $wanted, the file is $found" ; return 1 ; }
+	return 0
+}
+
+LocalToolsEmbeddedPythonFetch(){ ## url, file, what it is -- the file whole or not at all
+	curl -fsSL --connect-timeout 15 --retry 2 -o "$2.part" "$1" || { rm -f "$2.part" ; LocalToolsEmbeddedPythonRefuse "cannot fetch $3: $1" ; return 1 ; }
+	mv -f "$2.part" "$2"
+}
+
+LocalToolsEmbeddedPythonTriple(){ ## -- the target of the uv release for this machine, on standard output; where none covers it, why, rc 1
+	local system machine arch libc="gnu"
+	system="$( uname -s )" ; machine="$( uname -m )"
+	case "$system" in
+		Darwin)
+			case "$machine" in
+				arm64|aarch64) echo "aarch64-apple-darwin" ; return 0 ;;
+				x86_64) echo "x86_64-apple-darwin" ; return 0 ;;
+			esac
+		;;
+		Linux)
+			case "$machine" in
+				x86_64|amd64) arch="x86_64" ;;
+				aarch64|arm64) arch="aarch64" ;;
+			esac
+			if [ -n "$arch" ] ; then
+				ldd --version 2>&1 | grep -qi musl && libc="musl"
+				echo "$arch-unknown-linux-$libc"
+				return 0
+			fi
+		;;
+	esac
+	LocalToolsEmbeddedPythonRefuse "$system $machine is not covered: uv and the standalone CPython builds exist for macOS and Linux on arm64 and x86_64 only, and no standalone build covers this system. Nothing was installed and nothing was written."
+}
+
+LocalToolsEmbeddedPythonUv(){ ## uv's arguments -- uv, run with every folder it uses named, all of them inside the embedded-python folder
+	env \
+		UV_PYTHON_INSTALL_DIR="$embeddedBase/python" \
+		UV_CACHE_DIR="$embeddedBase/cache" \
+		UV_TOOL_DIR="$embeddedBase/tools" \
+		UV_TOOL_BIN_DIR="$embeddedBase/bin" \
+		UV_PYTHON_BIN_DIR="$embeddedBase/bin" \
+		UV_PYTHON_CACHE_DIR="$embeddedFiles/python" \
+		TMPDIR="$embeddedBase/tmp" \
+		UV_NO_MODIFY_PATH=1 \
+		UV_PYTHON_PREFERENCE=only-managed \
+		"$embeddedBase/uv/uv" "$@"
+}
+
+LocalToolsEmbeddedPython(){ ## the arguments after the option
+	local uvVersion="0.13.1" pythonMinor="3.12" fromFolder="" fromFolderSet="" triple embeddedBase embeddedFiles
+	local uvBin uvArchive uvSum uvReady="" pythonExe="" unpackDir srcFile
+
+	while [ $# -gt 0 ] ; do
+		case "$1" in
+			--help)
+				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools-install-embedded-python.include"
+				return 0
+			;;
+			--uv-version)
+				[ $# -ge 2 ] || { LocalToolsEmbeddedPythonRefuse "$1 needs a version" ; return 1 ; }
+				uvVersion="$2" ; shift 2
+			;;
+			--from-folder)
+				[ $# -ge 2 ] || { LocalToolsEmbeddedPythonRefuse "$1 needs a folder" ; return 1 ; }
+				fromFolder="$2" ; fromFolderSet="true" ; shift 2
+			;;
+			*)
+				LocalToolsEmbeddedPythonRefuse "invalid option: $1"
+				return 1
+			;;
+		esac
+	done
+
+	case "$uvVersion" in
+		''|*[!0-9.]*|.*|*.|*..*) LocalToolsEmbeddedPythonRefuse "not a uv release: '$uvVersion' (it is three numbers with dots)" ; return 1 ;;
+	esac
+	[ "$( printf '%s' "$uvVersion" | tr -cd '.' | wc -c | tr -d ' ' )" = 2 ] || { LocalToolsEmbeddedPythonRefuse "not a uv release: '$uvVersion' (it is three numbers with dots)" ; return 1 ; }
+	[ -n "$MMDAPP" ] && [ -d "$MMDAPP/.local" ] || { LocalToolsEmbeddedPythonRefuse "no workspace: MMDAPP is not set, or has no .local" ; return 1 ; }
+
+	triple="$( LocalToolsEmbeddedPythonTriple )" || return 1
+	embeddedBase="$MMDAPP/.local/embedded-python"
+	embeddedFiles="$embeddedBase/downloads"
+	if [ -n "$fromFolderSet" ] ; then
+		[ -d "$fromFolder" ] || { LocalToolsEmbeddedPythonRefuse "not a folder: $fromFolder" ; return 1 ; }
+		embeddedFiles="$( cd "$fromFolder" && pwd -P )"
+	fi
+	uvBin="$embeddedBase/uv/uv"
+	uvArchive="$embeddedFiles/uv-$triple.tar.gz"
+	uvSum="$uvArchive.sha256"
+
+	## what stands already
+	if [ -x "$uvBin" ] && [ "$( "$uvBin" --version 2> /dev/null | awk 'NR == 1 { print $2 }' )" = "$uvVersion" ] ; then
+		uvReady="true"
+		pythonExe="$( LocalToolsEmbeddedPythonUv python find "$pythonMinor" 2> /dev/null )"
+		[ -x "$pythonExe" ] || pythonExe=""
+	fi
+
+	if [ -n "$uvReady" ] && [ -n "$pythonExe" ] ; then
+		echo "$MDSC_CMD: --install-embedded-python: uv $uvVersion already installed: $uvBin" >&2
+		echo "$MDSC_CMD: --install-embedded-python: python $pythonMinor already installed: $pythonExe" >&2
+		echo "$MDSC_CMD: --install-embedded-python: folders uv, python, bin, cache, tools, tmp and downloads, all under $embeddedBase" >&2
+		printf '%s\n' "$pythonExe"
+		return 0
+	fi
+
+	## files given: what is needed is there, and the uv archive is the one its checksum names, before anything is written
+	if [ -n "$fromFolderSet" ] ; then
+		if [ -z "$uvReady" ] ; then
+			[ -f "$uvArchive" ] || { LocalToolsEmbeddedPythonRefuse "the folder has no uv archive for this machine: $uvArchive" ; return 1 ; }
+			[ -f "$uvSum" ] || { LocalToolsEmbeddedPythonRefuse "the folder has no checksum for it: $uvSum" ; return 1 ; }
+			LocalToolsEmbeddedPythonVerify "$uvArchive" "$uvSum" || return 1
+		fi
+		if [ -z "$pythonExe" ] ; then
+			[ -n "$( ls -A "$embeddedFiles/python" 2> /dev/null )" ] || { LocalToolsEmbeddedPythonRefuse "the folder has no Python archive: $embeddedFiles/python" ; return 1 ; }
+		fi
+	else
+		command -v curl > /dev/null 2>&1 || { LocalToolsEmbeddedPythonRefuse "curl is needed to fetch uv, and is not here" ; return 1 ; }
+	fi
+	command -v tar > /dev/null 2>&1 || { LocalToolsEmbeddedPythonRefuse "tar is needed to unpack uv, and is not here" ; return 1 ; }
+
+	mkdir -p "$embeddedBase/tmp" "$embeddedBase/cache" || { LocalToolsEmbeddedPythonRefuse "cannot make $embeddedBase" ; return 1 ; }
+
+	if [ -z "$uvReady" ] ; then
+		if [ -z "$fromFolderSet" ] ; then
+			mkdir -p "$embeddedFiles" || { LocalToolsEmbeddedPythonRefuse "cannot make $embeddedFiles" ; return 1 ; }
+			echo "$MDSC_CMD: --install-embedded-python: fetching uv $uvVersion ($triple)..." >&2
+			LocalToolsEmbeddedPythonFetch "https://github.com/astral-sh/uv/releases/download/$uvVersion/uv-$triple.tar.gz" "$uvArchive" "the uv archive" || return 1
+			LocalToolsEmbeddedPythonFetch "https://github.com/astral-sh/uv/releases/download/$uvVersion/uv-$triple.tar.gz.sha256" "$uvSum" "the checksum of the uv archive" || { rm -f "$uvArchive" ; return 1 ; }
+			LocalToolsEmbeddedPythonVerify "$uvArchive" "$uvSum" || { rm -f "$uvArchive" "$uvSum" ; return 1 ; }
+		fi
+		unpackDir="$( mktemp -d "$embeddedBase/unpack.XXXXXX" )" || { LocalToolsEmbeddedPythonRefuse "cannot make a folder to unpack uv in, under $embeddedBase" ; return 1 ; }
+		## this runs in a subshell of its own, so its exit trap is its own: the folder goes with the run, however it ends
+		embeddedUnpack="$unpackDir" ; trap 'rm -rf -- "$embeddedUnpack"' EXIT
+		tar -xzf "$uvArchive" -C "$unpackDir" || { rm -rf "$unpackDir" ; LocalToolsEmbeddedPythonRefuse "cannot unpack $uvArchive" ; return 1 ; }
+		srcFile="$( find "$unpackDir" -type f -name uv | head -1 )"
+		[ -n "$srcFile" ] || { rm -rf "$unpackDir" ; LocalToolsEmbeddedPythonRefuse "there is no uv in $uvArchive" ; return 1 ; }
+		rm -rf "$embeddedBase/uv"
+		mv "$( dirname "$srcFile" )" "$embeddedBase/uv" || { rm -rf "$unpackDir" ; LocalToolsEmbeddedPythonRefuse "cannot put uv in place: $embeddedBase/uv" ; return 1 ; }
+		rm -rf "$unpackDir" ; trap - EXIT
+		echo "$MDSC_CMD: --install-embedded-python: installed uv $uvVersion: $uvBin" >&2
+	else
+		echo "$MDSC_CMD: --install-embedded-python: uv $uvVersion already installed: $uvBin" >&2
+	fi
+
+	if [ -z "$pythonExe" ] ; then
+		[ -n "$fromFolderSet" ] || mkdir -p "$embeddedFiles/python" || { LocalToolsEmbeddedPythonRefuse "cannot make $embeddedFiles/python" ; return 1 ; }
+		echo "$MDSC_CMD: --install-embedded-python: installing python $pythonMinor with uv..." >&2
+		LocalToolsEmbeddedPythonUv python install "$pythonMinor" >&2 || { LocalToolsEmbeddedPythonRefuse "uv could not install python $pythonMinor" ; return 1 ; }
+		pythonExe="$( LocalToolsEmbeddedPythonUv python find "$pythonMinor" )"
+		[ -x "$pythonExe" ] || { LocalToolsEmbeddedPythonRefuse "uv installed python $pythonMinor, and cannot find it" ; return 1 ; }
+		echo "$MDSC_CMD: --install-embedded-python: installed python $pythonMinor: $pythonExe" >&2
+	else
+		echo "$MDSC_CMD: --install-embedded-python: python $pythonMinor already installed: $pythonExe" >&2
+	fi
+
+	echo "$MDSC_CMD: --install-embedded-python: folders uv, python, bin, cache, tools, tmp and downloads, all under $embeddedBase" >&2
+	printf '%s\n' "$pythonExe"
+}
+
+embeddedPythonRc=0
+( set +e ; LocalToolsEmbeddedPython "$@" ) || embeddedPythonRc=$?
+[ "$embeddedPythonRc" = 0 ] || { set +e ; return "$embeddedPythonRc" ; }

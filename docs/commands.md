@@ -15,6 +15,8 @@
 	- `--install-distro-agents` — install the agent tooling and create the workspace `agents` data directory.
 	- `--install-distro-.local` — upgrade the local `.local` packages to the latest `master` version.
 	- `--upgrade-installed-tools` — upgrade the deploy, source, remote and agents toolsets to the latest `master` version, then exit.
+- Embedded Python:
+	- `--install-embedded-python [--uv-version <version>] [--from-folder <folder>]` — install a pinned `uv` and a standalone CPython into `.local/embedded-python/`, then exit. It is separate from the `--install-distro-*` options and refuses systems no standalone build covers, such as FreeBSD.
 - Console and workspace setup:
 	- `--make-console-command [--quiet]` — re-create `DistroLocalConsole.sh`, then exit. `--quiet` hides the usage notes.
 	- `--make-console-script` — print the console script body that `--make-console-command` uses.
@@ -45,4 +47,5 @@ Each tool has a manual with its full syntax, options and examples.
 
 - [DistroLocalTools-install-unix-bare](../sh-lib/help/Help.DistroLocalTools-install-unix-bare.help.md)
 - [DistroLocalTools](../sh-lib/help/Help.DistroLocalTools.help.md)
+- [DistroLocalTools-install-embedded-python](../sh-lib/help/Help.DistroLocalTools-install-embedded-python.help.md)
 - [Project.Inf.file](../sh-lib/help/Man.Project.Inf.file.help.md)

@@ -67,7 +67,7 @@ function isoToEpoch(s,   y, mo, d, h, mi, sec, n, c, sign, off, era, yoe, doy, d
 
 {
 	if ($0 !~ /^[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]/) {
-		printf("⛔ ERROR: AgentsIsoToEpoch.awk: not an ISO-8601 date-time: %s\n", $0) > "/dev/stderr"
+		printf("⛔ ERROR: LocalIsoToEpoch.awk: not an ISO-8601 date-time: %s\n", $0) > "/dev/stderr"
 		exit 1
 	}
 	print isoToEpoch($0)

@@ -1,0 +1,5 @@
+echo "📘 syntax: DistroLocalTools.fn.sh --install-embedded-python [--uv-version <version>] [--from-folder <folder>]" >&2
+echo "📘 syntax: DistroLocalTools.fn.sh --install-embedded-python --help" >&2
+if [ "$1" = "--help" ]; then
+	CatMarkdown "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/help/Help.DistroLocalTools-install-embedded-python.help.md" >&2
+fi
