@@ -10,7 +10,14 @@
 ## ---- the subsystems: `Installed Subsystems` ----
 
 ## The fields of a `subsystem` row of `--manager-subsystem-list`, after its first.
-SUBSYSTEM_FIELDS = ("name", "state", "role", "install", "uninstall")
+SUBSYSTEM_FIELDS = ("name", "state", "role", "install", "uninstall", "update")
+## How a state reads on the screen: a subsystem that is not there is `not installed` (F11.7), not `missing`.
+SUBSYSTEM_STATE_WORDS = {"missing": "not installed"}
+
+
+def subsystemStateWords(state):
+    return SUBSYSTEM_STATE_WORDS.get(state, state)
+
 ## What each subsystem is, in the words of its console: one line.
 SUBSYSTEM_WORDS = {
     ".local": "local tool management: it installs the rest",
@@ -28,15 +35,34 @@ SUBSYSTEM_ROLES = {
 }
 ## What a command of a subsystem does, in words, for the left pane and for the dialog that asks first.
 SUBSYSTEM_RUNS = {
+    "update": "It pulls the installed copy of the toolset in .local of the workspace again, which is its install run again; it changes nothing else. It runs at once and unattended, in a window that follows what it writes. Run starts it; Cancel and Esc do nothing.",
     "install": "It installs the toolset: its package is cloned into .local of the workspace and the console command for it is made. It runs at once and unattended, in a window that follows what it writes. Run starts it; Cancel and Esc do nothing.",
     "uninstall": "It removes the installed copy of the toolset from .local of the workspace, and the console command that was made for it. The data of the workspace is not touched. It runs at once and unattended, in a window that follows what it writes. Run starts it; Cancel and Esc do nothing.",
 }
 
 
-## What `--manager-subsystem-list` printed, as rows, in the order they come: a subsystem a row, its state at the end of it, and, indented under it,
-## a row for each command it is offered: `Install`, `Uninstall`. A line of another name and one too short are left out.
+## The words of what a command runs, for the dialog that asks first and for the left pane: the local tools' own option.
+def subsystemRunWords(command):
+    if command["what"] == "update":
+        return "--upgrade-installed-tools" if command["name"] == "all" else "--install-distro-%s" % command["name"]
+    return "--%s-distro-%s" % (command["what"], command["name"])
+
+
+## What a command is called in the right pane (F11.7): `Update` and `Update All`, which the list draws with its dots as it does the others, since each asks first.
+def subsystemCommandLabel(command):
+    if command["what"] == "update":
+        return "Update All" if command["name"] == "all" else "Update"
+    return command["what"].capitalize()
+
+
+## What `--manager-subsystem-list` printed, as rows, in the order they come: first `Update All...`, which runs Update Local Tools, then a subsystem a row,
+## its state at the end of it, and, indented under it, a row for each command it is offered: `Update...`, `Install`, `Uninstall`. A line of another name and one too
+## short are left out.
 def parseSubsystemLevels(readKey, level, text):
     rows = []
+    updateAll = newRow("all:update", "Update All", "subsystem-command", False)
+    updateAll["subsystemCommand"] = {"name": "all", "what": "update"}
+    rows.append(updateAll)
     for printed in text.split("\n"):
         fields = printed.split("\t")
         if fields[0] != "subsystem" or len(fields) <= len(SUBSYSTEM_FIELDS):
@@ -44,12 +70,12 @@ def parseSubsystemLevels(readKey, level, text):
         held = dict(zip(SUBSYSTEM_FIELDS, fields[1:]))
         row = newRow(held["name"], held["name"], "subsystem", False, fields)
         row["subsystem"] = held
-        row["tail"] = held["state"]
-        row["look"] = PLAIN if held["state"] == "installed" else DIM
+        row["tail"] = subsystemStateWords(held["state"])
+        row["look"] = BOLD if held["state"] == "installed" else DIM
         rows.append(row)
-        for what in ("install", "uninstall"):
+        for what in ("update", "install", "uninstall"):
             if held[what] == "yes":
-                command = newRow("%s:%s" % (held["name"], what), what.capitalize(), "subsystem-command", False, fields)
+                command = newRow("%s:%s" % (held["name"], what), subsystemCommandLabel({"name": held["name"], "what": what}), "subsystem-command", False, fields)
                 command["indent"] = 2
                 command["subsystemCommand"] = {"name": held["name"], "what": what}
                 rows.append(command)
@@ -69,25 +95,25 @@ def subsystemsSummary(state, path, row, form):
     if not held:
         return [looked("The operation listed no subsystem.", BOLD)]
     return tableSummaryLines(state, ("SUBSYSTEM", "STATE", "WHAT", "COMMAND"),
-                             [[one["name"], one["state"], SUBSYSTEM_WORDS.get(one["name"], "-"),
-                               "install" if one["install"] == "yes" else "uninstall" if one["uninstall"] == "yes" else SUBSYSTEM_ROLES.get(one["role"], "-")] for one in held],
+                             [[one["name"], subsystemStateWords(one["state"]), SUBSYSTEM_WORDS.get(one["name"], "-"),
+                               ", ".join(what for what in ("update", "install", "uninstall") if one[what] == "yes") or SUBSYSTEM_ROLES.get(one["role"], "-")] for one in held],
                              ("key", "enum", "text", "text"),
-                             looks=[[None, stateLook(one["state"]) if one["state"] != "installed" else None, None, None] for one in held])
+                             looks=[[BOLD, stateLook(one["state"]) if one["state"] != "installed" else None, None, None] for one in held])
 
 
 ## The selected row of the folder for the left pane: a subsystem by what it is, its state and what it is offered; a command by what it does.
 def subsystemsFocus(state, row):
     if row.get("subsystemCommand"):
         command = row["subsystemCommand"]
-        return [looked("%s %s" % (command["what"].capitalize(), command["name"]), BOLD)] + factLines([
-            ("runs", "DistroLocalTools.fn.sh --%s-distro-%s" % (command["what"], command["name"])),
+        return [looked("Update all" if command["name"] == "all" else "%s %s" % (command["what"].capitalize(), command["name"]), BOLD)] + factLines([
+            ("runs", "DistroLocalTools.fn.sh " + subsystemRunWords(command)),
         ], state.viewWidth) + [""] + wrapToCells(SUBSYSTEM_RUNS[command["what"]], max(10, state.viewWidth - 1))
     if row.get("subsystem"):
         one = row["subsystem"]
-        offered = ", ".join(what for what in ("install", "uninstall") if one[what] == "yes")
+        offered = ", ".join(what for what in ("update", "install", "uninstall") if one[what] == "yes")
         return [looked(one["name"], BOLD)] + factLines([
             ("what", SUBSYSTEM_WORDS.get(one["name"], "-")),
-            ("state", one["state"], stateLook(one["state"]) if one["state"] != "installed" else None),
+            ("state", subsystemStateWords(one["state"]), stateLook(one["state"]) if one["state"] != "installed" else None),
             ("commands", offered or SUBSYSTEM_ROLES.get(one["role"], "none")),
         ], state.viewWidth)
     return None

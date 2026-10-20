@@ -24,13 +24,15 @@ LocalToolsManagerSubsystemDir(){ ## name
 	printf '%s\n' "${MMDAPP%/}/.local/myx/myx.distro-$1"
 }
 
-## The row of one subsystem: `subsystem <name> <state> <role> <install> <uninstall>`.
+## The row of one subsystem: `subsystem <name> <state> <role> <install> <uninstall> <update>`.
 ##   <state>      `installed`, or `missing`
 ##   <role>       why it has no command of its own, or `-`: `base` (.local), `shared` (system), `console` (the console that is asking)
 ##   <install>    `yes` where the command to install it is offered: a toolset that is missing
 ##   <uninstall>  `yes` where the command to uninstall it is offered: a toolset that is installed and is not the console's own
+##   <update>     `yes` where the command to update it is offered: a toolset that is installed and has a command of its own, which is its install again
+##                (it pulls its copy): any of the four, the console's own included; `.local` and `system` are updated with all of them
 LocalToolsManagerSubsystemRow(){ ## name
-	local rowState="missing" rowRole="-" rowInstall="no" rowUninstall="no"
+	local rowState="missing" rowRole="-" rowInstall="no" rowUninstall="no" rowUpdate="no"
 	[ ! -d "$( LocalToolsManagerSubsystemDir "$1" )/sh-scripts" ] || rowState="installed"
 	case "$1" in
 		.local) rowRole="base" ;;
@@ -39,9 +41,10 @@ LocalToolsManagerSubsystemRow(){ ## name
 			[ "$1" != "${managerConsoleSubsystem:-}" ] || rowRole="console"
 			[ "$rowState" != "missing" ] || rowInstall="yes"
 			[ "$rowState" != "installed" ] || [ "$rowRole" = "console" ] || rowUninstall="yes"
+			[ "$rowState" != "installed" ] || rowUpdate="yes"
 		;;
 	esac
-	printf 'subsystem\t%s\t%s\t%s\t%s\t%s\n' "$1" "$rowState" "$rowRole" "$rowInstall" "$rowUninstall"
+	printf 'subsystem\t%s\t%s\t%s\t%s\t%s\t%s\n' "$1" "$rowState" "$rowRole" "$rowInstall" "$rowUninstall" "$rowUpdate"
 }
 
 case "$1" in
@@ -57,32 +60,39 @@ case "$1" in
 	;;
 
 	## One command of a subsystem, run with the output it writes, the exit status its own: install a toolset that is missing, uninstall
-	## one that is installed and is not the console's own. A command its row does not offer is refused and nothing is run.
+	## one that is installed and is not the console's own, update one that is installed (its install again, which pulls its copy), or update
+	## them all with the local tools (`update all`: Update Local Tools, --upgrade-installed-tools). A command its row does not offer is refused and nothing is run.
 	--manager-subsystem-run)
-		local runOp="$1" runWhat="${2:-}" runName="${3:-}" runRow runFound="" runField1 runField2 runState runRole runInstall runUninstall runTool
-		[ $# -eq 3 ] || { echo "⛔ ERROR: $MDSC_CMD $runOp: syntax is $runOp (install|uninstall) <subsystem>, got $(( $# - 1 )) argument(s) -- nothing was run" >&2 ; set +e ; return 1 ; }
-		case "$runWhat" in install|uninstall) ;; *) echo "⛔ ERROR: $MDSC_CMD $runOp: the command given is none of install and uninstall -- nothing was run" >&2 ; set +e ; return 1 ;; esac
-		for runRow in $localManagerSubsystems ; do
-			[ "$runRow" = "$runName" ] || continue
-			runFound="yes"
-		done
-		[ -n "$runFound" ] || { echo "⛔ ERROR: $MDSC_CMD $runOp: the subsystem given is none of the subsystems of this family -- nothing was run. They are ${localManagerSubsystems// /, }" >&2 ; set +e ; return 1 ; }
-		IFS=$'\t' read -r runField1 runField2 runState runRole runInstall runUninstall <<< "$( LocalToolsManagerSubsystemRow "$runName" )"
-		case "$runWhat:$runInstall:$runUninstall" in
-			install:yes:*|uninstall:*:yes) ;;
-			*)
-				case "$runRole" in
-					base) echo "⛔ ERROR: $MDSC_CMD $runOp: $runName is the base that installs the rest, and is neither installed nor uninstalled here -- nothing was run" >&2 ;;
-					shared) echo "⛔ ERROR: $MDSC_CMD $runOp: $runName is shared by source and deploy and comes with either, so it has no command of its own -- nothing was run" >&2 ;;
-					console) echo "⛔ ERROR: $MDSC_CMD $runOp: $runName is the console that asks, and is not uninstalled from itself -- nothing was run" >&2 ;;
-					*) echo "⛔ ERROR: $MDSC_CMD $runOp: $runWhat is not offered for $runName, which is $runState -- nothing was run" >&2 ;;
-				esac
-				set +e ; return 1
-			;;
-		esac
+		local runOp="$1" runWhat="${2:-}" runName="${3:-}" runRow runFound="" runField1 runField2 runState runRole runInstall runUninstall runUpdate runTool runCommand=""
+		[ $# -eq 3 ] || { echo "⛔ ERROR: $MDSC_CMD $runOp: syntax is $runOp (install|uninstall|update) <subsystem>, or $runOp update all, got $(( $# - 1 )) argument(s) -- nothing was run" >&2 ; set +e ; return 1 ; }
+		case "$runWhat" in install|uninstall|update) ;; *) echo "⛔ ERROR: $MDSC_CMD $runOp: the command given is none of install, uninstall and update -- nothing was run" >&2 ; set +e ; return 1 ;; esac
+		if [ "$runWhat:$runName" = "update:all" ] ; then
+			runCommand="--upgrade-installed-tools"
+		else
+			for runRow in $localManagerSubsystems ; do
+				[ "$runRow" = "$runName" ] || continue
+				runFound="yes"
+			done
+			[ -n "$runFound" ] || { echo "⛔ ERROR: $MDSC_CMD $runOp: the subsystem given is none of the subsystems of this family -- nothing was run. They are ${localManagerSubsystems// /, }" >&2 ; set +e ; return 1 ; }
+			IFS=$'\t' read -r runField1 runField2 runState runRole runInstall runUninstall runUpdate <<< "$( LocalToolsManagerSubsystemRow "$runName" )"
+			case "$runWhat:$runInstall:$runUninstall:$runUpdate" in
+				install:yes:*:*|uninstall:*:yes:*|update:*:*:yes) runCommand="--$runWhat-distro-$runName" ; [ "$runWhat" != update ] || runCommand="--install-distro-$runName" ;;
+				*)
+					case "$runRole:$runWhat" in
+						base:update) echo "⛔ ERROR: $MDSC_CMD $runOp: $runName is the base, and is updated with all the others: $runOp update all -- nothing was run" >&2 ;;
+						shared:update) echo "⛔ ERROR: $MDSC_CMD $runOp: $runName is shared by source and deploy and has no command of its own: it is updated with all the others -- nothing was run" >&2 ;;
+						base:*) echo "⛔ ERROR: $MDSC_CMD $runOp: $runName is the base that installs the rest, and is neither installed nor uninstalled here -- nothing was run" >&2 ;;
+						shared:*) echo "⛔ ERROR: $MDSC_CMD $runOp: $runName is shared by source and deploy and comes with either, so it has no command of its own -- nothing was run" >&2 ;;
+						console:uninstall) echo "⛔ ERROR: $MDSC_CMD $runOp: $runName is the console that asks, and is not uninstalled from itself -- nothing was run" >&2 ;;
+						*) echo "⛔ ERROR: $MDSC_CMD $runOp: $runWhat is not offered for $runName, which is $runState -- nothing was run" >&2 ;;
+					esac
+					set +e ; return 1
+				;;
+			esac
+		fi
 		runTool="$( LocalToolsManagerSubsystemTool )"
 		[ -f "$runTool" ] || { echo "⛔ ERROR: $MDSC_CMD $runOp: the local tools are not at $runTool -- nothing was run" >&2 ; set +e ; return 1 ; }
-		bash "$runTool" "--$runWhat-distro-$runName"
+		bash "$runTool" "$runCommand"
 		return $?
 	;;
 
