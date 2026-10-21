@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+# ^^^ for syntax checking in the editor only
+
+##
+## LocalTools.ManagerWorkspace.include -- the --manager-workspace-read operation (F11.10 of the refactorings epic): `Workspace (System)`, the workspace
+## the console runs in, as its screen shows it. Owned by `.local`, which installs the rest, and sourced by the `--manager-workspace-*)` arm of the dispatcher of any
+## console of the family, each of which says in `managerConsoleSubsystem` which subsystem it is, and in `managerConsoleWorkspaceList` the plain list file in which
+## it registers the blocks it adds.
+##
+## WHAT IS PRINTED: rows of TAB-separated fields, the whitespace of a value written `_` and an empty one `-`, as in a registry.
+##   fact  <block> <name> <value>          one fact; <block> is `-` for the workspace's own
+##   block <id> <label> <count>            a block: its label, as capitalised words with their blanks written `_`, and how many `item` rows follow it
+##   item  <block> <name> <kind> <state> <detail>
+##                                         one thing of the block: what it is, what kind, in what state and where (`-` for none)
+## First the workspace's own facts (`-`): its name, its path, where its tooling comes from (`source`, `.local`, or `elsewhere`), the path of that tooling, and the account the
+## console runs as. Then the block of the subsystems installed in it, which is `.local`'s own (the rows of --manager-subsystem-list that read installed: one list, not a copy of
+## its rule). Then the blocks a console REGISTERS in its list file, each in the order of the list, TAB-separated, with `#` lines and blank lines left alone:
+##   block <name> <label> <reader> <include>
+##       a block: <label> is what a screen calls it, capitalised words with their blanks written `_`; <reader> the function that writes it with
+##       LocalToolsManagerWorkspaceFact and LocalToolsManagerWorkspaceItem, defined in <include>, a file under myx/ of the origin (`-` where it is `.local`'s own).
+## A block that wrote nothing is left out. Nothing is guessed: what a reader cannot tell it leaves unwritten.
+##
+## FOR VIEWING, AND CHEAP. Nothing here writes: no registry, no file. NO git command is run and nothing reaches another host. A SECRET IS NEVER PRINTED.
+##
+
+type LocalToolsManagerField > /dev/null 2>&1 || . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.ManagerField.include"
+## One `fact` row of the block being read, into workspaceRows of the operation.
+LocalToolsManagerWorkspaceFact(){ ## name, value
+	workspaceRows="$workspaceRows"$'fact\t'"${workspaceBlock:--}"$'\t'"$( LocalToolsManagerField "$1" )"$'\t'"$( LocalToolsManagerField "${2:-}" )"$'\n'
+	return 0
+}
+
+## One `item` row of the block being read, into workspaceRows of the operation, counted in workspaceItems.
+LocalToolsManagerWorkspaceItem(){ ## name, kind, state, detail
+	workspaceRows="$workspaceRows"$'item\t'"${workspaceBlock:--}"$'\t'"$( LocalToolsManagerField "$1" )"$'\t'"$( LocalToolsManagerField "${2:-}" )"$'\t'"$( LocalToolsManagerField "${3:-}" )"$'\t'"$( LocalToolsManagerField "${4:-}" )"$'\n'
+	workspaceItems=$(( workspaceItems + 1 ))
+	return 0
+}
+
+## The workspace's own facts.
+LocalToolsManagerWorkspaceOwn(){
+	local ownRoot="${MMDAPP%/}" ownTooling="elsewhere" ownAccount=""
+	case "${MDLT_ORIGIN%/}" in
+		"$ownRoot/source") ownTooling="source" ;;
+		"$ownRoot/.local") ownTooling=".local" ;;
+	esac
+	ownAccount="$( id -un 2> /dev/null )" || ownAccount=""
+	LocalToolsManagerWorkspaceFact name "${ownRoot##*/}"
+	LocalToolsManagerWorkspaceFact path "$ownRoot"
+	LocalToolsManagerWorkspaceFact tooling "$ownTooling"
+	LocalToolsManagerWorkspaceFact tooling-path "${MDLT_ORIGIN%/}"
+	LocalToolsManagerWorkspaceFact account "$ownAccount"
+	return 0
+}
+
+## The subsystems installed in this workspace, by the one list of them (--manager-subsystem-list, whose include is run as the dispatcher runs it): an item each, the name, `subsystem`, `installed`.
+LocalToolsManagerWorkspacePackages(){
+	local packagesKind packagesName packagesState packagesRest
+	while IFS=$'\t' read -r packagesKind packagesName packagesState packagesRest ; do
+		[ "$packagesKind" = "subsystem" ] && [ "$packagesState" = "installed" ] || continue
+		LocalToolsManagerWorkspaceItem "$packagesName" subsystem installed ""
+	done <<< "$( set -- --manager-subsystem-list ; . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.ManagerSubsystem.include" 2> /dev/null )"
+	return 0
+}
+
+case "$1" in
+
+	## The workspace the console runs in: its facts, and the blocks. Its form is the help entry's.
+	--manager-workspace-read)
+		local readOp="$1" readList="${managerConsoleWorkspaceList:-}" readTab=$'\t' readBlocks="" readKind readName readLabel readReader readInclude
+		local workspaceRows="" workspaceItems=0 workspaceBlock="-"
+		[ $# -eq 1 ] || { echo "⛔ ERROR: $MDSC_CMD $readOp: syntax is $readOp, got $(( $# - 1 )) argument(s) -- nothing is shown" >&2 ; set +e ; return 1 ; }
+		if [ -n "$readList" ] ; then
+			if [ ! -f "$readList" ] ; then
+				echo "⛔ ERROR: $MDSC_CMD $readOp: the list of blocks of this console is not there ($readList) -- nothing was printed" >&2
+				set +e ; return 1
+			fi
+			readBlocks="$( LC_ALL=C awk -F'\t' '$1 == "block" && NF >= 4 && $2 != "" && $4 != "" { print }' "$readList" )"
+		fi
+		## The readers are all there before the first row is printed: a reader the list names that is none is refused whole.
+		while IFS="$readTab" read -r readKind readName readLabel readReader readInclude ; do
+			[ -n "$readName" ] || continue
+			[ "${readInclude:--}" = "-" ] || . "$MDLT_ORIGIN/myx/$readInclude"
+			if ! type "$readReader" > /dev/null 2>&1 ; then
+				echo "⛔ ERROR: $MDSC_CMD $readOp: the reader $readReader of the block $readName is not defined${readInclude:+ in $readInclude} -- nothing was printed" >&2
+				set +e ; return 1
+			fi
+		done <<< "$readBlocks"
+		LocalToolsManagerWorkspaceOwn
+		printf '%s' "$workspaceRows"
+		workspaceBlock="packages" ; workspaceRows="" ; workspaceItems=0
+		LocalToolsManagerWorkspacePackages
+		[ -z "$workspaceRows" ] || printf 'block\tpackages\tInstalled_Subsystems\t%s\n%s' "$workspaceItems" "$workspaceRows"
+		while IFS="$readTab" read -r readKind readName readLabel readReader readInclude ; do
+			[ -n "$readName" ] || continue
+			workspaceBlock="$readName" ; workspaceRows="" ; workspaceItems=0
+			"$readReader" || :
+			[ -n "$workspaceRows" ] || continue
+			printf 'block\t%s\t%s\t%s\n%s' "$readName" "${readLabel:-$readName}" "$workspaceItems" "$workspaceRows"
+		done <<< "$readBlocks"
+		return 0
+	;;
+
+	*)
+		echo "$MDSC_CMD: ⛔ ERROR: invalid option: $1" >&2
+		set +e ; return 1
+	;;
+esac

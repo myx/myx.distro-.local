@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# ^^^ for syntax checking in the editor only
+
+##
+## LocalTools.ManagerField.include -- the field of a row of a console's operation, written one way (F11.10 of the refactorings epic). Functions only. Sourced by the operations of `.local`
+## that print rows (--manager-place-*, --manager-workspace-read) and by the readers a console registers in their lists, so that no console writes it a second time.
+##
+
+## One field of a row: its whitespace reads `_`, and an empty one `-`, as in a registry.
+LocalToolsManagerField(){ ## text
+	local fieldText="${1//[[:space:]]/_}"
+	printf '%s' "${fieldText:--}"
+}

@@ -1,0 +1,273 @@
+#!/usr/bin/env bash
+# ^^^ for syntax checking in the editor only
+
+##
+## LocalTools.ManagerPlace.include -- the --manager-place-* operations (F11.10: moved whole from myx.distro-agents, sh-lib/manager/AgentsTools.ManagerPlace.include): the places of this
+## machine as the console shows them. Sourced from the `--manager-place-*)` arm of
+## AgentsTools.Manager.include of the agents; who may call was asked where the family is dispatched.
+##
+## A PLACE is a folder the tooling knows by a name, a workspace or a directory
+## (LocalTools.Places.include). THE PLACES ARE READ BY THEIR OWN READER, the merged list
+## (LocalToolsPlacesMergedText), which is what --owner-workspace-list and
+## --member-directory-list print: nothing here opens a registry of places, and nothing here
+## writes one. What a row gets beyond that list is measured at the call or made of the row
+## itself: whether its path is there, whether it is the workspace the call runs in, a label,
+## and how many sessions of this workspace's registry of sessions name it, as that registry
+## lies.
+##
+## FOR VIEWING. Nothing here writes: no registry, no file. NOTHING REACHES ANOTHER HOST: a
+## path is tested by the shell's own tests, on this host, and nothing is started. A registry
+## of places holds no host: a row of it is a path as it was resolved for the host that wrote
+## it. So no host is printed, and a place is shown by what stands at its path here, now.
+##
+
+type LocalToolsManagerField > /dev/null 2>&1 || . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.ManagerField.include"
+type LocalToolsPlacesMergedText > /dev/null 2>&1 || . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/places/LocalTools.Places.include"
+
+## THE BLOCKS A CONSOLE ADDS to the places (F11.10): it registers them in the list file it names in `managerConsolePlaceList` (the agents: sh-lib/config/place-blocks.list), a line each,
+## TAB-separated, `#` lines and blank lines left alone:
+##   block <kind> <reader> <include>
+##       <kind> is what the reader writes, <reader> a function of <include>, a file under myx/ of the origin (`-` where it is defined already):
+##         sessions  writes the path of the registry of the sessions of this workspace, as it lies: the sessions that name a workspace are counted from it
+##         stands    writes `stands <what> <name> <path>` rows, for the place whose path and state are its two words: what the console knows stands in it
+##         members   writes `member <name> <kind> <home> <setup> <folder>` rows, for the place whose path and state are its two words: the members that belong to it
+## A console that registers none of a kind shows the places without it: this file knows no registry of sessions, no member and no team data. The reader asked for goes into placeReader
+## (empty where none is registered); one the list names that is none is refused, naming it.
+LocalToolsManagerPlaceReader(){ ## kind
+	local readerLine readerKind readerName readerInclude
+	placeReader=""
+	[ -n "${managerConsolePlaceList:-}" ] && [ -f "$managerConsolePlaceList" ] || return 0
+	while IFS=$'\t' read -r readerLine readerKind readerName readerInclude ; do
+		[ "$readerLine" = "block" ] && [ "$readerKind" = "$1" ] && [ -n "$readerName" ] || continue
+		[ "${readerInclude:--}" = "-" ] || . "$MDLT_ORIGIN/myx/$readerInclude"
+		if ! type "$readerName" > /dev/null 2>&1 ; then
+			echo "⛔ ERROR: $MDSC_CMD: the reader $readerName of the block $1 is not defined${readerInclude:+ in $readerInclude} -- nothing is shown" >&2
+			return 1
+		fi
+		placeReader="$readerName"
+		return 0
+	done < "$managerConsolePlaceList"
+	return 0
+}
+
+## The members that belong to a place: the registered `members` block, nothing without one.
+LocalToolsManagerPlaceMembersOf(){ ## the path of the place, its state
+	LocalToolsManagerPlaceReader members || return 1
+	[ -z "$placeReader" ] || "$placeReader" "$1" "$2"
+	return 0
+}
+
+## The merged list of the places, each row with the state of its path as it is here, now:
+## name, kind, ceiling, path, declaring root, declared-by, state, a TAB between them.
+## `present` where the path is a folder the user who runs the call can enter and read,
+## `unreadable` where something is there that is not, `absent` where nothing is, `unknown`
+## where the list knows no path. By the shell's own tests alone.
+LocalToolsManagerPlaceSource(){
+	local sourceName sourceKind sourceCeiling sourcePath sourceRoot sourceBy sourceState
+	LocalToolsPlacesMergedText "${MMDAPP%/}" quiet | while IFS=$'\t' read -r sourceName sourceKind sourceCeiling sourcePath sourceRoot sourceBy ; do
+		[ -n "$sourceName" ] || continue
+		if [ -z "$sourcePath" ] || [ "$sourcePath" = "-" ] ; then
+			sourceState=unknown
+		elif [ -d "$sourcePath" ] && [ -r "$sourcePath" ] && [ -x "$sourcePath" ] ; then
+			sourceState=present
+		elif [ -e "$sourcePath" ] ; then
+			sourceState=unreadable
+		else
+			sourceState=absent
+		fi
+		printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$sourceName" "${sourceKind:--}" "${sourceCeiling:--}" "${sourcePath:--}" "${sourceRoot:--}" "${sourceBy:--}" "$sourceState"
+	done
+	return 0
+}
+
+## The `place` rows of the source rows on stdin (LocalManagerPlaceRows.awk): with a key, the
+## row of that place alone. The registry of the sessions of this workspace is read as it
+## lies, where it is there, and is never rebuilt here.
+LocalToolsManagerPlaceRows(){ ## key (may be empty)
+	local rowsSessions=""
+	LocalToolsManagerPlaceReader sessions || return 1
+	[ -z "$placeReader" ] || rowsSessions="$( "$placeReader" )"
+	MDLT_MANAGER_PLACE_HERE="${MMDAPP%/}" MDLT_MANAGER_PLACE_SESSIONS="$rowsSessions" \
+		LC_ALL=C awk -v wanted="${1:-}" -f "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalManagerPlaceRows.awk"
+}
+
+## THE COMMANDS OF A WORKSPACE, the same its editor's palette gets: what each package of this console declares in
+## its workspace-commands.list (in sh-lib/config/ of myx.distro-agents, in the sh-lib/ of the others), of the packages that workspace has, picked as the tasks of its palette are
+## (myx.distro-source's SourceTools.Make.BuildCodeWorkspaceData.include): myx.distro-source always, another where
+## its console at the root is executable. A row each, in that order: the package, the name, how it runs and the
+## command, with the root put for `$MMDAPP` and `${MMDAPP}`, a TAB between them. A line of a declaration that
+## starts with `#`, and one with fewer fields, is none.
+LocalToolsManagerPlaceCommands(){ ## workspace root
+	local commandsPackage commandsConsole commandsList
+	for commandsPackage in source:- deploy:DistroDeployConsole.sh remote:DistroRemoteConsole.sh agents:DistroAgentsConsole.sh ; do
+		commandsConsole="${commandsPackage#*:}"
+		commandsPackage="myx.distro-${commandsPackage%%:*}"
+		case "$commandsPackage" in
+			myx.distro-agents) commandsList="$MDLT_ORIGIN/myx/$commandsPackage/sh-lib/config/workspace-commands.list" ;;
+			*) commandsList="$MDLT_ORIGIN/myx/$commandsPackage/sh-lib/workspace-commands.list" ;;
+		esac
+		[ -f "$commandsList" ] || continue
+		[ "$commandsConsole" = "-" ] || [ -x "${1%/}/$commandsConsole" ] || continue
+		commandsRoot="${1%/}" commandsPackage="$commandsPackage" LC_ALL=C awk -F'\t' -v OFS='\t' '
+			function rooted(text, word,    done, at) {
+				done = ""
+				while ( ( at = index( text, word ) ) > 0 ) {
+					done = done substr( text, 1, at - 1 ) ENVIRON["commandsRoot"]
+					text = substr( text, at + length( word ) )
+				}
+				return done text
+			}
+			/^#/ || NF < 3 { next }
+			{
+				command = $3
+				for ( field = 4 ; field <= NF ; field++ ) {
+					command = command "\t" $field
+				}
+				print ENVIRON["commandsPackage"], $1, $2, rooted( rooted( command, "${MMDAPP}" ), "$MMDAPP" )
+			}
+		' "$commandsList"
+	done
+	return 0
+}
+
+## One place by its key, as --manager-place-read finds it, into the variables its caller declares: placeKind,
+## placePath, placeState. Says why on stderr, and fails, for a word that is no name of a place and for a name no
+## place has.
+LocalToolsManagerPlaceFind(){ ## operation, key
+	local findName findKind findCeiling findPath findRoot findBy findState
+	if ! LocalToolsPlacesNameValid "${2%%@*}" || { [ "$2" != "${2%%@*}" ] && ! LocalToolsPlacesNameValid "${2#*@}" ; } ; then
+		echo "⛔ ERROR: $MDSC_CMD $1: the word given is no name of a place -- nothing is done" >&2
+		return 1
+	fi
+	while IFS=$'\t' read -r findName findKind findCeiling findPath findRoot findBy findState ; do
+		[ "$findName" = "$2" ] || continue
+		placeKind="$findKind" ; placePath="$findPath" ; placeState="$findState"
+		return 0
+	done <<< "$( LocalToolsManagerPlaceSource )"
+	echo "⛔ ERROR: $MDSC_CMD $1: no place is named '$2' -- nothing is done. The places are those --manager-place-list prints" >&2
+	return 1
+}
+
+case "$1" in
+
+	## The places of this machine, one row each: TAB-separated rows a screen reads. Their form
+	## is the help entry's.
+	--manager-place-list)
+		local listOp="$1"
+		shift
+		if [ $# -gt 0 ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $listOp: syntax is $listOp, got $# argument(s) -- nothing is shown" >&2
+			set +e ; return 1
+		fi
+		LocalToolsManagerPlaceSource | LocalToolsManagerPlaceRows ""
+		return 0
+	;;
+
+	## One place by its key: its row as the list has it, what the registry holds of it beyond
+	## that row, and what stands at its path that the tooling knows. Its form is the help entry's.
+	--manager-place-read)
+		local readOp="$1" readKey readName readKind readCeiling readPath readRoot readBy readState readFound="" readFile
+		shift
+		if [ $# -ne 1 ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $readOp: syntax is $readOp <place>, got $# argument(s) -- nothing is shown" >&2
+			set +e ; return 1
+		fi
+		readKey="$1"
+		## A word that is no name of a place may be anything: it is not repeated.
+		if ! LocalToolsPlacesNameValid "${readKey%%@*}" || { [ "$readKey" != "${readKey%%@*}" ] && ! LocalToolsPlacesNameValid "${readKey#*@}" ; } ; then
+			echo "⛔ ERROR: $MDSC_CMD $readOp: syntax is $readOp <place>, and the word given is no name of a place -- nothing is shown" >&2
+			set +e ; return 1
+		fi
+		while IFS=$'\t' read -r readName readKind readCeiling readPath readRoot readBy readState ; do
+			[ "$readName" = "$readKey" ] || continue
+			readFound="true"
+			break
+		done <<< "$( LocalToolsManagerPlaceSource )"
+		if [ -z "$readFound" ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $readOp: no place is named '$readKey' -- nothing is shown. The places are those ${readOp%-read}-list prints" >&2
+			set +e ; return 1
+		fi
+		printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$readName" "$readKind" "$readCeiling" "$readPath" "$readRoot" "$readBy" "$readState" | LocalToolsManagerPlaceRows "$readKey"
+
+		## What the registry holds of it beyond its row: who declared it, the workspace that
+		## declares it, and the file that holds its row, which a built-in place has none of.
+		printf 'info\tdeclared-by\t%s\n' "$( LocalToolsManagerField "${readBy#-}" )"
+		printf 'info\tworkspace\t%s\n' "$( LocalToolsManagerField "${readRoot#-}" )"
+		if [ "$readBy" = "built-in" ] || [ "$readRoot" = "-" ] ; then
+			printf 'info\tregistry\t-\n'
+		else
+			printf 'info\tregistry\t%s\n' "$( LocalToolsManagerField "$( LocalToolsPlacesLocalFile "$readRoot" )" )"
+		fi
+
+		## What stands there that the tooling knows, for a place that is there: nothing is
+		## looked for at a path that is not, and of a file nothing is read but its name.
+		if [ "$readState" != "present" ] ; then
+			[ "$readKind" != "workspace" ] || LocalToolsManagerPlaceMembersOf "$readPath" "$readState" || { set +e ; return 1 ; }
+			return 0
+		fi
+		##   the consoles at its root, as a workspace has them
+		for readFile in "${readPath%/}"/Distro*Console.sh ; do
+			[ -f "$readFile" ] || continue
+			printf 'stands\tconsole\t%s\t%s\n' "$( LocalToolsManagerField "${readFile##*/}" )" "$( LocalToolsManagerField "$readFile" )"
+		done
+		##   what the console knows stands there: its registered `stands` block (the agents: the members whose home the machine keeps there, the team data root)
+		LocalToolsManagerPlaceReader stands || { set +e ; return 1 ; }
+		[ -z "$placeReader" ] || "$placeReader" "$readPath" "$readState"
+		##   and, after them, every member that belongs to it, where it is a workspace
+		[ "$readKind" != "workspace" ] || LocalToolsManagerPlaceMembersOf "$readPath" "$readState" || { set +e ; return 1 ; }
+		return 0
+	;;
+
+	## The commands of one place, a workspace: those its editor's palette gets, by the declarations of this
+	## console's packages (LocalToolsManagerPlaceCommands), whitespace in a name as `_`. A directory, and a
+	## workspace that is not there, has none. Its form is the help entry's.
+	--manager-place-command-list)
+		local commandOp="$1" placeKind="" placePath="" placeState=""
+		shift
+		if [ $# -ne 1 ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $commandOp: syntax is $commandOp <place>, got $# argument(s) -- nothing is shown" >&2
+			set +e ; return 1
+		fi
+		LocalToolsManagerPlaceFind "$commandOp" "$1" || { set +e ; return 1 ; }
+		[ "$placeKind" = "workspace" ] && [ "$placeState" = "present" ] || return 0
+		LocalToolsManagerPlaceCommands "$placePath" | LC_ALL=C awk -F'\t' -v OFS='\t' '{ name = $2 ; gsub( /[[:space:]]+/, "_", name ) ; print "command", name, $1, $3 }'
+		return 0
+	;;
+
+	## One command of a workspace run: the one of its commands the name gives, as the list prints it or with its
+	## blanks, in the root of that workspace, by /bin/sh as the editor's palette runs a task, with none of this
+	## console's variables, on the input and the output this call has. It ends with that command's status.
+	--manager-place-command-run)
+		local commandOp="$1" placeKind="" placePath="" placeState="" commandRow commandStatus=0
+		shift
+		if [ $# -ne 2 ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $commandOp: syntax is $commandOp <place> <command>, got $# argument(s) -- nothing is run" >&2
+			set +e ; return 1
+		fi
+		LocalToolsManagerPlaceFind "$commandOp" "$1" || { set +e ; return 1 ; }
+		if [ "$placeKind" != "workspace" ] || [ "$placeState" != "present" ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $commandOp: '$1' is no workspace that is here, and has no command -- nothing is run" >&2
+			set +e ; return 1
+		fi
+		commandRow="$( LocalToolsManagerPlaceCommands "$placePath" | commandWanted="$2" LC_ALL=C awk -F'\t' '
+			BEGIN { wanted = ENVIRON["commandWanted"] ; gsub( /[[:space:]]+/, "_", wanted ) }
+			{ name = $2 ; gsub( /[[:space:]]+/, "_", name ) ; if ( name == wanted ) { print ; exit } }
+		' )"
+		if [ -z "$commandRow" ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $commandOp: '$2' is none of the commands of '$1' -- nothing is run. Its commands are those ${commandOp%-run}-list prints" >&2
+			set +e ; return 1
+		fi
+		## the command: what follows the package, the name and how it runs
+		commandRow="${commandRow#*$'\t'}" ; commandRow="${commandRow#*$'\t'}" ; commandRow="${commandRow#*$'\t'}"
+		( cd "$placePath" || exit 1
+			exec env -i HOME="${HOME:-}" USER="${USER:-}" LOGNAME="${LOGNAME:-}" SHELL="${SHELL:-/bin/sh}" PATH="${PATH:-/usr/bin:/bin}" TERM="${TERM:-dumb}" LANG="${LANG:-}" \
+				/bin/sh -c "$commandRow" ) || commandStatus=$?
+		[ "$commandStatus" = 0 ] || set +e
+		return "$commandStatus"
+	;;
+
+	*)
+		echo "$MDSC_CMD: ⛔ ERROR: invalid option: $1" >&2
+		set +e ; return 1
+	;;
+esac
