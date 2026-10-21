@@ -26,6 +26,8 @@
 ##       what keeps a scope from being deleted: called with the name of the scope, it prints who uses it, and nothing where nobody does.
 ##   secret <function that says a key is a credential> <function that shows a credential> <function that masks a password in a URL> <include>
 ##       how a value is printed: a credential in its one form, a password inside a URL masked alone.
+##   create <glob of an id> <function> <include>
+##       a scope that is made: called with the name of the scope, it makes it (an empty one, to hold the variables that are added to it) and ends 0.
 ##   describe <function> <include>
 ##       the catalogue of a key's text: called with the key, it prints `<scope>|<placeholder>|<secret>|<how to obtain>`, or nothing.
 ## A console that registers none of a kind shows its scopes with none of it; a function the list names that is none is refused, naming it.
@@ -370,6 +372,29 @@ case "$1" in
 			set +e ; return 1
 		fi
 		printf 'deleted\t%s\n' "$2"
+		return 0
+	;;
+
+	## Makes one scope, empty: its id is `<subsystem>:<name>`, the subsystem one that registered how a scope of it is made, the name a word a scope may be named by, and no scope of it is there
+	## already. Its row `created` says which. The variables are added to it by --manager-scope-set. Its form is the help entry's.
+	--manager-scope-new)
+		local scopeHook scopeId scopeSubsystem scopeName scopeFile scopeDeletable newId="${2:-}"
+		[ $# -eq 2 ] || { echo "⛔ ERROR: $MDSC_CMD $1: syntax is $1 <subsystem>:<name>, got $(( $# - 1 )) argument(s) -- nothing was made" >&2 ; set +e ; return 1 ; }
+		case "$newId" in
+			*:*) LocalToolsManagerScopeNameOk "${newId#*:}" || { echo "⛔ ERROR: $MDSC_CMD $1: the name given is none a scope may have -- nothing was made" >&2 ; set +e ; return 1 ; } ;;
+			*) echo "⛔ ERROR: $MDSC_CMD $1: the id is <subsystem>:<name> -- nothing was made" >&2 ; set +e ; return 1 ;;
+		esac
+		if LocalToolsManagerScopeFind "$1" "$newId" 2> /dev/null && [ -e "$scopeFile" ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $1: that scope is there already -- nothing was made" >&2
+			set +e ; return 1
+		fi
+		LocalToolsManagerScopeHook create "$newId" || { set +e ; return 1 ; }
+		if [ -z "$scopeHook" ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $1: no subsystem of this console makes a scope of that id -- nothing was made" >&2
+			set +e ; return 1
+		fi
+		"$scopeHook" "${newId#*:}" || { echo "⛔ ERROR: $MDSC_CMD $1: the scope could not be made -- nothing was made" >&2 ; set +e ; return 1 ; }
+		printf 'created\t%s\n' "$newId"
 		return 0
 	;;
 

@@ -52,12 +52,21 @@ DIALOGS["scope-delete"] = {"title": "Delete", "feeds": "scopedelete",
                                         {"name": "word", "kind": "input", "label": "Type %s to delete" % KILL_WORD, "exactly": KILL_WORD,
                                          "required": "nothing is deleted: the word typed is not %s" % KILL_WORD}),
                            "buttons": (("ok", "Delete"), ("cancel", "Cancel"))}
+DIALOGS["scope-add-var"] = {"title": "Add a variable", "feeds": "scopeaddvar", "first": "name",
+                            "controls": ({"name": "about", "kind": "text"},
+                                         {"name": "name", "kind": "input", "label": "Its name (letters, digits and _)", "required": "nothing is added: the variable has no name yet"}),
+                            "buttons": (("ok", "Next"), ("cancel", "Cancel"))}
+DIALOGS["scope-add-scope"] = {"title": "Add a scope", "feeds": "scopeaddscope", "first": "id",
+                              "controls": ({"name": "about", "kind": "text"},
+                                           {"name": "id", "kind": "input", "label": "Its id, <subsystem>:<name>", "required": "nothing is made: the scope has no id yet"}),
+                              "buttons": (("ok", "Make"), ("cancel", "Cancel"))}
 READING_DIALOGS = READING_DIALOGS + ("scope-edit", "scope-credential")
 
 CALLS["scope-set"] = ["--manager-scope-set", "{id}"]
 CALLS["scope-unset"] = ["--manager-scope-unset", "{id}"]
 CALLS["scope-clear"] = ["--manager-scope-clear", "{id}"]
 CALLS["scope-delete"] = ["--manager-scope-delete", "{id}"]
+CALLS["scope-new"] = ["--manager-scope-new"]
 
 
 ## What `--manager-scope-list` printed, as rows, in the order they come: a scope a folder, by its label as its subsystem names it, with how many variables it
@@ -313,8 +322,77 @@ def submitScopeWhole(state, dialog, button):
             {"viewKey": about["viewKey"], "says": "%s %s" % ("cleared" if about["what"] == "clear" else "deleted", about["label"])})
     state.notice = "%s asked of the tooling: %s" % (about["what"], about["label"])
     state.noticeOf = None
+    if about["what"] == "delete":
+        ## the scope is about to be gone: the screen leaves it now, if it stands in it, forgets what it read of it, and takes its row out of the list, so that the selection falls on the row next to it
+        ## and the left window shows that one; the list is read again when the operation has ended, and brings the scope back if it was not deleted
+        gone = about["scope"]
+        if gone in state.path:
+            state.path = state.path[:state.path.index(gone)]
+        for key in [held for held in state.plans if gone in held]:
+            state.plans.pop(key)
+        for key in [held for held in state.rows if gone in held]:
+            state.rows.pop(key)
+        listed = pluginLevel("scopes")
+        if state.rows.get(listed) is not None:
+            state.rows[listed] = [one for one in state.rows[listed] if one["id"] != gone]
+        state.view.pop("blocksFor", None)
     return None
 
+
+## `n` in a scope: a variable added. Its name is asked; one the console knows of the scope (a registered key, with its kind) opens the form of its kind, as the same variable does when it is listed
+## as one that holds nothing; any other opens the form of a text. The value is saved by --manager-scope-set, and the scope's file made by it.
+def askScopeAddVar(state, row):
+    scopes = state.rows.get(pluginLevel("scopes")) or ()
+    scope = next((one["scope"] for one in scopes if one.get("scope") and one["id"] == state.path[-1]), None)
+    if scope is None:
+        return "Add a variable inside a scope."
+    state.answer = None
+    openDialog(state, "scope-add-var", {"about": {"lines": [("scope", unspaced(scope["label"])), "The name of the variable. A name the console knows for this scope is edited by its kind; any other as a text."]},
+                                          "name": {"value": ""}},
+               {"scope": scope["id"], "label": unspaced(scope["label"]), "viewKey": viewKeyOf(state)}, "Add a variable")
+    return ""
+
+
+def submitScopeAddVar(state, dialog, button):
+    about = dialog["about"]
+    name = dialogValue(dialog, "name").strip()
+    if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", name):
+        return "nothing is added: a name is letters, digits and _, not led by a digit"
+    closeDialog(state)
+    known = next((one["scopeKey"] for one in state.rows.get(levelKey(state.path)) or () if one.get("scopeKey") and one["scopeKey"]["name"] == name), None)
+    held = known or {"name": name, "state": "missing", "value": "-", "type": "setting", "description": "-", "scope": about["scope"], "scopeLabel": about["label"], "kind": "-", "takes": "-"}
+    return askScopeKey(state, held)
+
+
+## `n` among the scopes: one made. Its id is the subsystem and a name, the subsystems being those the scopes that may be deleted already belong to (a subsystem makes its scopes when it registered how).
+def askScopeAddScope(state, row):
+    scopes = state.rows.get(pluginLevel("scopes")) or ()
+    prefixes = sorted(set(one["scope"]["id"].partition(":")[0] + ":" for one in scopes if one.get("scope") and one["scope"].get("delete") == "yes"))
+    state.answer = None
+    openDialog(state, "scope-add-scope", {"about": {"lines": ["The id is a subsystem and a name: %s<name>. The variables are added once it is made." % ("/".join(prefixes) if prefixes else "<subsystem>:")]},
+                                           "id": {"value": prefixes[0] if prefixes else ""}},
+               {"viewKey": viewKeyOf(state)}, "Add a scope")
+    return ""
+
+
+def submitScopeAddScope(state, dialog, button):
+    scopeId = dialogValue(dialog, "id").strip()
+    if ":" not in scopeId or not scopeId.partition(":")[2]:
+        return "nothing is made: the id is <subsystem>:<name>"
+    askCall(state, "scope", "new/%s" % scopeId, callWords("scope-new") + [scopeId], None, {"viewKey": dialog["about"]["viewKey"], "says": "made the scope %s" % scopeId})
+    state.notice = "the scope is asked of the tooling: %s" % scopeId
+    state.noticeOf = None
+    return None
+
+
+ACTION_HANDLERS["scopeaddvar"] = askScopeAddVar
+ACTION_FITS["scopeaddvar"] = lambda state, row: len(state.path) > len(pluginPath("scopes") or ())
+ACTION_REFUSALS["scopeaddvar"] = lambda state, row: "a variable is added inside a scope"
+ACTION_HANDLERS["scopeaddscope"] = askScopeAddScope
+ACTION_FITS["scopeaddscope"] = lambda state, row: True
+ACTION_REFUSALS["scopeaddscope"] = lambda state, row: ""
+DIALOG_HANDLERS["scope-add-var"] = submitScopeAddVar
+DIALOG_HANDLERS["scope-add-scope"] = submitScopeAddScope
 
 ACTION_HANDLERS["scopeunset"] = askScopeUnset
 ACTION_FITS["scopeunset"] = scopeKeyFits
@@ -372,6 +450,12 @@ registerPlugin({
         {"name": "scopeunset", "keys": ("d",), "menu": ("view", 3), "label": "~D~elete the variable", "status": "Delete", "window": "list",
          "views": ("scopes/*",), "for": "a variable", "on": ("scopes/*:scope-key",), "only": True, "says": "delete",
          "does": ("action", "scopeunset"), "calls": ("scope-unset",)},
+        {"name": "scopeaddvar", "keys": ("n",), "menu": ("view", 3), "label": "~N~ew variable", "status": "Add", "window": "list",
+         "views": ("scopes/*",), "for": "a variable", "on": ("scopes/*:scope-key", "scopes/*:up"), "only": True, "says": "add",
+         "does": ("action", "scopeaddvar"), "calls": ("scope-set",)},
+        {"name": "scopeaddscope", "keys": ("n",), "menu": ("view", 3), "label": "~N~ew scope", "status": "Add", "window": "list",
+         "views": ("scopes",), "for": "a scope", "on": ("scopes:scope", "scopes:up"), "only": True, "says": "add",
+         "does": ("action", "scopeaddscope"), "calls": ("scope-new",)},
         {"name": "scopeclear", "keys": ("c",), "menu": ("view", 3), "label": "~C~lear the scope", "status": "Clear", "window": "list",
          "views": ("scopes",), "for": "a scope", "on": ("scopes:scope",), "only": True, "says": "clear",
          "does": ("action", "scopeclear"), "calls": ("scope-clear",)},
@@ -379,4 +463,6 @@ registerPlugin({
          "views": ("scopes",), "for": "a scope", "on": ("scopes:scope",), "only": True, "says": "delete",
          "does": ("action", "scopedelete"), "calls": ("scope-delete",)},
     ),
+    ## a scope's variables and the scopes are what the operations print: the key that takes all or only the active has nothing to take there
+    "integrates": {"list": {"unfiltered": ("scopes", "scopes/*")}},
 })
