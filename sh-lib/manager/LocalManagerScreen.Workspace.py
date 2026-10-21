@@ -39,7 +39,12 @@ def parseWorkspaceRows(readKey, level, text):
             held[fields[1]] = block
             blocks.append(block)
         elif fields[0] == "item" and len(fields) >= 6 and fields[1] in held:
-            held[fields[1]]["items"].append(dict(zip(WORKSPACE_ITEM, [absent(field) for field in fields[2:]])))
+            ## a name is as it is written (a command is run by it); what is said of the item has its blanks back
+            item = dict(zip(WORKSPACE_ITEM, [absent(field) for field in fields[2:]]))
+            for said in ("kind", "state", "detail"):
+                item[said] = unspaced(item.get(said, "")) if fields[2:][WORKSPACE_ITEM.index(said)] != "-" else ""
+            item["title"] = unspaced(item.get("name", ""))
+            held[fields[1]]["items"].append(item)
     rows = []
     name = next((value for fact, value in own if fact == "name"), "") or "Workspace"
     head = newRow("workspace", name, "workspace", False)
@@ -76,7 +81,7 @@ ROW_FORMS["workspace"] = parseWorkspaceRows
 
 ## The items of a block as one table of the left pane: the name, its kind, its state in its colour, and where it is.
 def workspaceItemTable(state, items, width):
-    head, blocks = paneTable(("NAME", "KIND", "STATE", "WHERE"), [[item["name"], item["kind"] or "-", item["state"] or "-", item["detail"] or "-"] for item in items],
+    head, blocks = paneTable(("NAME", "KIND", "STATE", "WHERE"), [[item.get("title") or item["name"], item["kind"] or "-", item["state"] or "-", item["detail"] or "-"] for item in items],
                              max(10, width - 1), None, state.wrap, ("key", "enum", "enum", "text"), "  ",
                              looks=[[None, None, stateLook(item["state"]), None] for item in items])
     return head + [line for block in blocks for line in block]
@@ -114,7 +119,7 @@ def workspaceFocus(state, row):
         return placeCommandLines(row["placeCommand"], state.viewWidth)
     if row.get("workspaceItem"):
         item = row["workspaceItem"]
-        return [looked(item["name"], BOLD)] + factLines([
+        return [looked(item.get("title") or item["name"], BOLD)] + factLines([
             ("block", item["block"]),
             ("kind", item["kind"]),
             ("state", item["state"], stateLook(item["state"])),
