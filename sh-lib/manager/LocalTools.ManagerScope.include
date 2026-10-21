@@ -1,0 +1,380 @@
+#!/usr/bin/env bash
+# ^^^ for syntax checking in the editor only
+
+##
+## LocalTools.ManagerScope.include -- the --manager-scope-* operations (F11.7 of the refactorings epic): `Scope Settings`, moved whole from myx.distro-agents
+## (sh-lib/manager/AgentsTools.ManagerScope.include) to `.local`, which installs the rest. Every --config item of every installed subsystem is a SOURCE of settings,
+## one file of KEY=VALUE lines read and written by the one setting reader (LocalTools.Config.include, as --system-config-option, --custom-config-option,
+## --remote-config-option and --agents-config-option), and each source is a scope the console lists, shows, edits and takes keys out of. Sourced from the `--manager-scope-*)`
+## arm of the dispatcher of any console of the family, each of which says in `managerConsoleScopeList` the plain list file in which it REGISTERS what it adds; who may call was
+## asked where the family is dispatched.
+##
+## THE SCOPES, by the id the other operations take: `common:workspace` (the workspace's own settings, for everybody), `common:user-<account>` (the settings of the one who runs
+## the call in this workspace) and `remote:<id>` (a profile of the remote tools, where that subsystem is installed) are `.local`'s own; any other `<subsystem>:<name>` is a
+## subsystem's, registered. A scope is shown if its file is there. The two common scopes are one each and stay; a scope of any other kind is one of many and may be deleted.
+##
+## WHAT A CONSOLE REGISTERS, in its list file, TAB-separated, `#` lines and blank lines left alone; the function of each is defined in <include>, a file under myx/ of the origin:
+##   source <subsystem> <reader of the sources> <how it reads and writes> <include>
+##       a subsystem whose scopes are listed: the first function prints its scopes as AgentsToolsManagerScopeSources did, `<id> <subsystem label> <name> <file> <deletable>`; the
+##       second is called as `<function> read|write <arguments of the setting reader>...` with scopeName set, a write taking the value on the standard input.
+##   unlisted <glob of an id> <function> <include>
+##       a scope that is not listed because it holds no file yet (a member of the team, for its tiers): the function is called with the id and prints its scope line, or nothing.
+##   known <glob of an id> <function> <include>
+##       the keys the console knows of a scope that the file may not hold, with the kind of each: called with the name of the scope, it prints a line a key,
+##       `<key> <TAB> <kind> <TAB> <takes> <TAB> <description>`; the kind is `choice`, `number`, `text`, `tier` or `locked`, which the scope may not set and says why in the next field.
+##   guard <glob of an id> <function> <include>
+##       what keeps a scope from being deleted: called with the name of the scope, it prints who uses it, and nothing where nobody does.
+##   secret <function that says a key is a credential> <function that shows a credential> <function that masks a password in a URL> <include>
+##       how a value is printed: a credential in its one form, a password inside a URL masked alone.
+##   describe <function> <include>
+##       the catalogue of a key's text: called with the key, it prints `<scope>|<placeholder>|<secret>|<how to obtain>`, or nothing.
+## A console that registers none of a kind shows its scopes with none of it; a function the list names that is none is refused, naming it.
+##
+## EVERY WRITE GOES THROUGH THE SETTING READER, and for a subsystem through the function it registered (for the agents, the dispatcher's own operation, so the write checks of a
+## preset and of the tiers are asked as they are for any other writer). A VALUE NEVER TRAVELS IN ARGV: --manager-scope-set takes it on the standard input. A value is printed in one
+## form only, that of a credential where its key is one, a password inside a URL masked alone: nothing else of a secret is printed here, a refusal included.
+## --manager-scope-reveal is the one operation that prints a value whole, and it is asked only for a key that is set, by the key's name, when the console's form is told to reveal it:
+## the mask is no security boundary, since a shell read shows the value.
+##
+
+## What the console registered, of one kind: its lines after the kind, TAB-separated, from the list file the arm of the dispatcher named.
+LocalToolsManagerScopeRegistered(){ ## kind
+	[ -n "${managerConsoleScopeList:-}" ] && [ -f "$managerConsoleScopeList" ] || return 0
+	LC_ALL=C awk -F'\t' -v kind="$1" '$1 == kind && NF >= 3 { print }' "$managerConsoleScopeList"
+}
+
+## A function the console registered, brought in: its include sourced and the function checked. rc 1, said, for one that is none.
+LocalToolsManagerScopeHookReady(){ ## function, include (`-` for none)
+	[ "${2:--}" = "-" ] || . "$MDLT_ORIGIN/myx/$2"
+	if ! type "$1" > /dev/null 2>&1 ; then
+		echo "⛔ ERROR: $MDSC_CMD: the function $1 that this console registered for the scope settings is not defined${2:+ in $2} -- nothing is shown" >&2
+		return 1
+	fi
+	return 0
+}
+
+## The function the console registered of one kind for an id (the first line whose glob the id matches), into scopeHook; scopeHook is empty where there is none.
+LocalToolsManagerScopeHook(){ ## kind, id
+	local hookKind hookGlob hookFunction hookInclude
+	scopeHook=""
+	while IFS=$'\t' read -r hookKind hookGlob hookFunction hookInclude ; do
+		[ -n "$hookGlob" ] || continue
+		case "$2" in $hookGlob) ;; *) continue ;; esac
+		LocalToolsManagerScopeHookReady "$hookFunction" "$hookInclude" || return 1
+		scopeHook="$hookFunction"
+		return 0
+	done <<< "$( LocalToolsManagerScopeRegistered "$1" )"
+	return 0
+}
+
+## The account the call runs as, and the files of the common scopes.
+LocalToolsManagerScopeAccount(){
+	id -un 2> /dev/null || :
+}
+
+## A word a source's name may be: not empty, no slash, no blank, no `=` and no `:`, not led by a dot or a hyphen.
+LocalToolsManagerScopeNameOk(){ ## name
+	case "$1" in ''|.*|-*|*/*|*[[:space:]]*|*=*|*:*) return 1 ;; esac
+	return 0
+}
+
+## The scopes, one a line: `<id> <TAB> <subsystem> <TAB> <name> <TAB> <file> <TAB> <deletable>`, in the order the console lists them: the common ones, the remote ones, then
+## those of each subsystem the console registered, in the order it did.
+LocalToolsManagerScopeSources(){
+	local sourceAccount sourceFile sourceName sourceKind sourceId sourceLabel sourceReader sourceCall sourceInclude
+	sourceAccount="$( LocalToolsManagerScopeAccount )"
+	[ ! -f "${MMDAPP%/}/.local/MDLT.settings.env" ] || printf 'common:workspace\tCommon\tworkspace\t%s\tno\n' "${MMDAPP%/}/.local/MDLT.settings.env"
+	if [ -n "$sourceAccount" ] && [ -f "${MMDAPP%/}/.local/home/$sourceAccount/MDLT.settings.env" ] ; then
+		printf 'common:user-%s\tCommon\tuser-%s\t%s\tno\n' "$sourceAccount" "$sourceAccount" "${MMDAPP%/}/.local/home/$sourceAccount/MDLT.settings.env"
+	fi
+	if [ -d "$MDLT_ORIGIN/myx/myx.distro-remote" ] ; then
+		for sourceFile in "${MMDAPP%/}/remote/static"/*.remote.env ; do
+			[ -f "$sourceFile" ] || continue
+			sourceName="${sourceFile##*/}" ; sourceName="${sourceName%.remote.env}"
+			LocalToolsManagerScopeNameOk "$sourceName" || continue
+			printf 'remote:%s\tRemote\t%s\t%s\tyes\n' "$sourceName" "$sourceName" "$sourceFile"
+		done
+	fi
+	while IFS=$'\t' read -r sourceKind sourceId sourceReader sourceCall sourceInclude ; do
+		[ -n "$sourceReader" ] || continue
+		LocalToolsManagerScopeHookReady "$sourceReader" "$sourceInclude" || continue
+		"$sourceReader"
+	done <<< "$( LocalToolsManagerScopeRegistered source )"
+	return 0
+}
+
+## One scope by its id, into scopeId, scopeSubsystem, scopeName, scopeFile and scopeDeletable. rc 1, with the reason, for an id
+## that names none of the scopes listed: the refusal repeats nothing of what was given.
+LocalToolsManagerScopeFind(){ ## operation, id
+	local findLine findId findRest findLineText
+	scopeId="" ; scopeSubsystem="" ; scopeName="" ; scopeFile="" ; scopeDeletable=""
+	while IFS=$'\t' read -r findId findRest ; do
+		[ "$findId" = "$2" ] || continue
+		IFS=$'\t' read -r scopeSubsystem scopeName scopeFile scopeDeletable <<< "$findRest"
+		scopeId="$findId"
+		return 0
+	done <<< "$( LocalToolsManagerScopeSources )"
+	## A scope that holds no file yet, which the console registered as one all the same (for the agents, a member of the team, for its tiers): it is not listed, and the first key written makes its file.
+	LocalToolsManagerScopeHook unlisted "$2" || return 1
+	if [ -n "$scopeHook" ] ; then
+		findLineText="$( "$scopeHook" "$2" )"
+		if [ -n "$findLineText" ] ; then
+			IFS=$'\t' read -r findId scopeSubsystem scopeName scopeFile scopeDeletable <<< "$findLineText"
+			scopeId="$findId"
+			return 0
+		fi
+	fi
+	echo "⛔ ERROR: $MDSC_CMD $1: the id given is none of the scopes of this workspace -- nothing was done. The scopes are those $MDSC_CMD --manager-scope-list prints" >&2
+	return 1
+}
+
+## The reader's operation on a scope, whatever its subsystem: `read` or `write`, then `<config operation> <arguments>...`, the value of a
+## write on the standard input. A READ is the sibling package's reader itself, so what a scope's file holds is what is read; a subsystem's scope is read and written by the
+## function it registered (for the agents, a write through the dispatcher, whose write checks it must pass).
+LocalToolsManagerScopeCall(){ ## `read` or `write`, then the reader's arguments after the scope: --select KEY, --upsert-from-stdin KEY, --delete KEY ...
+	local callHow="$1" callKind callId callReader callCall callInclude callLine ; shift
+	case "$scopeId" in
+		remote:*) ( set -- --remote-config-option "$scopeName" "$@" ; . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Config.include" ) ;;
+		common:workspace) ( set -- --system-config-option "$@" ; . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Config.include" ) ;;
+		common:user-*) ( USER="$( LocalToolsManagerScopeAccount )" ; set -- --custom-config-option "$@" ; . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Config.include" ) ;;
+		*)
+			## the line of the subsystem is read first: a loop over it would take the standard input a write carries
+			callLine="$( LocalToolsManagerScopeRegistered source | LC_ALL=C awk -F'\t' -v id="${scopeId%%:*}" '$2 == id { print ; exit }' )"
+			IFS=$'\t' read -r callKind callId callReader callCall callInclude <<< "$callLine"
+			[ -n "${callCall:-}" ] || return 1
+			LocalToolsManagerScopeHookReady "$callCall" "$callInclude" || return 1
+			"$callCall" "$callHow" "$@"
+			return $?
+		;;
+	esac
+}
+
+## The names of the keys a scope's file holds, each once, in the order of the file: names only, read from the text left of the `=`,
+## and only a name of a setting (a letter or `_` first, then letters, digits and `_`). A comment, a blank and a line of any other
+## shape are no key.
+LocalToolsManagerScopeKeyNames(){ ## file
+	[ -f "$1" ] && [ -r "$1" ] || return 0
+	LC_ALL=C awk 'index( $0, "=" ) > 1 { name = substr( $0, 1, index( $0, "=" ) - 1 ) ; if ( name ~ /^[A-Za-z_][A-Za-z0-9_]*$/ && !( name in seen ) ) { seen[ name ] = 1 ; print name ; } }' "$1"
+}
+
+## Whether a key is a credential, and a value as it is printed: a credential in its one form (what the console registered as `secret`), a password inside a URL masked alone, any
+## other value as it is. One field: its whitespace reads `_`, as in a registry.
+LocalToolsManagerScopeSecretKey(){ ## key -- rc 0 where the console says it is a credential
+	local secretKind secretCheck secretShow secretUrl secretInclude
+	read -r secretKind secretCheck secretShow secretUrl secretInclude <<< "$( LocalToolsManagerScopeRegistered secret | LC_ALL=C sed -n 1p | LC_ALL=C tr '\t' ' ' )"
+	[ -n "${secretCheck:-}" ] || return 1
+	LocalToolsManagerScopeHookReady "$secretCheck" "$secretInclude" || return 1
+	"$secretCheck" "$1"
+}
+
+LocalToolsManagerScopeShown(){ ## key, value
+	local shownText secretKind secretCheck secretShow secretUrl secretInclude
+	read -r secretKind secretCheck secretShow secretUrl secretInclude <<< "$( LocalToolsManagerScopeRegistered secret | LC_ALL=C sed -n 1p | LC_ALL=C tr '\t' ' ' )"
+	shownText="$2"
+	if [ -n "${secretCheck:-}" ] && LocalToolsManagerScopeHookReady "$secretCheck" "$secretInclude" && LocalToolsManagerScopeHookReady "$secretShow" "$secretInclude" && LocalToolsManagerScopeHookReady "$secretUrl" "$secretInclude" ; then
+		if "$secretCheck" "$1" ; then
+			shownText="$( "$secretShow" "$2" )"
+		elif ! shownText="$( "$secretUrl" "$2" )" ; then
+			shownText="$2"
+		fi
+	fi
+	shownText="${shownText//[[:space:]]/_}"
+	printf '%s' "${shownText:--}"
+}
+
+## The `key` row of one key of the scope found: its name, its state (`set`, `secret-set` for a credential, `missing` where its line
+## holds nothing after the `=`), its value as it is printed, its type (`credential` or `setting`, as the plugin's own enumeration says,
+## what the console registered as secret) and its description, which is the catalogue of the owner setup's text for a key it describes
+## (the registered catalogue) and `-` for any other. A description is plain words: it never holds a value.
+LocalToolsManagerScopeKeyRow(){ ## key
+	local rowValue rowType="setting" rowSpec rowScope rowHolder rowSecret rowHow="" rowState
+	rowValue="$( LocalToolsManagerScopeCall read --select "$1" 2> /dev/null < /dev/null )" || rowValue=""
+	! LocalToolsManagerScopeSecretKey "$1" || rowType="credential"
+	LocalToolsManagerScopeHook describe "$scopeId" || :
+	rowSpec=""
+	[ -z "$scopeHook" ] || rowSpec="$( "$scopeHook" "$1" 2> /dev/null )" || rowSpec=""
+	[ -z "$rowSpec" ] || IFS='|' read -r rowScope rowHolder rowSecret rowHow <<< "$rowSpec"
+	rowHow="${rowHow//[[:space:]]/_}"
+	if [ -z "$rowValue" ] ; then
+		rowState="missing" ; rowValue="-"
+	elif [ "$rowType" = "credential" ] ; then
+		rowState="secret-set" ; rowValue="$( LocalToolsManagerScopeShown "$1" "$rowValue" )"
+	else
+		rowState="set" ; rowValue="$( LocalToolsManagerScopeShown "$1" "$rowValue" )"
+	fi
+	## what the console knows the key takes (LocalToolsManagerScopeKnown): its kind and what it takes
+	local rowKind="-" rowTakes="-" rowKnown="" rowKnownKey rowKnownDescription
+	if [ -n "${scopeKnown:-}" ] ; then
+		rowKnown="$( printf '%s\n' "$scopeKnown" | LC_ALL=C awk -F'\t' -v key="$1" '$1 == key { print ; exit }' )"
+		IFS=$'\t' read -r rowKnownKey rowKind rowTakes rowKnownDescription <<< "$rowKnown"
+		[ "$rowHow" != "-" ] && [ -n "$rowHow" ] || rowHow="${rowKnownDescription:--}"
+		rowKind="${rowKind:--}" ; rowTakes="${rowTakes:--}"
+	fi
+	printf 'key\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$1" "$rowState" "$rowValue" "$rowType" "${rowHow:--}" "$rowKind" "$rowTakes"
+}
+
+## The `key` rows of the keys the console knows of a scope that its file does not hold: a variable that holds nothing, to be set from here.
+LocalToolsManagerScopeMissingRows(){ ## the keys the file holds, one a line
+	local missingLine missingKey missingKind missingTakes missingDescription missingType
+	while IFS=$'\t' read -r missingKey missingKind missingTakes missingDescription ; do
+		[ -n "$missingKey" ] || continue
+		printf '%s\n' "$1" | LC_ALL=C grep -q -x -F -- "$missingKey" && continue
+		missingType="setting" ; ! LocalToolsManagerScopeSecretKey "$missingKey" || missingType="credential"
+		printf 'key\t%s\tmissing\t-\t%s\t%s\t%s\t%s\n' "$missingKey" "$missingType" "${missingDescription:--}" "$missingKind" "${missingTakes:--}"
+	done <<< "$scopeKnown"
+}
+
+## The `scope` row of the scope found: its id, its label as the console shows a folder (`Agents: client-ndm`), how many keys it
+## holds, whether it may be cleared and whether it may be deleted, and its file.
+LocalToolsManagerScopeRow(){
+	local rowCount rowText
+	rowCount=0
+	while IFS= read -r rowText ; do
+		[ -n "$rowText" ] || continue
+		rowCount=$(( rowCount + 1 ))
+	done <<< "$( LocalToolsManagerScopeKeyNames "$scopeFile" )"
+	printf 'scope\t%s\t%s\t%s\t%s\t%s\t%s\n' "$scopeId" "$( printf '%s: %s' "$scopeSubsystem" "$scopeName" | LC_ALL=C tr -s '[:space:]' '_' )" \
+		"$rowCount" "$( [ "$rowCount" -gt 0 ] && echo yes || echo no )" "$scopeDeletable" "${scopeFile//[[:space:]]/_}"
+}
+
+## Whether a name is the name of a setting: rc 0 when it is.
+LocalToolsManagerScopeKeyOk(){ ## key
+	case "$1" in ''|[!A-Za-z_]*|*[!A-Za-z0-9_]*) return 1 ;; esac
+	return 0
+}
+
+case "$1" in
+
+	## The scopes of this workspace, one `scope` row each. Its form is the help entry's.
+	--manager-scope-list)
+		local listId listRest scopeId scopeSubsystem scopeName scopeFile scopeDeletable
+		while IFS=$'\t' read -r listId listRest ; do
+			[ -n "$listId" ] || continue
+			LocalToolsManagerScopeFind "$1" "$listId" 2> /dev/null || continue
+			LocalToolsManagerScopeRow
+		done <<< "$( LocalToolsManagerScopeSources )"
+		return 0
+	;;
+
+	## One scope: its own `scope` row, then a `key` row for every key it holds. A credential shows in its one form.
+	--manager-scope-read)
+		local scopeHook scopeId scopeSubsystem scopeName scopeFile scopeDeletable readKey scopeKnown=""
+		[ $# -eq 2 ] || { echo "⛔ ERROR: $MDSC_CMD $1: syntax is $1 <scope-id>, got $(( $# - 1 )) argument(s)" >&2 ; set +e ; return 1 ; }
+		LocalToolsManagerScopeFind "$1" "$2" || { set +e ; return 1 ; }
+		LocalToolsManagerScopeRow
+		scopeKnown="" ; LocalToolsManagerScopeHook known "$scopeId" || { set +e ; return 1 ; }
+		[ -z "$scopeHook" ] || scopeKnown="$( "$scopeHook" "$scopeName" )"
+		while IFS= read -r readKey ; do
+			[ -n "$readKey" ] || continue
+			LocalToolsManagerScopeKeyRow "$readKey"
+		done <<< "$( LocalToolsManagerScopeKeyNames "$scopeFile" )"
+		[ -z "$scopeKnown" ] || LocalToolsManagerScopeMissingRows "$( LocalToolsManagerScopeKeyNames "$scopeFile" )"
+		return 0
+	;;
+
+	## One value whole, by its scope and key: the one operation here that prints a value as it is, asked when a form is told to reveal
+	## a credential. It prints the value alone.
+	--manager-scope-reveal)
+		local scopeHook scopeId scopeSubsystem scopeName scopeFile scopeDeletable
+		[ $# -eq 3 ] || { echo "⛔ ERROR: $MDSC_CMD $1: syntax is $1 <scope-id> <key>, got $(( $# - 1 )) argument(s)" >&2 ; set +e ; return 1 ; }
+		LocalToolsManagerScopeFind "$1" "$2" || { set +e ; return 1 ; }
+		LocalToolsManagerScopeKeyOk "$3" || { echo "⛔ ERROR: $MDSC_CMD $1: the key given is no setting's name -- nothing was shown" >&2 ; set +e ; return 1 ; }
+		LocalToolsManagerScopeCall read --select "$3" 2> /dev/null < /dev/null
+		return 0
+	;;
+
+	## Saves one key of one scope: the value is the standard input, one line, never an argument. Its row `saved` says the key and what it
+	## holds now, as it is printed. An empty value is refused: a key is taken out with --manager-scope-unset.
+	--manager-scope-set)
+		local scopeHook scopeId scopeSubsystem scopeName scopeFile scopeDeletable setValue setNow
+		[ $# -eq 3 ] || { echo "⛔ ERROR: $MDSC_CMD $1: syntax is $1 <scope-id> <key>, the value on the standard input; got $(( $# - 1 )) argument(s) -- nothing was saved" >&2 ; set +e ; return 1 ; }
+		LocalToolsManagerScopeFind "$1" "$2" || { set +e ; return 1 ; }
+		LocalToolsManagerScopeKeyOk "$3" || { echo "⛔ ERROR: $MDSC_CMD $1: the key given is no setting's name -- nothing was saved" >&2 ; set +e ; return 1 ; }
+		setValue="$( cat )"
+		case "$setValue" in
+			'') echo "⛔ ERROR: $MDSC_CMD $1: the value on the standard input is empty -- nothing was saved. A key is taken out with --manager-scope-unset" >&2 ; set +e ; return 1 ;;
+			*$'\n'*) echo "⛔ ERROR: $MDSC_CMD $1: the value holds more than one line -- nothing was saved" >&2 ; set +e ; return 1 ;;
+		esac
+		printf '%s\n' "$setValue" | LocalToolsManagerScopeCall write --upsert-from-stdin "$3" > /dev/null || { echo "⛔ ERROR: $MDSC_CMD $1: the setting reader refused the write of $3 in $2 -- nothing was saved" >&2 ; set +e ; return 1 ; }
+		setNow="$( LocalToolsManagerScopeCall read --select "$3" 2> /dev/null < /dev/null )" || setNow=""
+		if [ "$setNow" != "$setValue" ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $1: $3 could not be saved: $2 does not hold the value after the write" >&2
+			set +e ; return 1
+		fi
+		printf 'saved\t%s\t%s\t%s\n' "$2" "$3" "$( LocalToolsManagerScopeShown "$3" "$setNow" )"
+		return 0
+	;;
+
+	## Takes one key out of one scope. Its row `removed` says which; a key the scope does not hold is refused.
+	--manager-scope-unset)
+		local scopeHook scopeId scopeSubsystem scopeName scopeFile scopeDeletable unsetNow
+		[ $# -eq 3 ] || { echo "⛔ ERROR: $MDSC_CMD $1: syntax is $1 <scope-id> <key>, got $(( $# - 1 )) argument(s) -- nothing was removed" >&2 ; set +e ; return 1 ; }
+		LocalToolsManagerScopeFind "$1" "$2" || { set +e ; return 1 ; }
+		LocalToolsManagerScopeKeyOk "$3" || { echo "⛔ ERROR: $MDSC_CMD $1: the key given is no setting's name -- nothing was removed" >&2 ; set +e ; return 1 ; }
+		if ! LocalToolsManagerScopeKeyNames "$scopeFile" | LC_ALL=C grep -q -x -F -- "$3" ; then
+			echo "⛔ ERROR: $MDSC_CMD $1: the scope holds no such key -- nothing was removed" >&2
+			set +e ; return 1
+		fi
+		LocalToolsManagerScopeCall write --delete "$3" > /dev/null || { echo "⛔ ERROR: $MDSC_CMD $1: the setting reader refused to take $3 out of $2 -- nothing was removed" >&2 ; set +e ; return 1 ; }
+		if LocalToolsManagerScopeKeyNames "$scopeFile" | LC_ALL=C grep -q -x -F -- "$3" ; then
+			echo "⛔ ERROR: $MDSC_CMD $1: $3 could not be removed: $2 still holds it after the write" >&2
+			set +e ; return 1
+		fi
+		printf 'removed\t%s\t%s\n' "$2" "$3"
+		return 0
+	;;
+
+	## Takes every key out of one scope, one by one as --manager-scope-unset does; the scope stays. Its row `cleared` says how many.
+	--manager-scope-clear)
+		local scopeHook scopeId scopeSubsystem scopeName scopeFile scopeDeletable clearKey clearCount=0 clearLeft=0
+		[ $# -eq 2 ] || { echo "⛔ ERROR: $MDSC_CMD $1: syntax is $1 <scope-id>, got $(( $# - 1 )) argument(s) -- nothing was removed" >&2 ; set +e ; return 1 ; }
+		LocalToolsManagerScopeFind "$1" "$2" || { set +e ; return 1 ; }
+		while IFS= read -r clearKey ; do
+			[ -n "$clearKey" ] || continue
+			if LocalToolsManagerScopeCall write --delete "$clearKey" > /dev/null 2>&1 ; then clearCount=$(( clearCount + 1 )) ; fi
+		done <<< "$( LocalToolsManagerScopeKeyNames "$scopeFile" )"
+		while IFS= read -r clearKey ; do
+			[ -n "$clearKey" ] || continue
+			clearLeft=$(( clearLeft + 1 ))
+		done <<< "$( LocalToolsManagerScopeKeyNames "$scopeFile" )"
+		if [ "$clearLeft" -gt 0 ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $1: $clearLeft key(s) of $2 could not be removed -- $clearCount were" >&2
+			set +e ; return 1
+		fi
+		printf 'cleared\t%s\t%s\n' "$2" "$clearCount"
+		return 0
+	;;
+
+	## Deletes one scope, its file, where the subsystem has many: a scope of the remote tools or of the agents. The two common scopes
+	## stay. Its row `deleted` says which.
+	--manager-scope-delete)
+		local scopeHook scopeId scopeSubsystem scopeName scopeFile scopeDeletable deleteUsers
+		[ $# -eq 2 ] || { echo "⛔ ERROR: $MDSC_CMD $1: syntax is $1 <scope-id>, got $(( $# - 1 )) argument(s) -- nothing was deleted" >&2 ; set +e ; return 1 ; }
+		LocalToolsManagerScopeFind "$1" "$2" || { set +e ; return 1 ; }
+		if [ "$scopeDeletable" != "yes" ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $1: this scope is the workspace's or the user's own, one of each, and is cleared, never deleted -- nothing was deleted" >&2
+			set +e ; return 1
+		fi
+		## A scope something uses is not deleted from under it (for the agents: a preset that another preset extends, or that a tier names): what the console registered says who.
+		LocalToolsManagerScopeHook guard "$scopeId" || { set +e ; return 1 ; }
+		if [ -n "$scopeHook" ] ; then
+			deleteUsers="$( "$scopeHook" "$scopeName" )"
+			if [ -n "$deleteUsers" ] ; then
+				echo "⛔ ERROR: $MDSC_CMD $1: the scope is in use by ${deleteUsers} -- nothing was deleted" >&2
+				set +e ; return 1
+			fi
+		fi
+		rm -f -- "$scopeFile" || { echo "⛔ ERROR: $MDSC_CMD $1: the file of $2 could not be removed -- nothing was deleted" >&2 ; set +e ; return 1 ; }
+		if [ -e "$scopeFile" ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $1: the file of $2 is still there after the removal" >&2
+			set +e ; return 1
+		fi
+		printf 'deleted\t%s\n' "$2"
+		return 0
+	;;
+
+	*)
+		echo "$MDSC_CMD: ⛔ ERROR: invalid option: $1" >&2
+		set +e ; return 1
+	;;
+esac

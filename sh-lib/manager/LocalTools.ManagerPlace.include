@@ -22,6 +22,7 @@
 ##
 
 type LocalToolsManagerField > /dev/null 2>&1 || . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.ManagerField.include"
+type LocalToolsManagerCommandRun > /dev/null 2>&1 || . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.ManagerCommands.include"
 type LocalToolsPlacesMergedText > /dev/null 2>&1 || . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/places/LocalTools.Places.include"
 
 ## THE BLOCKS A CONSOLE ADDS to the places (F11.10): it registers them in the list file it names in `managerConsolePlaceList` (the agents: sh-lib/config/place-blocks.list), a line each,
@@ -89,45 +90,6 @@ LocalToolsManagerPlaceRows(){ ## key (may be empty)
 	[ -z "$placeReader" ] || rowsSessions="$( "$placeReader" )"
 	MDLT_MANAGER_PLACE_HERE="${MMDAPP%/}" MDLT_MANAGER_PLACE_SESSIONS="$rowsSessions" \
 		LC_ALL=C awk -v wanted="${1:-}" -f "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalManagerPlaceRows.awk"
-}
-
-## THE COMMANDS OF A WORKSPACE, the same its editor's palette gets: what each package of this console declares in
-## its workspace-commands.list (in sh-lib/config/ of myx.distro-agents, in the sh-lib/ of the others), of the packages that workspace has, picked as the tasks of its palette are
-## (myx.distro-source's SourceTools.Make.BuildCodeWorkspaceData.include): myx.distro-source always, another where
-## its console at the root is executable. A row each, in that order: the package, the name, how it runs and the
-## command, with the root put for `$MMDAPP` and `${MMDAPP}`, a TAB between them. A line of a declaration that
-## starts with `#`, and one with fewer fields, is none.
-LocalToolsManagerPlaceCommands(){ ## workspace root
-	local commandsPackage commandsConsole commandsList
-	for commandsPackage in source:- deploy:DistroDeployConsole.sh remote:DistroRemoteConsole.sh agents:DistroAgentsConsole.sh ; do
-		commandsConsole="${commandsPackage#*:}"
-		commandsPackage="myx.distro-${commandsPackage%%:*}"
-		case "$commandsPackage" in
-			myx.distro-agents) commandsList="$MDLT_ORIGIN/myx/$commandsPackage/sh-lib/config/workspace-commands.list" ;;
-			*) commandsList="$MDLT_ORIGIN/myx/$commandsPackage/sh-lib/workspace-commands.list" ;;
-		esac
-		[ -f "$commandsList" ] || continue
-		[ "$commandsConsole" = "-" ] || [ -x "${1%/}/$commandsConsole" ] || continue
-		commandsRoot="${1%/}" commandsPackage="$commandsPackage" LC_ALL=C awk -F'\t' -v OFS='\t' '
-			function rooted(text, word,    done, at) {
-				done = ""
-				while ( ( at = index( text, word ) ) > 0 ) {
-					done = done substr( text, 1, at - 1 ) ENVIRON["commandsRoot"]
-					text = substr( text, at + length( word ) )
-				}
-				return done text
-			}
-			/^#/ || NF < 3 { next }
-			{
-				command = $3
-				for ( field = 4 ; field <= NF ; field++ ) {
-					command = command "\t" $field
-				}
-				print ENVIRON["commandsPackage"], $1, $2, rooted( rooted( command, "${MMDAPP}" ), "$MMDAPP" )
-			}
-		' "$commandsList"
-	done
-	return 0
 }
 
 ## One place by its key, as --manager-place-read finds it, into the variables its caller declares: placeKind,
@@ -218,11 +180,12 @@ case "$1" in
 		return 0
 	;;
 
-	## The commands of one place, a workspace: those its editor's palette gets, by the declarations of this
-	## console's packages (LocalToolsManagerPlaceCommands), whitespace in a name as `_`. A directory, and a
-	## workspace that is not there, has none. Its form is the help entry's.
+	## What stands in one place, a workspace, as the folder of it shows it: first whether it is the workspace the console runs in (`here yes|no`) and how many sessions of the registry name it
+	## (`sessions <n>`, `-` where none is counted); then the commands its editor's palette gets, by the declarations of this console's packages (LocalToolsManagerPlaceCommands), whitespace
+	## in a name as `_`; then the members that belong to it (`member` rows, as the read of a place prints them). A directory, and a workspace that is not there, has none. Its form is the
+	## help entry's.
 	--manager-place-command-list)
-		local commandOp="$1" placeKind="" placePath="" placeState=""
+		local commandOp="$1" placeKind="" placePath="" placeState="" placeRowText="" placeRowFields
 		shift
 		if [ $# -ne 1 ] ; then
 			echo "⛔ ERROR: $MDSC_CMD $commandOp: syntax is $commandOp <place>, got $# argument(s) -- nothing is shown" >&2
@@ -230,7 +193,11 @@ case "$1" in
 		fi
 		LocalToolsManagerPlaceFind "$commandOp" "$1" || { set +e ; return 1 ; }
 		[ "$placeKind" = "workspace" ] && [ "$placeState" = "present" ] || return 0
+		placeRowText="$( LocalToolsManagerPlaceSource | LocalToolsManagerPlaceRows "$1" )" || placeRowText=""
+		IFS=$'\t' read -r -a placeRowFields <<< "$placeRowText"
+		printf 'here\t%s\nsessions\t%s\n' "${placeRowFields[7]:-no}" "${placeRowFields[8]:--}"
 		LocalToolsManagerPlaceCommands "$placePath" | LC_ALL=C awk -F'\t' -v OFS='\t' '{ name = $2 ; gsub( /[[:space:]]+/, "_", name ) ; print "command", name, $1, $3 }'
+		LocalToolsManagerPlaceMembersOf "$placePath" "$placeState" || { set +e ; return 1 ; }
 		return 0
 	;;
 
@@ -238,7 +205,7 @@ case "$1" in
 	## blanks, in the root of that workspace, by /bin/sh as the editor's palette runs a task, with none of this
 	## console's variables, on the input and the output this call has. It ends with that command's status.
 	--manager-place-command-run)
-		local commandOp="$1" placeKind="" placePath="" placeState="" commandRow commandStatus=0
+		local commandOp="$1" placeKind="" placePath="" placeState=""
 		shift
 		if [ $# -ne 2 ] ; then
 			echo "⛔ ERROR: $MDSC_CMD $commandOp: syntax is $commandOp <place> <command>, got $# argument(s) -- nothing is run" >&2
@@ -249,21 +216,8 @@ case "$1" in
 			echo "⛔ ERROR: $MDSC_CMD $commandOp: '$1' is no workspace that is here, and has no command -- nothing is run" >&2
 			set +e ; return 1
 		fi
-		commandRow="$( LocalToolsManagerPlaceCommands "$placePath" | commandWanted="$2" LC_ALL=C awk -F'\t' '
-			BEGIN { wanted = ENVIRON["commandWanted"] ; gsub( /[[:space:]]+/, "_", wanted ) }
-			{ name = $2 ; gsub( /[[:space:]]+/, "_", name ) ; if ( name == wanted ) { print ; exit } }
-		' )"
-		if [ -z "$commandRow" ] ; then
-			echo "⛔ ERROR: $MDSC_CMD $commandOp: '$2' is none of the commands of '$1' -- nothing is run. Its commands are those ${commandOp%-run}-list prints" >&2
-			set +e ; return 1
-		fi
-		## the command: what follows the package, the name and how it runs
-		commandRow="${commandRow#*$'\t'}" ; commandRow="${commandRow#*$'\t'}" ; commandRow="${commandRow#*$'\t'}"
-		( cd "$placePath" || exit 1
-			exec env -i HOME="${HOME:-}" USER="${USER:-}" LOGNAME="${LOGNAME:-}" SHELL="${SHELL:-/bin/sh}" PATH="${PATH:-/usr/bin:/bin}" TERM="${TERM:-dumb}" LANG="${LANG:-}" \
-				/bin/sh -c "$commandRow" ) || commandStatus=$?
-		[ "$commandStatus" = 0 ] || set +e
-		return "$commandStatus"
+		LocalToolsManagerCommandRun "$commandOp" "$1" "$placePath" "$2"
+		return $?
 	;;
 
 	*)

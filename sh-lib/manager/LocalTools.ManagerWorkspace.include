@@ -10,8 +10,9 @@
 ## WHAT IS PRINTED: rows of TAB-separated fields, the whitespace of a value written `_` and an empty one `-`, as in a registry.
 ##   fact  <block> <name> <value>          one fact; <block> is `-` for the workspace's own
 ##   block <id> <label> <count>            a block: its label, as capitalised words with their blanks written `_`, and how many `item` rows follow it
-##   item  <block> <name> <kind> <state> <detail>
-##                                         one thing of the block: what it is, what kind, in what state and where (`-` for none)
+##   item  <block> <name> <kind> <state> <detail> <go>
+##                                         one thing of the block: what it is, what kind, in what state and where (`-` for none); <go>, where there is one, the place in the
+##                                         screen it leads to, `@<root>/<rest>` (`-` for none)
 ## First the workspace's own facts (`-`): its name, its path, where its tooling comes from (`source`, `.local`, or `elsewhere`), the path of that tooling, and the account the
 ## console runs as. Then the block of the subsystems installed in it, which is `.local`'s own (the rows of --manager-subsystem-list that read installed: one list, not a copy of
 ## its rule). Then the blocks a console REGISTERS in its list file, each in the order of the list, TAB-separated, with `#` lines and blank lines left alone:
@@ -24,6 +25,7 @@
 ##
 
 type LocalToolsManagerField > /dev/null 2>&1 || . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.ManagerField.include"
+type LocalToolsManagerCommandRun > /dev/null 2>&1 || . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.ManagerCommands.include"
 ## One `fact` row of the block being read, into workspaceRows of the operation.
 LocalToolsManagerWorkspaceFact(){ ## name, value
 	workspaceRows="$workspaceRows"$'fact\t'"${workspaceBlock:--}"$'\t'"$( LocalToolsManagerField "$1" )"$'\t'"$( LocalToolsManagerField "${2:-}" )"$'\n'
@@ -31,8 +33,8 @@ LocalToolsManagerWorkspaceFact(){ ## name, value
 }
 
 ## One `item` row of the block being read, into workspaceRows of the operation, counted in workspaceItems.
-LocalToolsManagerWorkspaceItem(){ ## name, kind, state, detail
-	workspaceRows="$workspaceRows"$'item\t'"${workspaceBlock:--}"$'\t'"$( LocalToolsManagerField "$1" )"$'\t'"$( LocalToolsManagerField "${2:-}" )"$'\t'"$( LocalToolsManagerField "${3:-}" )"$'\t'"$( LocalToolsManagerField "${4:-}" )"$'\n'
+LocalToolsManagerWorkspaceItem(){ ## name, kind, state, detail, go (may be empty)
+	workspaceRows="$workspaceRows"$'item\t'"${workspaceBlock:--}"$'\t'"$( LocalToolsManagerField "$1" )"$'\t'"$( LocalToolsManagerField "${2:-}" )"$'\t'"$( LocalToolsManagerField "${3:-}" )"$'\t'"$( LocalToolsManagerField "${4:-}" )"$'\t'"$( LocalToolsManagerField "${5:-}" )"$'\n'
 	workspaceItems=$(( workspaceItems + 1 ))
 	return 0
 }
@@ -60,6 +62,16 @@ LocalToolsManagerWorkspacePackages(){
 		[ "$packagesKind" = "subsystem" ] && [ "$packagesState" = "installed" ] || continue
 		LocalToolsManagerWorkspaceItem "$packagesName" subsystem installed ""
 	done <<< "$( set -- --manager-subsystem-list ; . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.ManagerSubsystem.include" 2> /dev/null )"
+	return 0
+}
+
+## The commands of this workspace, the same its editor's palette gets (LocalToolsManagerPlaceCommands): an item each, the name, how it runs, `ready`, and the package that declares it.
+LocalToolsManagerWorkspaceCommands(){
+	local commandsPackage commandsName commandsRuns commandsRest
+	while IFS=$'\t' read -r commandsPackage commandsName commandsRuns commandsRest ; do
+		[ -n "$commandsName" ] || continue
+		LocalToolsManagerWorkspaceItem "${commandsName//[[:space:]]/_}" "$commandsRuns" ready "$commandsPackage"
+	done <<< "$( LocalToolsManagerPlaceCommands "${MMDAPP%/}" )"
 	return 0
 }
 
@@ -91,6 +103,9 @@ case "$1" in
 		workspaceBlock="packages" ; workspaceRows="" ; workspaceItems=0
 		LocalToolsManagerWorkspacePackages
 		[ -z "$workspaceRows" ] || printf 'block\tpackages\tInstalled_Subsystems\t%s\n%s' "$workspaceItems" "$workspaceRows"
+		workspaceBlock="commands" ; workspaceRows="" ; workspaceItems=0
+		LocalToolsManagerWorkspaceCommands
+		[ -z "$workspaceRows" ] || printf 'block\tcommands\tCommands\t%s\n%s' "$workspaceItems" "$workspaceRows"
 		while IFS="$readTab" read -r readKind readName readLabel readReader readInclude ; do
 			[ -n "$readName" ] || continue
 			workspaceBlock="$readName" ; workspaceRows="" ; workspaceItems=0
@@ -99,6 +114,28 @@ case "$1" in
 			printf 'block\t%s\t%s\t%s\n%s' "$readName" "${readLabel:-$readName}" "$workspaceItems" "$workspaceRows"
 		done <<< "$readBlocks"
 		return 0
+	;;
+
+	## The commands of this workspace, as the read of a location prints them: `command <name> <package> <how it runs>`, the whitespace of a name `_`. Its form is the help entry's.
+	--manager-workspace-command-list)
+		if [ $# -ne 1 ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $1: syntax is $1, got $(( $# - 1 )) argument(s) -- nothing is shown" >&2
+			set +e ; return 1
+		fi
+		LocalToolsManagerPlaceCommands "${MMDAPP%/}" | LC_ALL=C awk -F'\t' -v OFS='\t' '{ name = $2 ; gsub( /[[:space:]]+/, "_", name ) ; print "command", name, $1, $3 }'
+		return 0
+	;;
+
+	## One command of this workspace run, in its root: the one of the commands --manager-workspace-read lists that the name gives (its blanks as `_`), as the editor's palette runs a task.
+	## It ends with that command's status. Its form is the help entry's.
+	--manager-workspace-command-run)
+		local runOp="$1"
+		if [ $# -ne 2 ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $runOp: syntax is $runOp <command>, got $(( $# - 1 )) argument(s) -- nothing is run" >&2
+			set +e ; return 1
+		fi
+		LocalToolsManagerCommandRun "$runOp" "this workspace" "${MMDAPP%/}" "$2"
+		return $?
 	;;
 
 	*)

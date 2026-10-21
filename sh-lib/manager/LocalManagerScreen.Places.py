@@ -22,14 +22,46 @@ PLACE_COMMAND_RUNS = {
 ## and how it runs. Each is an item that opens a dialog, by its name, its emoji part of it.
 def parsePlaceCommandRows(text):
     rows = []
+    here = False
+    sessions = ""
+    members = []
     for line in text.split("\n"):
         fields = line.split("\t")
-        if fields[0] != "command" or len(fields) < 4:
-            continue
-        command = {"name": fields[1], "label": unspaced(fields[1]), "package": fields[2], "runs": fields[3]}
-        row = newRow(fields[1], command["label"], "place-command", False, fields)
-        row["placeCommand"] = command
-        rows.append(row)
+        if fields[0] == "here":
+            here = len(fields) > 1 and fields[1] == "yes"
+        elif fields[0] == "sessions":
+            sessions = fields[1] if len(fields) > 1 else ""
+        elif fields[0] == "member" and len(fields) >= 6:
+            members.append(fields)
+        elif fields[0] == "command" and len(fields) >= 4:
+            command = {"name": fields[1], "label": unspaced(fields[1]), "package": fields[2], "runs": fields[3]}
+            row = newRow(fields[1], command["label"], "place-command", False, fields)
+            row["placeCommand"] = command
+            rows.append(row)
+    ## after the commands, the sessions that name this workspace and the members that belong to it; each leads on (goLink) where this is the workspace the console runs in, since only there
+    ## is the session or the member one this console holds
+    if sessions not in ("", "-"):
+        head = newRow("place:sessions", "Sessions", "place-heading", False)
+        head["look"] = BOLD
+        head["tail"] = sessions
+        head["placeFact"] = [("sessions", "%s recorded" % sessions)] + ([("enter", "opens Activity")] if here else [("held", "by the console of that workspace")])
+        if here:
+            head["link"] = "@activity"
+        rows.append(head)
+    if members:
+        head = newRow("place:members", "Members", "place-heading", False)
+        head["look"] = BOLD
+        head["tail"] = str(len(members))
+        head["placeFact"] = [("members", "%d belong to it" % len(members))]
+        rows.append(head)
+        for fields in members:
+            one = newRow("member:%s" % fields[1], fields[1], "place-member", False)
+            one["indent"] = 2
+            one["tail"] = absent(fields[4])
+            one["placeFact"] = [("kind", absent(fields[2])), ("set up", absent(fields[4])), ("folder", absent(fields[5]))] + ([("enter", "opens its folder in Team Members")] if here else [])
+            if here:
+                one["link"] = "@team/%s" % fields[1]
+            rows.append(one)
     return rows
 
 
@@ -48,10 +80,13 @@ def askPlaceCommand(state, row):
     command = row.get("placeCommand") if row else None
     if command is None:
         return ""
+    ## a command of the workspace the console runs in (`Workspace (System)`) has no location to name: it runs in that workspace's own root
+    here = bool(command.get("here"))
+    where = (os.path.basename((state.workspace or "").rstrip("/")) or "this workspace") if here else state.path[-1]
     openDialog(state, "placecommand", {"about": {"lines": [
-        ("runs", command["label"]), ("workspace", state.path[-1]), ("package", command["package"]),
+        ("runs", command["label"]), ("workspace", where), ("package", command["package"]),
         PLACE_COMMAND_RUNS.get(command["runs"], ("", ""))[1]]}},
-        about={"id": row["id"], "label": command["label"], "place": state.path[-1], "runs": command["runs"]},
+        about={"id": row["id"], "label": command["label"], "place": "" if here else state.path[-1], "runs": command["runs"]},
         title="Run: %s" % command["label"])
     return ""
 
@@ -65,7 +100,7 @@ ACTION_FITS["placecommand"] = lambda state, row: bool(row and row.get("placeComm
 def submitPlaceCommand(state, dialog, button):
     closeDialog(state)
     about = dialog["about"]
-    words = ["--manager-place-command-run", about["place"], about["id"]]
+    words = ["--manager-place-command-run", about["place"], about["id"]] if about["place"] else ["--manager-workspace-command-run", about["id"]]
     if about["runs"] == "terminal":
         state.answer = None
         state.child = {"label": about["label"], "said": "command", "words": words, "directory": state.workspace or None, "tools": True}
@@ -316,6 +351,8 @@ def placesFocus(state, row):
 
 
 def placeCommandsFocus(state, row):
+    if row.get("placeFact"):
+        return [looked(row["label"], BOLD)] + factLines(row["placeFact"], state.viewWidth)
     return placeCommandLines(row["placeCommand"], state.viewWidth) if row.get("placeCommand") else None
 
 
@@ -343,5 +380,7 @@ registerPlugin({
     "commands": (
         {"name": "placecommand", "keys": ("ENTER",), "menu": ("view", 3), "label": "R~u~n the command", "status": "Run",
          "views": ("places/*",), "for": "a command of a workspace", "on": ("places/*:place-command",), "only": True, "enters": True, "says": "run", "does": ("action", "placecommand")},
+        {"name": "placelink", "keys": ("ENTER",), "menu": ("view", 3), "label": "~O~pen what it names", "status": "Open",
+         "views": ("places/*",), "for": "a session or a member of this workspace", "on": ("places/*:place-heading", "places/*:place-member"), "only": True, "enters": True, "says": "open", "does": ("action", "golink")},
     ),
 })

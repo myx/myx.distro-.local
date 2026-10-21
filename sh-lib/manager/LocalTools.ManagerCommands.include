@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# ^^^ for syntax checking in the editor only
+
+##
+## LocalTools.ManagerCommands.include -- the commands of a workspace, the same its editor's palette gets (F11.10), and how one runs. Functions only, sourced by the --manager-place-*
+## operations (the commands of a location) and the --manager-workspace-* operations (the commands of the workspace the console runs in).
+##
+
+## THE COMMANDS OF A WORKSPACE, the same its editor's palette gets: what each package of this console declares in
+## its workspace-commands.list (in sh-lib/config/ of myx.distro-agents, in the sh-lib/ of the others), of the packages that workspace has, picked as the tasks of its palette are
+## (myx.distro-source's SourceTools.Make.BuildCodeWorkspaceData.include): myx.distro-source always, another where
+## its console at the root is executable. A row each, in that order: the package, the name, how it runs and the
+## command, with the root put for `$MMDAPP` and `${MMDAPP}`, a TAB between them. A line of a declaration that
+## starts with `#`, and one with fewer fields, is none.
+LocalToolsManagerPlaceCommands(){ ## workspace root
+	local commandsPackage commandsConsole commandsList
+	for commandsPackage in source:- deploy:DistroDeployConsole.sh remote:DistroRemoteConsole.sh agents:DistroAgentsConsole.sh ; do
+		commandsConsole="${commandsPackage#*:}"
+		commandsPackage="myx.distro-${commandsPackage%%:*}"
+		case "$commandsPackage" in
+			myx.distro-agents) commandsList="$MDLT_ORIGIN/myx/$commandsPackage/sh-lib/config/workspace-commands.list" ;;
+			*) commandsList="$MDLT_ORIGIN/myx/$commandsPackage/sh-lib/workspace-commands.list" ;;
+		esac
+		[ -f "$commandsList" ] || continue
+		[ "$commandsConsole" = "-" ] || [ -x "${1%/}/$commandsConsole" ] || continue
+		commandsRoot="${1%/}" commandsPackage="$commandsPackage" LC_ALL=C awk -F'\t' -v OFS='\t' '
+			function rooted(text, word,    done, at) {
+				done = ""
+				while ( ( at = index( text, word ) ) > 0 ) {
+					done = done substr( text, 1, at - 1 ) ENVIRON["commandsRoot"]
+					text = substr( text, at + length( word ) )
+				}
+				return done text
+			}
+			/^#/ || NF < 3 { next }
+			{
+				command = $3
+				for ( field = 4 ; field <= NF ; field++ ) {
+					command = command "\t" $field
+				}
+				print ENVIRON["commandsPackage"], $1, $2, rooted( rooted( command, "${MMDAPP}" ), "$MMDAPP" )
+			}
+		' "$commandsList"
+	done
+	return 0
+}
+
+## One command of a workspace run: the one of its commands the name gives, as the list prints it or with its blanks, in the root of that workspace, by /bin/sh as the editor's palette
+## runs a task, with none of this console's variables, on the input and the output this call has. It ends with that command's status. A name that is none of them is refused,
+## naming the operation that lists them.
+LocalToolsManagerCommandRun(){ ## operation, what the command belongs to (for the message), workspace root, command name
+	local commandRow commandStatus=0
+	commandRow="$( LocalToolsManagerPlaceCommands "$3" | commandWanted="$4" LC_ALL=C awk -F'\t' '
+		BEGIN { wanted = ENVIRON["commandWanted"] ; gsub( /[[:space:]]+/, "_", wanted ) }
+		{ name = $2 ; gsub( /[[:space:]]+/, "_", name ) ; if ( name == wanted ) { print ; exit } }
+	' )"
+	if [ -z "$commandRow" ] ; then
+		echo "⛔ ERROR: $MDSC_CMD $1: '$4' is none of the commands of '$2' -- nothing is run. Its commands are those ${1%-run}-list prints" >&2
+		set +e ; return 1
+	fi
+	## the command: what follows the package, the name and how it runs
+	commandRow="${commandRow#*$'\t'}" ; commandRow="${commandRow#*$'\t'}" ; commandRow="${commandRow#*$'\t'}"
+	( cd "$3" || exit 1
+		exec env -i HOME="${HOME:-}" USER="${USER:-}" LOGNAME="${LOGNAME:-}" SHELL="${SHELL:-/bin/sh}" PATH="${PATH:-/usr/bin:/bin}" TERM="${TERM:-dumb}" LANG="${LANG:-}" \
+			/bin/sh -c "$commandRow" ) || commandStatus=$?
+	[ "$commandStatus" = 0 ] || set +e
+	return "$commandStatus"
+}

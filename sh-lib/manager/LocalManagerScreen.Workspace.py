@@ -9,7 +9,7 @@
 ##
 
 ## The fields of an `item` row of `--manager-workspace-read`, after its block.
-WORKSPACE_ITEM = ("name", "kind", "state", "detail")
+WORKSPACE_ITEM = ("name", "kind", "state", "detail", "go")
 ## What the facts are called in the pane: a name the operation gives is shown by these words, any other by its own with the dashes read as blanks.
 WORKSPACE_FACT_WORDS = {"tooling": "tooling from", "tooling-path": "tooling path", "account": "runs as"}
 ## A path stands as it is here, not by the key of the location it lies in (PLACED, Roots.py): this is the view of the workspace itself.
@@ -54,10 +54,19 @@ def parseWorkspaceRows(readKey, level, text):
             row["tail"] = str(len(block["items"]))
         rows.append(row)
         for item in block["items"]:
-            one = newRow("%s:%s" % (block["id"], item["name"]), item["name"], "workspace-item", False)
+            if block["id"] == "commands":
+                ## a command of the workspace: Enter runs it, asked first (askPlaceCommand), as a command of a location does
+                one = newRow(item["name"], unspaced(item["name"]), "workspace-command", False)
+                one["placeCommand"] = {"name": item["name"], "label": unspaced(item["name"]), "package": item["detail"], "runs": item["kind"], "here": True}
+                one["tail"] = item["kind"]
+            else:
+                one = newRow("%s:%s" % (block["id"], item["name"]), item["name"], "workspace-item", False)
+                one["tail"] = item["state"]
             one["workspaceItem"] = dict(item, block=block["label"])
             one["indent"] = 2
-            one["tail"] = item["state"]
+            ## where the item leads, Enter: a place of this screen, as the reader names it (@<root>/<rest>)
+            if item.get("go"):
+                one["link"] = item["go"]
             rows.append(one)
     return {level: rows}
 
@@ -101,6 +110,8 @@ def workspaceFocus(state, row):
         return [looked(row["label"], BOLD)] + factLines(row["workspace"]["facts"], state.viewWidth)
     if row.get("workspaceBlock"):
         return [looked(row["label"], BOLD)] + workspaceBlockLines(state, row["workspaceBlock"], state.viewWidth)
+    if row.get("placeCommand"):
+        return placeCommandLines(row["placeCommand"], state.viewWidth)
     if row.get("workspaceItem"):
         item = row["workspaceItem"]
         return [looked(item["name"], BOLD)] + factLines([
@@ -108,8 +119,28 @@ def workspaceFocus(state, row):
             ("kind", item["kind"]),
             ("state", item["state"], stateLook(item["state"])),
             ("where", item["detail"]),
-        ], state.viewWidth)
+        ] + ([("enter", "opens %s" % item["detail"])] if row.get("link") else []), state.viewWidth)
     return None
+
+
+## Enter on a row that leads somewhere (row["link"], `@<root>/<rest>` as a reader names it): the screen goes there, onto the level that is named, with the rows on the way kept at the
+## ones that lead to it (the cursor of each level asks for its row, as soon as the level has rows), so that Back goes up onto them. Said, and nothing done, where this console has no such place.
+def goLink(state, row):
+    link = row.get("link") if row else None
+    target = pluginPathOf([], link, PLUGIN_BASES) if link else None
+    if not target:
+        return "This console has no place for it: %s" % (link or "-")
+    steps = target.split("/")
+    for depth in range(len(steps)):
+        cursor = state.cursors.setdefault(levelKey(steps[:depth]), {"key": None, "index": 0, "top": 0})
+        cursor["want"] = steps[depth]
+    state.goTo = steps
+    state.focus = "list"
+    return ""
+
+
+ACTION_HANDLERS["golink"] = goLink
+ACTION_FITS["golink"] = lambda state, row: bool(row and row.get("link"))
 
 
 ## ---- the plugin: `Workspace (System)` ----
@@ -123,4 +154,10 @@ registerPlugin({
         ## The workspace the console runs in, with the blocks of every subsystem that adds one. Read on entering it and when it is asked for, not on the period.
         "list:workspace": {"operation": ["--manager-workspace-read"], "rows": "workspace", "once": True},
     },
+    "commands": (
+        {"name": "workspacecommand", "keys": ("ENTER",), "menu": ("view", 3), "label": "R~u~n the command", "status": "Run",
+         "views": ("workspace",), "for": "a command of this workspace", "on": ("workspace:workspace-command",), "only": True, "enters": True, "says": "run", "does": ("action", "placecommand")},
+        {"name": "workspacelink", "keys": ("ENTER",), "menu": ("view", 3), "label": "~O~pen what it names", "status": "Open",
+         "views": ("workspace",), "for": "a thing that leads on", "on": ("workspace:workspace-item",), "only": True, "enters": True, "says": "open", "does": ("action", "golink")},
+    ),
 })
