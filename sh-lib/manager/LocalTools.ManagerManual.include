@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+# ^^^ for syntax checking in the editor only
+
+##
+## LocalTools.ManagerManual.include -- the --manager-manual-* operations of the four sibling
+## consoles (F12.2): the manuals of the projects of this workspace, which the root `Manuals
+## (Help)` of the screen shows, and the tooling commands a console user calls by name. Sourced
+## by the `--manager-manual-*)`, `--manager-command-*)` and `--manager-help-*)` arms of
+## LocalTools.Manager.include, with $MDSC_CMD the console's own command name; who may call was
+## asked where the family is dispatched.
+##
+## THE BUILD SEQUENCE IS NOT DECIDED HERE, and is read the way the agents console reads it: the
+## projects are what ListDistroProjects --select-all gives, in the order it gives them, read
+## from the source; a project lies in the source folder of the workspace under its name. A user
+## manual is the README.md of a project, a maintainer manual its MAGIC.md, and a project that
+## has no such file is not listed. The tooling commands are the `*.fn.sh` of the family's
+## sh-scripts folders and the commands the projects declare, the two readers the console's own
+## completion gathers. It reads, and writes nothing.
+##
+
+case "$1" in
+
+	## The projects that have the manual of a kind, in build order, one a line: the project, a TAB, the file.
+	## With a project of that list, that file as it is.
+	--manager-manual-read)
+		local manualOp="$1" manualFile manualSelected manualStatus=0 manualProject manualPath manualFound=""
+		shift
+		case "${1:-}" in
+			user) manualFile="README.md" ;;
+			maintainer) manualFile="MAGIC.md" ;;
+			*)
+				echo "⛔ ERROR: $MDSC_CMD $manualOp: syntax is user|maintainer [<project>], got: $*" >&2
+				set +e ; return 1
+			;;
+		esac
+		shift
+		if [ $# -gt 1 ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $manualOp: syntax is user|maintainer [<project>], got a second project: $2" >&2
+			set +e ; return 1
+		fi
+		## The build sequence is read with the system's own readers, whichever console this is
+		## served from: the local console and the remote one do not carry the system context of
+		## their own, so it is sourced here, in place, and only when it is not there.
+		if ! type DistroSystemContext >/dev/null 2>&1 ; then
+			. "$MDLT_ORIGIN/myx/myx.distro-system/sh-lib/SystemContext.include"
+		fi
+		if ! DistroSystemContext --distro-from-source ; then
+			echo "⛔ ERROR: $MDSC_CMD $manualOp: cannot establish an input spec for workspace $MMDAPP" >&2
+			set +e ; return 1
+		fi
+		Require ListDistroProjects || :
+		manualSelected="$( Distro ListDistroProjects --select-all )" || manualStatus=$?
+		if [ "$manualStatus" != "0" ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $manualOp: ListDistroProjects --select-all exited $manualStatus" >&2
+			set +e ; return 1
+		fi
+		while IFS= read -r manualProject ; do
+			[ -n "$manualProject" ] || continue
+			manualPath="${MMDAPP%/}/source/$manualProject/$manualFile"
+			[ -f "$manualPath" ] || continue
+			if [ $# -eq 0 ] ; then
+				printf '%s\t%s\n' "$manualProject" "$manualPath"
+			elif [ "$manualProject" = "$1" ] ; then
+				manualFound="$manualPath"
+			fi
+		done <<< "$manualSelected"
+		[ $# -gt 0 ] || return 0
+		if [ -z "$manualFound" ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $manualOp: no project of that name has a $manualFile: $1" >&2
+			set +e ; return 1
+		fi
+		cat "$manualFound" || { set +e ; return 1 ; }
+		return 0
+	;;
+
+	## Every tooling command of this workspace, one a line: its base name, a TAB, its file. The
+	## two readers are the console's own: the `*.fn.sh` of the family's sh-scripts folders, and
+	## the commands the projects declare, as the source index gives them.
+	--manager-command-list)
+		local listOp="$1"
+		shift
+		if [ $# -gt 0 ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $listOp: syntax is no argument, got: $1" >&2
+			set +e ; return 1
+		fi
+		local listPath="" listItem listName listHere="$MDLT_ORIGIN/myx"
+		for listItem in .local system deploy source remote agents ; do
+			listPath="$listPath:$listHere/myx.distro-$listItem/sh-scripts"
+		done
+		listPath="${listPath#:}"
+		## the index's folders, as its reader appends them to a PATH that holds the family's
+		listPath="$listPath$( PATH="$listPath:/usr/bin:/bin" Distro --shell-path-append )"
+		{
+			for listItem in .local system deploy source remote agents ; do
+				[ -d "$listHere/myx.distro-$listItem/sh-scripts" ] || continue
+				find "$listHere/myx.distro-$listItem/sh-scripts" -type f -name '*.fn.sh' \
+					| sed -E "s:^$listHere/myx.distro-(.local|system|deploy|source|remote|agents)/sh-scripts/::g"
+			done
+			PATH="$listPath:/usr/bin:/bin" Distro --shell-path-append --completion
+		} | sort -u | (
+			PATH="$listPath"
+			hash -r
+			while IFS= read -r listName ; do
+				printf '%s\t%s\n' "$listName" "$( command -v -- "$listName" || echo - )"
+			done
+		)
+		return 0
+	;;
+
+	## One tooling command's help, as its own `--help` prints it, read and never run: the syntax
+	## lines of its help include, then its help file, both beside the command. With no command,
+	## the help of this console's own tool, as the root `Manuals (Help)` shows of itself.
+	--manager-help-read)
+		shift
+		if [ $# -gt 1 ] ; then
+			echo "⛔ ERROR: $MDSC_CMD --manager-help-read: syntax is [<Name>.fn.sh], got: $*" >&2
+			set +e ; return 1
+		fi
+		if [ $# -eq 1 ] ; then
+			local helpName="$1" helpFile helpFolder
+			helpFile="$( . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.ManagerManual.include" --manager-command-list | LC_ALL=C awk -F'\t' -v name="$helpName" '$1 == name { print $2 ; exit }' )"
+			if [ -z "$helpFile" ] ; then
+				echo "⛔ ERROR: $MDSC_CMD --manager-help-read: no tooling command of that name: $helpName" >&2
+				set +e ; return 1
+			fi
+			[ "$helpFile" != "-" ] || return 0
+			helpFolder="${helpFile%/*}"
+			helpFolder="${helpFolder%/*}/sh-lib/help/Help.${helpName%.fn.sh}"
+			if [ -f "$helpFolder.include" ] ; then
+				LC_ALL=C awk -v help="$helpFolder.help.md" '
+					BEGIN { while ((getline line < help) > 0) held[line] = 1 }
+					/^[ \t]*echo "📘 syntax: / {
+						msg = $0 ; sub(/^[ \t]*echo "/, "", msg) ; sub(/"[^"]*$/, "", msg)
+						if (!(msg in held) && !(msg in seen)) { seen[msg] = 1 ; print msg }
+					}' "$helpFolder.include" || { set +e ; return 1 ; }
+			fi
+			[ ! -f "$helpFolder.help.md" ] || cat "$helpFolder.help.md" || { set +e ; return 1 ; }
+			return 0
+		fi
+		## The help of this console's own tool, as it is written: the whole help file.
+		local helpOwn helpOwnPackage
+		helpOwn="${MDSC_CMD#Distro}"
+		helpOwn="${helpOwn%Tools}"
+		helpOwn="$( printf '%s' "$helpOwn" | tr '[:upper:]' '[:lower:]' )"
+		helpOwnPackage="myx.distro-$helpOwn"
+		[ "$helpOwn" != "local" ] || helpOwnPackage="myx.distro-.local"
+		[ ! -f "$MDLT_ORIGIN/myx/$helpOwnPackage/sh-lib/help/Help.$MDSC_CMD.help.md" ] || cat "$MDLT_ORIGIN/myx/$helpOwnPackage/sh-lib/help/Help.$MDSC_CMD.help.md"
+		return 0
+	;;
+
+	*)
+		echo "$MDSC_CMD: ⛔ ERROR: invalid option: $1" >&2
+		set +e ; return 1
+	;;
+esac

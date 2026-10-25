@@ -307,7 +307,15 @@ LocalToolsPlacesMergedText(){ ## workspace, flags
 					alt[N[i]] = alt[N[i]] ( alt[N[i]] == "" ? "" : ", " ) N[i] "@" wsName( R[i] )
 				}
 			}
+			nw = 0 ; nd = 0
 			for ( i = 1 ; i <= n ; i++ ) {
+				if ( K[i] == "workspace" ) { nw++ ; WI[nw] = i }
+				else { nd++ ; DI[nd] = i }
+			}
+			for ( a = 1 ; a <= nw ; a++ ) for ( b = a + 1 ; b <= nw ; b++ ) if ( N[WI[a]] > N[WI[b]] ) { t = WI[a] ; WI[a] = WI[b] ; WI[b] = t }
+			for ( a = 1 ; a <= nd ; a++ ) for ( b = a + 1 ; b <= nd ; b++ ) if ( N[DI[a]] > N[DI[b]] ) { t = DI[a] ; DI[a] = DI[b] ; DI[b] = t }
+			for ( a = 1 ; a <= nw + nd ; a++ ) {
+				i = ( a <= nw ) ? WI[a] : DI[a - nw]
 				name = N[i]
 				if ( P[i] == "-" ) {
 					if ( paths[name] > 0 || ( name in unknownShown ) ) continue

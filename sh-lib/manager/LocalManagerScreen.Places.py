@@ -133,7 +133,8 @@ def placeTable(rows):
     places = [row["place"] for row in rows]
     words = [[column[1](place) or "-" for column in PLACE_COLUMNS] for place in places]
     marks = [MARKS["on"] if place["here"] == PLACES["here"] else "" for place in places]
-    table = {"heads": [column[0] for column in PLACE_COLUMNS], "kinds": None, "cut": TABLE_CAP}
+    looks = [[None, DIM if place["kind"] == "directory" else None, None, None, None] for place in places]
+    table = {"heads": [column[0] for column in PLACE_COLUMNS], "kinds": None, "cut": TABLE_CAP, "looks": looks}
     for row, mark, line in zip(rows, marks, words):
         row["table"] = table
         row["cells"] = [mark] + line
@@ -158,6 +159,10 @@ def parsePlaceRows(text):
         if place["state"] != PLACES["present"]:
             row["look"] = DIM
         rows.append(row)
+    ## THE SKETCH'S ORDER, and it is the LIST's too: workspaces first, directories second,
+    ## alphabetical within each group -- so the rows an operator walks and the table they read
+    ## are one order, not two.
+    rows.sort(key=lambda row: (row["place"]["kind"] == "directory", row["place"]["key"]))
     placeTable(rows)
     return rows
 

@@ -85,6 +85,19 @@ def parseSubsystemLevels(readKey, level, text):
 ROW_FORMS["subsystems"] = parseSubsystemLevels
 
 
+## What `--manager-subsystem-read` printed of one subsystem, after its two rows: the repository
+## its project.inf declares, and its README whole under them (C1).
+def parseSubsystemRead(text):
+    lines = text.split("\n")
+    info = {"repository": "-", "body": ""}
+    for line in lines[:2]:
+        name, tab, value = line.partition("\t")
+        if tab and name == "repository":
+            info["repository"] = value or "-"
+    info["body"] = "\n".join(lines[2:]).strip("\n")
+    return info
+
+
 ## What the folder holds, for the left pane: every subsystem as a table, its state in its colour, what it is, and the command it is offered or why
 ## it has none. None until its read has answered.
 def subsystemsSummary(state, path, row, form):
@@ -101,7 +114,21 @@ def subsystemsSummary(state, path, row, form):
                              looks=[[BOLD, stateLook(one["state"]) if one["state"] != "installed" else None, None, None] for one in held])
 
 
-## The selected row of the folder for the left pane: a subsystem by what it is, its state and what it is offered; a command by what it does.
+## The README of the subsystem, as the left pane shows it, rendered (markdownLines), once for
+## each text, width and marks, never on a tick: the pane's own lines are set out again at each
+## selection, and the looks of its parts go with them.
+def subsystemReadmeLines(state, body):
+    view = state.view
+    stamp = (body, state.viewWidth, MARKS["plain"])
+    if view.get("readmeFor") != stamp:
+        view["readmeFor"] = stamp
+        lines, spans = markdownLines(body, state.viewWidth)
+        view["readmeLines"] = [lookedAt(line, spans.get(number)) for number, line in enumerate(lines)]
+    return view["readmeLines"]
+
+
+## The selected row of the folder for the left pane: a subsystem by what it is, its state and what it is offered, and, once its read has
+## answered, its repository and its README; a command by what it does.
 def subsystemsFocus(state, row):
     if row.get("subsystemCommand"):
         command = row["subsystemCommand"]
@@ -111,11 +138,18 @@ def subsystemsFocus(state, row):
     if row.get("subsystem"):
         one = row["subsystem"]
         offered = ", ".join(what for what in ("update", "install", "uninstall") if one[what] == "yes")
-        return [looked(one["name"], BOLD)] + factLines([
+        lines = [looked(one["name"], BOLD)] + factLines([
             ("what", SUBSYSTEM_WORDS.get(one["name"], "-")),
             ("state", subsystemStateWords(one["state"]), stateLook(one["state"]) if one["state"] != "installed" else None),
             ("commands", offered or SUBSYSTEM_ROLES.get(one["role"], "none")),
         ], state.viewWidth)
+        info = state.view["info"]
+        if isinstance(info, dict):
+            lines.extend(factLines([("repository", info.get("repository", "-"))], state.viewWidth))
+            if info.get("body"):
+                lines.append("")
+                lines.extend(subsystemReadmeLines(state, info["body"]))
+        return lines
     return None
 
 
@@ -159,6 +193,8 @@ registerPlugin({
     "reads": {
         ## The subsystems of the family and what may be done with each. Read on entering it and when it is asked for, not on the period.
         "list:subsystems": {"operation": ["--manager-subsystem-list"], "rows": "subsystems", "once": True},
+        ## One subsystem, whole: its repository as its project.inf declares it, and its README, for the left pane. Read once the selection rests on it.
+        "view:subsystems:subsystem": {"operation": ["--manager-subsystem-read", "{id}"], "rows": "subsystem-read", "once": True},
     },
     "commands": (
         {"name": "subsystem", "keys": ("ENTER",), "menu": ("view", 3), "label": "R~u~n the command", "status": "Run",
