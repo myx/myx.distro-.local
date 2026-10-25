@@ -59,6 +59,32 @@ case "$1" in
 		return 0
 	;;
 
+	## One subsystem's repository and its user manual (C1 of the refactorings epic): the README.md of its package,
+	## read from its installed copy where that stands, else from the source tree of the origin. The repository is the
+	## address its project.inf declares under `distro-image-sync:source-prepare-pull:repo:`, which is what the package
+	## is pulled from; a package that declares none has none. Nothing is reached, and nothing is written.
+	--manager-subsystem-read)
+		local readOp="$1" readName readFound="" readDir readFile readRepo readReadme
+		shift
+		[ $# -eq 1 ] || { echo "⛔ ERROR: $MDSC_CMD $readOp: syntax is $readOp <subsystem>, got $# argument(s) -- nothing is shown" >&2 ; set +e ; return 1 ; }
+		for readName in $localManagerSubsystems ; do [ "$readName" != "$1" ] || readFound="yes" ; done
+		[ -n "$readFound" ] || { echo "⛔ ERROR: $MDSC_CMD $readOp: the subsystem given is none of the subsystems of this family -- nothing was shown. They are ${localManagerSubsystems// /, }" >&2 ; set +e ; return 1 ; }
+		readDir="$( LocalToolsManagerSubsystemDir "$1" )"
+		[ -f "$readDir/project.inf" ] || readDir="$MDLT_ORIGIN/myx/myx.distro-$1"
+		readRepo="$( LC_ALL=C grep -m1 'source-prepare-pull:repo:' "$readDir/project.inf" 2> /dev/null )" || readRepo=""
+		if [ -n "$readRepo" ] ; then
+			## <path>:<branch>:<url>, the url the rest after the first two colons; the url itself may hold colons
+			readRepo="${readRepo#*repo:}" ; readRepo="${readRepo#*:}" ; readRepo="${readRepo#*:}"
+			readRepo="${readRepo%%[[:space:]]*}"
+		fi
+		readReadme="$readDir/README.md"
+		printf 'repository\t%s\n' "${readRepo:--}"
+		printf 'readme\t%s\n' "$readReadme"
+		[ -f "$readReadme" ] || return 0
+		cat "$readReadme" || { set +e ; return 1 ; }
+		return 0
+	;;
+
 	## One command of a subsystem, run with the output it writes, the exit status its own: install a toolset that is missing, uninstall
 	## one that is installed and is not the console's own, update one that is installed (its install again, which pulls its copy), or update
 	## them all with the local tools (`update all`: Update Local Tools, --upgrade-installed-tools). A command its row does not offer is refused and nothing is run.
