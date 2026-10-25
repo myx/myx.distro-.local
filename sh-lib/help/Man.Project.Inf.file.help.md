@@ -209,19 +209,19 @@ feature flags—that all requiring projects automatically inherit.
 	`:something` with no further `/` in that segment, retry the match against the substring
 	before the last colon.
 
-	Real example (`ndm/infra/accounts-ndm/group.ndm-admins/project.inf`):
+	Real example (`prv/infra/accounts-prv/group.prv-admins/project.inf`):
 
 	```
-	Name: group.ndm-admins
+	Name: group.prv-admins
 	Requires: \
-		accounts/user.ndm-eliseev:admins \
-		accounts/user.ndm-zerobug \
+		accounts/user.prv-eliseeff:admins \
+		accounts/user.prv-nullbug \
 		...
 	```
 
-	`accounts/user.ndm-eliseev:admins` matches `user.ndm-eliseev/project.inf`'s
-	`Provides: accounts/user.ndm-eliseev ...` — the `:admins` suffix is dropped for matching
-	purposes, it is not part of the identity. (`accounts/user.ndm-zerobug`, with no colon,
+	`accounts/user.prv-eliseeff:admins` matches `user.prv-eliseeff/project.inf`'s
+	`Provides: accounts/user.prv-eliseeff ...` — the `:admins` suffix is dropped for matching
+	purposes, it is not part of the identity. (`accounts/user.prv-nullbug`, with no colon,
 	matches directly with no fallback needed.)
 
 	This is distinct from *structured* Provides-only tokens that legitimately contain multiple

@@ -10,7 +10,7 @@
 ## ---- the scopes: `Scope Settings` ----
 
 ## It is a plugin mounted on `Settings`, and its operations are `--manager-scope-*` (LocalTools.ManagerScope.include of `.local`): the screen draws what they print
-## and takes the keys, and writes no file. A scope is a folder, named as its subsystem names it (`Agents: client-ndm`, `Remote: mdci01.ndm9.xyz`,
+## and takes the keys, and writes no file. A scope is a folder, named as its subsystem names it (`Agents: client-example`, `Remote: mdci01.example.org`,
 ## `Common: user-myx`), and the variables of the scope are its rows. The left window shows a scope as a table of its variables and their values, and one
 ## variable as that table's one row. Enter edits a variable, `d` takes it out, with a confirmation; a scope is cleared of every variable (`c`) and, where
 ## its subsystem has many, deleted (`D`), each behind the word typed whole. A credential shows in its one form and is edited in the form of a credential,

@@ -226,7 +226,7 @@ LocalToolsManagerScopeMissingRows(){ ## the keys the file holds, one a line
 	done <<< "$scopeKnown"
 }
 
-## The `scope` row of the scope found: its id, its label as the console shows a folder (`Agents: client-ndm`), how many keys it
+## The `scope` row of the scope found: its id, its label as the console shows a folder (`Agents: client-example`), how many keys it
 ## holds, whether it may be cleared and whether it may be deleted, and its file.
 LocalToolsManagerScopeRow(){
 	local rowCount rowText
