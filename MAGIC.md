@@ -9,7 +9,9 @@ Team-owned notes for the magic-* team. This package installs the others, so what
 - `sh-scripts/workspace-install.sh` is the stand-alone bootstrap. It reads the workspace config file and then calls `DistroLocalTools.fn.sh`.
 - `sh-lib/LocalTools.Config.include` handles every `--*-config-option` scope, including the remote profiles (`remote/static/<name>.remote.env`) and the agents scope (`.local/.agents/`).
 - `sh-lib/LocalTools.Make*.include` hold the `--make-*` operations. `sh-lib/console-.local-bashrc.rc` is this package's console.
+- `sh-lib/manager/LocalTools.ManagerInterface.include` is the one declaration of the console interface settings of the manager screen — its style (`MDLT_MANAGER_STYLE`), its mouse and the spacers of its lists — which the agents settings digest expands into its `interface` subject.
 - `sh-lib/help/Man.Project.Inf.file.help.md` is the `project.inf` grammar for the whole family.
+- `sh-lib/manager/LocalManagerScreen.*.py` are parts of the agents manager screen (`myx.distro-agents`), which runs them in its own namespace (`LOCAL_PARTS` in `AgentsManagerScreen.py`). `LocalManagerScreen.Features.py` draws `Optional Features` (in `Installed Subsystems`) and `Local AI` (in `This Machine`). It decides nothing: every row and action is a `--manager-feature-*` operation of `myx.distro-agents`.
 
 ## Installed copies are distributions
 

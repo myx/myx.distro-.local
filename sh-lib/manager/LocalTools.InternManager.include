@@ -50,21 +50,21 @@ case "$1" in
 			return 1
 		fi
 
-		## THE SPACERS OF THIS START: MDLT_CONSOLE_SPACERS, a console setting of .local, the
+		## THE SPACERS OF THIS START: MDLT_MANAGER_SPACERS, a console setting of .local, the
 		## user's own, beside MDLT_CONSOLE_HISTORY. `disable` turns off the blank lines between
 		## the groups of the screen's lists. The one the environment names first, which the
 		## screen reads itself; else the one the user saved, handed on in the screen's
 		## environment alone.
-		if [ -z "${MDLT_CONSOLE_SPACERS:-}" ] ; then
-			managerSpacers="$( set -- --.local-config-option-select-default MDLT_CONSOLE_SPACERS "" ; . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Config.include" 2> /dev/null < /dev/null )" || managerSpacers=""
-			[ -z "$managerSpacers" ] || local -x MDLT_CONSOLE_SPACERS="$managerSpacers"
+		if [ -z "${MDLT_MANAGER_SPACERS:-}" ] ; then
+			managerSpacers="$( set -- --.local-config-option-select-default MDLT_MANAGER_SPACERS "" ; . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Config.include" 2> /dev/null < /dev/null )" || managerSpacers=""
+			[ -z "$managerSpacers" ] || local -x MDLT_MANAGER_SPACERS="$managerSpacers"
 		fi
 
-		## THE MOUSE OF THIS START: MDLT_CONSOLE_MOUSE, beside the spacers and read the same way,
+		## THE MOUSE OF THIS START: MDLT_MANAGER_MOUSE, beside the spacers and read the same way,
 		## a console setting of .local. `disable` leaves the mouse to the terminal.
-		if [ -z "${MDLT_CONSOLE_MOUSE:-}" ] ; then
-			managerMouse="$( set -- --.local-config-option-select-default MDLT_CONSOLE_MOUSE "" ; . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Config.include" 2> /dev/null < /dev/null )" || managerMouse=""
-			[ -z "$managerMouse" ] || local -x MDLT_CONSOLE_MOUSE="$managerMouse"
+		if [ -z "${MDLT_MANAGER_MOUSE:-}" ] ; then
+			managerMouse="$( set -- --.local-config-option-select-default MDLT_MANAGER_MOUSE "" ; . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Config.include" 2> /dev/null < /dev/null )" || managerMouse=""
+			[ -z "$managerMouse" ] || local -x MDLT_MANAGER_MOUSE="$managerMouse"
 		fi
 
 		set -- --workspace "$MMDAPP" --tools "$MDLT_ORIGIN/myx/$managerConsolePackage/sh-scripts/$MDSC_CMD.fn.sh" --app "$managerConsoleApp"

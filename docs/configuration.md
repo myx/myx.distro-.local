@@ -45,8 +45,9 @@ Both `--system-config-option` and `--custom-config-option` take one of:
 	- `local-machine-home` — per-workspace file in `$HOME`, e.g. `~/.bash_history_<workspace>`.
 	- `bash-default` — reset to Bash's standard `~/.bash_history`.
 	- `user-default` — leave the user's current setting untouched.
-- `MDLT_CONSOLE_SPACERS` — the blank lines between the groups of the agents console screen's lists. `disable` turns them off. Default: on.
-- `MDLT_CONSOLE_MOUSE` — the mouse of the agents console screen. `disable` leaves the mouse to the terminal, so that its own selection copies text. Default: on.
+- `MDLT_MANAGER_STYLE` — the interface style of the manager screen, `<style>-<colours>`. Default `tv-system`. Declared with the mouse and the spacers in `sh-lib/manager/LocalTools.ManagerInterface.include`.
+- `MDLT_MANAGER_SPACERS` — the blank lines between the groups of the agents console screen's lists. `disable` turns them off. Default: on.
+- `MDLT_MANAGER_MOUSE` — the mouse of the agents console screen. `disable` leaves the mouse to the terminal, so that its own selection copies text. Default: on.
 - `MDLT_ACTIONS_SH_WRAP` — command used to wrap every action run, for remote runners or logging.
 
 

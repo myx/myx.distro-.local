@@ -41,15 +41,40 @@ LocalToolsPlacesLegacyFile(){
 	printf '%s\n' "${HOME:-}/.agents/magic-team/known-workspaces.registry"
 }
 
-## The machine's skillset in HOME: the skills folder the clients read there, $HOME/.claude/skills,
-## or $HOME/.agents/skills on a machine that holds only that one, so nobody has to know which.
-## An entry there is a link the member install made, or a real folder: a skill that lives on
-## this machine only. By builtins only.
+## The home that a place's `~` resolves under: the home of the account that owns the workspace,
+## when the workspace lies in it, since a member's console runs as the member while the rig
+## keeps its skillset and registries in the account's home (mdci-console enters root as the
+## account and a group member as itself); the caller's own home otherwise. MDCI_HOME names
+## that home first on a rig, else its passwd entry.
+LocalToolsPlacesHome(){ ## -- prints the home
+	local placesHome="${HOME:-}" placesOwner="" placesOwnerHome=""
+	if stat -c '%U' "${MMDAPP:-.}" > /dev/null 2>&1 ; then
+		placesOwner="$( stat -c '%U' "${MMDAPP:-.}" 2> /dev/null )" || placesOwner=""
+	elif stat -f '%Su' "${MMDAPP:-.}" > /dev/null 2>&1 ; then
+		placesOwner="$( stat -f '%Su' "${MMDAPP:-.}" 2> /dev/null )" || placesOwner=""
+	fi
+	if [ -n "$placesOwner" ] ; then
+		placesOwnerHome="${MDCI_HOME:-}"
+		[ -n "$placesOwnerHome" ] || placesOwnerHome="$( getent passwd "$placesOwner" 2> /dev/null | LC_ALL=C cut -d: -f6 )"
+		if [ -n "$placesOwnerHome" ] ; then
+			placesOwnerHome="${placesOwnerHome%/}"
+			case "${MMDAPP:-}/" in "$placesOwnerHome"/*) placesHome="$placesOwnerHome" ;; esac
+		fi
+	fi
+	printf '%s\n' "${placesHome%/}"
+}
+
+## The machine's skillset in the places' home: the skills folder the clients read there,
+## .claude/skills, or .agents/skills on a machine that holds only that one, so nobody has to
+## know which. An entry there is a link the member install made, or a real folder: a skill that
+## lives on this machine only. By builtins only.
 LocalToolsPlacesHomeSkills(){ ## -- sets localPlacesHomeSkills
+	local placesHome=""
 	localPlacesHomeSkills=""
-	[ -n "${HOME:-}" ] || return 1
-	localPlacesHomeSkills="${HOME%/}/.claude/skills"
-	[ -d "$localPlacesHomeSkills" ] || [ ! -d "${HOME%/}/.agents/skills" ] || localPlacesHomeSkills="${HOME%/}/.agents/skills"
+	placesHome="$( LocalToolsPlacesHome )" || placesHome=""
+	[ -n "$placesHome" ] || return 1
+	localPlacesHomeSkills="$placesHome/.claude/skills"
+	[ -d "$localPlacesHomeSkills" ] || [ ! -d "$placesHome/.agents/skills" ] || localPlacesHomeSkills="$placesHome/.agents/skills"
 }
 
 ## THE BUILT-IN PLACES: their names, spelled here and nowhere else.
@@ -110,14 +135,14 @@ LocalToolsPlacesNameValid(){ ## name
 	return 0
 }
 
-## A path made absolute: absolute as it is, `~` and `~/...` under HOME, anything else
-## relative to the workspace. Trailing slashes are dropped.
+## A path made absolute: absolute as it is, `~` and `~/...` under the places' home, anything
+## else relative to the workspace. Trailing slashes are dropped.
 LocalToolsPlacesPathResolve(){ ## workspace, path
 	local resolveWs="${1%/}" resolvePath="$2"
 	case "$resolvePath" in
 		/*) ;;
-		'~') resolvePath="${HOME%/}" ;;
-		'~/'*) resolvePath="${HOME%/}/${resolvePath#'~/'}" ;;
+		'~') resolvePath="$( LocalToolsPlacesHome )" ;;
+		'~/'*) resolvePath="$( LocalToolsPlacesHome )/${resolvePath#'~/'}" ;;
 		.) resolvePath="$resolveWs" ;;
 		./*) resolvePath="$resolveWs/${resolvePath#./}" ;;
 		*) resolvePath="$resolveWs/$resolvePath" ;;

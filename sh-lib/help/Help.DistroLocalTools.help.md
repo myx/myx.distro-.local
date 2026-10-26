@@ -122,11 +122,18 @@
 					HISTSIZE, HISTFILESIZE and histappend to achieve the desired isolation or 
 					sharing.
 
-				MDLT_CONSOLE_SPACERS
+				MDLT_MANAGER_STYLE
+					The interface style of the manager screen: the style and its colours,
+					`<style>-<colours>`: nu-system, nu-blue, nu-gray, tv-system, tv-blue,
+					tv-gray, bw-system, bw-dark or bw-light. `tv-system` where nothing
+					names one. It is declared, with MDLT_MANAGER_MOUSE and
+					MDLT_MANAGER_SPACERS, in sh-lib/manager/LocalTools.ManagerInterface.include.
+
+				MDLT_MANAGER_SPACERS
 					The blank lines between the groups of the agents console screen's lists.
 					`disable` turns them off. The default is on.
 
-				MDLT_CONSOLE_MOUSE
+				MDLT_MANAGER_MOUSE
 					The mouse of the agents console screen. `disable` leaves the mouse to the
 					terminal, so that its own selection copies text. The default is on.
 
