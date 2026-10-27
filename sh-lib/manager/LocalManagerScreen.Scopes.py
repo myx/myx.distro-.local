@@ -172,18 +172,30 @@ def askScopeEdit(state, row):
 
 ## The form of one key of a scope, `held` as the scope's row gives it (a key of Member Settings has it made by askScopeLine): the form of its kind where the digest
 ## declares what the key takes (askScopeDeclared); else its text form, or the form of a credential.
+## THE FORMS OF THE KINDS OF A VALUE are a registry (kind -> a function of the key as the scope's row gives it and of what it takes, giving the form or None): the kinds every scope has
+## are registered here, and a subsystem registers the kind of its own where it is loaded (the agents' `tier`, AgentsManagerScreen.CliPresets.py), so this part knows no subsystem's kind.
+## The dictionary is made by whichever part comes first and shared by the others.
+SCOPE_KIND_FORMS = globals().setdefault("SCOPE_KIND_FORMS", {})
+
+
+def scopeChoiceForm(held, takes):
+    choices = [(part.partition("=")[0], unspaced(part.partition("=")[2]) or part.partition("=")[0]) for part in takes.split(",") if part]
+    return {"kind": "choice", "choices": choices, "range": None} if choices else None
+
+
+def scopeNumberForm(held, takes):
+    low, dots, high = takes.partition("..")
+    return {"kind": "number", "choices": [], "range": (low, high)} if ".." in takes and low.isdigit() and high.isdigit() else None
+
+
+SCOPE_KIND_FORMS.setdefault("choice", scopeChoiceForm)
+SCOPE_KIND_FORMS.setdefault("number", scopeNumberForm)
+
+
 def scopeKindDeclared(held):
     kind, takes = held.get("kind", "-"), absent(held.get("takes", "-"))
-    if kind == "choice" and takes:
-        choices = [(part.partition("=")[0], unspaced(part.partition("=")[2]) or part.partition("=")[0]) for part in takes.split(",") if part]
-        return {"kind": "choice", "choices": choices, "range": None} if choices else None
-    if kind == "tier" and "/" in takes:
-        presets, slash, efforts = takes.partition("/")
-        return {"kind": "tier", "choices": [(part, part) for part in presets.split(",") if part], "efforts": [part for part in efforts.split(",") if part], "range": None}
-    if kind == "number" and ".." in takes:
-        low, dots, high = takes.partition("..")
-        return {"kind": "number", "choices": [], "range": (low, high)} if low.isdigit() and high.isdigit() else None
-    return None
+    form = SCOPE_KIND_FORMS.get(kind)
+    return form(held, takes) if form and takes else None
 
 
 def askScopeKey(state, held):

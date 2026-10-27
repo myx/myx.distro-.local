@@ -303,6 +303,107 @@ def featureUseAnswer(text, about, width):
 ACTION_ANSWERS["feature-use"] = featureUseAnswer
 
 
+## ---- the agreed set of models: the plan first, one command ----
+
+## `--manager-feature-models [--profile <p>] [--all]` prints the plan without `--yes` (the `set`, `model` and `total` rows) and, with it, installs every part of the set that is not
+## there: the dialog reads the plan for the choices made, shows it, and runs the same operation with `--yes` in the output dialog only when the plan shown is for the choices that stand,
+## and is not blocked (`total ... blocked yes`).
+FEATURE_SET_READ = "full:feature-set"
+FEATURE_SET_PROFILES = (("", "the profile of this host"), ("shared-cpu", "shared-cpu"), ("big-cpu", "big-cpu"), ("gpu", "gpu"))
+FEATURE_SET_ALL = ("all", "all the chat models of the list, in place of the one of the profile")
+DIALOGS["feature-set"] = {"title": "Install the agreed set", "feeds": "featureset", "reads": ("full:{kind}",), "first": "profile",
+                          "controls": ({"name": "about", "kind": "text"},
+                                       {"name": "profile", "kind": "radios", "label": "Profile"},
+                                       {"name": "all", "kind": "checks", "label": "Models"}),
+                          "buttons": (("run", "Install"), ("plan", "Show the plan"), ("cancel", "Cancel"))}
+READING_DIALOGS = READING_DIALOGS + ("feature-set",)
+
+
+## The words of the operation for a choice of the profile ("" for the host's own) and of all the chat models.
+def featureSetWords(profile, everything):
+    return ["--manager-feature-models"] + (["--profile", profile] if profile else []) + (["--all"] if everything else [])
+
+
+## What `--manager-feature-models` printed without `--yes`, as lines for the dialog and whether it is blocked: the set and its profile, each part with its state and what it fetches,
+## and the total to fetch against the free space.
+def featureSetLines(text):
+    lines, blocked, seen = [], False, False
+    for printed in text.split("\n"):
+        fields = printed.split("\t")
+        if fields[0] == "set" and len(fields) >= 4:
+            lines.append(("set", "%s parts, by %s" % (fields[2], "the profile %s" % fields[1] if fields[3] == "profile" else "all the chat models")))
+        elif fields[0] == "model" and len(fields) >= 7:
+            lines.append((fields[3], "%s, %s, %s%s" % (fields[2], featureStateWords(fields[4]), shortBytes(fields[5]) if fields[5] != "-" else "size not said", " (default)" if fields[6] == "yes" else "")))
+        elif fields[0] == "total" and len(fields) >= 4:
+            seen = True
+            blocked = fields[3] == "yes"
+            lines.append(("to fetch", shortBytes(fields[1])))
+            lines.append(("free space", shortBytes(fields[2])))
+            lines.append(("blocked", "yes: it does not fit, nothing can be installed" if blocked else "no"))
+    return lines, blocked, seen
+
+
+## Opens the dialog on the host's own profile, and asks for the plan of that choice.
+def askFeatureSet(state, row):
+    state.answer = None
+    words = featureSetWords("", False)
+    state.plans.pop(FEATURE_SET_READ, None)
+    state.forced.add(FEATURE_SET_READ)
+    openDialog(state, "feature-set", {"about": {"lines": ["The plan is being read; nothing is installed by reading it."]},
+                                      "profile": {"options": list(FEATURE_SET_PROFILES), "value": ""}, "all": {"options": [FEATURE_SET_ALL]}},
+               {"target": {"kind": "feature-set", "id": "set", "level": "", "read": words}, "plan": None, "asked": ("", False), "viewKey": viewKeyOf(state)}, "Install the agreed set")
+    return ""
+
+
+## At every turn while the dialog is open: once the plan for the choice asked has answered, it stands in the dialog, or why it could not be made.
+def fillFeatureSet(state, dialog):
+    about = dialog["about"]
+    if about["plan"] is not None:
+        return
+    plan = state.plans.get(FEATURE_SET_READ)
+    if plan is None or plan["words"] != readWords(READS[FEATURE_SET_READ], state, {"_operation": about["target"]["read"]}, False):
+        return
+    state.plans.pop(FEATURE_SET_READ, None)
+    lines, blocked, seen = featureSetLines(plan["rows"])
+    if not seen:
+        about["plan"] = {"blocked": True, "choice": about["asked"]}
+        lines = ["No plan could be made: %s" % (plan["error"] or "the operation printed no total")]
+    else:
+        about["plan"] = {"blocked": blocked, "choice": about["asked"]}
+        if plan["error"] and blocked:
+            lines.append("the operation says: %s" % plan["error"])
+        lines.append("Install runs it, in a window that follows what it writes. Show the plan asks again for other choices." if not blocked else "Blocked: Install does nothing.")
+    dialogControl(dialog, "about")["lines"] = lines
+
+
+## Show the plan asks again for the choices that stand; Install runs the plan shown, only if it is for those choices and is not blocked.
+def submitFeatureSet(state, dialog, button):
+    about = dialog["about"]
+    choice = (dialogValue(dialog, "profile"), "all" in dialogValue(dialog, "all"))
+    if button == "plan":
+        about["target"]["read"] = featureSetWords(*choice)
+        about["plan"], about["asked"] = None, choice
+        state.plans.pop(FEATURE_SET_READ, None)
+        state.forced.add(FEATURE_SET_READ)
+        dialogControl(dialog, "about")["lines"] = ["The plan is being read; nothing is installed by reading it."]
+        return "the plan for these choices is being read"
+    if about["plan"] is None:
+        return "the plan is being read: Install waits for it"
+    if about["plan"]["choice"] != choice:
+        return "the plan shown is for other choices: press Show the plan"
+    if about["plan"]["blocked"]:
+        return "the plan is blocked: nothing can be installed"
+    closeDialog(state)
+    runFollowed(state, "Install the agreed set", featureSetWords(*choice) + ["--yes"])
+    return None
+
+
+DIALOG_HANDLERS["feature-set"] = submitFeatureSet
+DIALOG_FILLS["feature-set"] = fillFeatureSet
+ACTION_HANDLERS["featureset"] = askFeatureSet
+ACTION_FITS["featureset"] = lambda state, row: row is not None
+
+
 ## ---- the plugins ----
 
 registerPlugin({
@@ -316,11 +417,16 @@ registerPlugin({
         "list:features": {"operation": ["--manager-feature-list"], "rows": "features", "once": True},
         ## The plan of one command of a part, for the dialog that asks first: read once, when that dialog is open.
         FEATURE_PLAN_READ: {"operation": ["--manager-feature-part"], "rows": "feature-plan", "kind": "plan", "demand": True},
+        FEATURE_SET_READ: {"operation": ["--manager-feature-models"], "rows": "feature-plan", "kind": "plan", "demand": True},
     },
     "commands": (
         {"name": "feature", "keys": ("ENTER",), "menu": ("view", 3), "label": "R~u~n the command", "status": "Run",
          "views": ("features", "local-ai"), "for": "a command of a part", "on": ("features:feature-command", "local-ai:feature-command"), "only": True, "enters": True, "says": "run",
          "does": ("action", "feature")},
+        {"name": "featureset", "keys": ("i",), "menu": ("view", 3), "label": "~I~nstall the agreed set", "status": "Install", "window": "list",
+         "views": ("features", "local-ai"), "for": "the agreed set of models", "on": ("features:feature", "features:feature-part", "features:feature-command", "features:up",
+                                                                                    "local-ai:feature", "local-ai:feature-part", "local-ai:feature-command", "local-ai:feature-use", "local-ai:up"),
+         "only": True, "says": "install", "does": ("action", "featureset")},
     ),
 })
 

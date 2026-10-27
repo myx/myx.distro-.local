@@ -133,11 +133,13 @@ def placeTable(rows):
     places = [row["place"] for row in rows]
     words = [[column[1](place) or "-" for column in PLACE_COLUMNS] for place in places]
     marks = [MARKS["on"] if place["here"] == PLACES["here"] else "" for place in places]
-    looks = [[None, DIM if place["kind"] == "directory" else None, None, None, None] for place in places]
-    table = {"heads": [column[0] for column in PLACE_COLUMNS], "kinds": None, "cut": TABLE_CAP, "looks": looks}
-    for row, mark, line in zip(rows, marks, words):
+    looks = [[None, FOLDER if place["kind"] == "directory" else None, None, None, None] for place in places]
+    table = {"heads": [column[0] for column in PLACE_COLUMNS], "kinds": None, "cut": TABLE_CAP}
+    for row, mark, line, cellLooks in zip(rows, marks, words, looks):
         row["table"] = table
         row["cells"] = [mark] + line
+        ## the looks of its cells, which the list draws its table by (Draw.py: tableLooks): a directory's type in the colour of a folder
+        row["tableLooks"] = cellLooks
 
 
 ## What `--manager-place-list` printed, as rows: `place` rows of TAB-separated fields, in
