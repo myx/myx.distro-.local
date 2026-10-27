@@ -5,8 +5,10 @@
 ## Workspace config file
 
 The workspace config is a text file of directives, one per line. The first column
-is the subsystem (`source`, `deploy`, `remote`, `system` or `.local`); the rest is
-that subsystem's directive:
+is the subsystem (`source`, `remote`, `deploy`, `agents` or `.local`); the rest is
+that subsystem's directive. The installer installs that subsystem's toolset first,
+where the workspace does not have it yet, then runs the directives. Any other first
+column is refused there, so `system` is not one.
 
 	# Repository roots for source projects
 	source root lib
