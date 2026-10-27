@@ -254,6 +254,11 @@ DistroLocalTools(){
 				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Config.include"
 				return 0
 			;;
+			--manager)
+				## The console's manager screen: the shared start of the sibling consoles (LocalTools.InternManager.include).
+				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.InternManager.include"
+				return $?
+			;;
 			--make-*)
 				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Make.include"
 				return $?
