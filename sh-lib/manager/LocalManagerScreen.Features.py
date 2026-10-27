@@ -303,6 +303,76 @@ def featureUseAnswer(text, about, width):
 ACTION_ANSWERS["feature-use"] = featureUseAnswer
 
 
+## ---- the form of a `local` preset: its model is chosen from the chat models installed here (sketch 13.4) ----
+
+## The model list is what `--manager-feature-list` prints: the parts that are installed and that the tooling says are chat models (`part=chat`). The preset is made by
+## `--manager-feature-preset <model> [--name <preset>]`, the same operation the use of a model on This Machine asks.
+FEATURE_MODELS_READ = "full:feature-models"
+CLI_FORMS = CLI_FORMS + (("local", "a local preset: one of the chat models installed on this machine"),)
+DIALOGS["preset-local"] = {"title": "New local preset", "feeds": "featureuse", "reads": ("full:{kind}",), "first": "model",
+                           "controls": ({"name": "about", "kind": "text"},
+                                        {"name": "model", "kind": "list", "label": "Model", "required": "nothing is made: no installed model is chosen"},
+                                        {"name": "name", "kind": "input", "label": "Name of the preset, or none for `local`"}),
+                           "buttons": (("make", "Make"), ("cancel", "Cancel"))}
+READING_DIALOGS = READING_DIALOGS + ("preset-local",)
+
+
+## The installed chat models of the list `--manager-feature-list` printed, in its order.
+def installedChatModels(text):
+    models = []
+    for printed in text.split("\n"):
+        fields = printed.split("\t")
+        if fields[0] != "part" or len(fields) <= len(FEATURE_FIELDS):
+            continue
+        held = dict(zip(FEATURE_FIELDS, fields[1:]))
+        if held["state"] == "installed" and featureDetail(held, "part") == "chat":
+            models.append(held["part"])
+    return models
+
+
+def openLocalPreset(state):
+    state.answer = None
+    state.plans.pop(FEATURE_MODELS_READ, None)
+    state.forced.add(FEATURE_MODELS_READ)
+    openDialog(state, "preset-local", {"about": {"lines": ["The chat models installed on this machine are being read."]},
+                                       "model": {"options": [("", "reading the installed models")], "value": ""}},
+               {"target": {"kind": "feature-models", "id": "models", "level": "", "read": ["--manager-feature-list"]}, "filled": False, "viewKey": viewKeyOf(state)}, "New local preset")
+    return ""
+
+
+## At every turn while the dialog is open: once the list has come, the installed chat models stand in the select, none chosen, or why there are none.
+def fillLocalPreset(state, dialog):
+    about = dialog["about"]
+    if about["filled"]:
+        return
+    plan = state.plans.get(FEATURE_MODELS_READ)
+    if plan is None or plan["words"] != readWords(READS[FEATURE_MODELS_READ], state, {"_operation": about["target"]["read"]}, False):
+        return
+    state.plans.pop(FEATURE_MODELS_READ, None)
+    about["filled"] = True
+    models = installedChatModels(plan["rows"])
+    control = dialogControl(dialog, "model")
+    control["options"] = [SLOT_CHOOSE_FIRST] + [(one, one) for one in models]
+    control["value"], control["at"] = "", 0
+    dialogControl(dialog, "about")["lines"] = (["One of the chat models installed on this machine; the preset speaks to it through the `local` CLI service."] if models else
+                                               ["No chat model is installed: %s" % (plan["error"] or "install one in Optional Features first")])
+
+
+def submitLocalPreset(state, dialog, button):
+    model = dialogValue(dialog, "model")
+    name = dialogValue(dialog, "name").strip()
+    askCall(state, "feature-use", model, callWords("feature-preset", model) + (["--name", name] if name else []), None,
+            {"viewKey": dialog["about"]["viewKey"], "use": "preset", "model": model})
+    state.notice = "preset asked of the tooling: %s" % model
+    state.noticeOf = None
+    return None
+
+
+DIALOG_HANDLERS["preset-local"] = submitLocalPreset
+DIALOG_FILLS["preset-local"] = fillLocalPreset
+CLI_FORM_OPENERS["local"] = openLocalPreset
+
+
 ## ---- the agreed set of models: the plan first, one command ----
 
 ## `--manager-feature-models [--profile <p>] [--all]` prints the plan without `--yes` (the `set`, `model` and `total` rows) and, with it, installs every part of the set that is not
@@ -418,6 +488,7 @@ registerPlugin({
         ## The plan of one command of a part, for the dialog that asks first: read once, when that dialog is open.
         FEATURE_PLAN_READ: {"operation": ["--manager-feature-part"], "rows": "feature-plan", "kind": "plan", "demand": True},
         FEATURE_SET_READ: {"operation": ["--manager-feature-models"], "rows": "feature-plan", "kind": "plan", "demand": True},
+        FEATURE_MODELS_READ: {"operation": ["--manager-feature-list"], "rows": "feature-plan", "kind": "plan", "demand": True},
     },
     "commands": (
         {"name": "feature", "keys": ("ENTER",), "menu": ("view", 3), "label": "R~u~n the command", "status": "Run",
