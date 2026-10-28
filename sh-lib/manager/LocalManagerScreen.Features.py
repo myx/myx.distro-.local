@@ -148,7 +148,7 @@ def featuresFocus(state, row):
 DIALOGS["feature-part"] = {"title": "Run", "feeds": "feature", "reads": ("full:{kind}",),
                            "controls": ({"name": "about", "kind": "text"},),
                            "buttons": (("run", "Run"), ("cancel", "Cancel"))}
-READING_DIALOGS = READING_DIALOGS + ("feature-part",)
+readingDialogs("feature-part")
 
 
 ## The words of the plan read of a command, as READS would make them: what the dialog is waiting for.
@@ -308,13 +308,12 @@ ACTION_ANSWERS["feature-use"] = featureUseAnswer
 ## The model list is what `--manager-feature-list` prints: the parts that are installed and that the tooling says are chat models (`part=chat`). The preset is made by
 ## `--manager-feature-preset <model> [--name <preset>]`, the same operation the use of a model on This Machine asks.
 FEATURE_MODELS_READ = "full:feature-models"
-CLI_FORMS = CLI_FORMS + (("local", "a local preset: one of the chat models installed on this machine"),)
 DIALOGS["preset-local"] = {"title": "New local preset", "feeds": "featureuse", "reads": ("full:{kind}",), "first": "model",
                            "controls": ({"name": "about", "kind": "text"},
                                         {"name": "model", "kind": "list", "label": "Model", "required": "nothing is made: no installed model is chosen"},
                                         {"name": "name", "kind": "input", "label": "Name of the preset, or none for `local`"}),
                            "buttons": (("make", "Make"), ("cancel", "Cancel"))}
-READING_DIALOGS = READING_DIALOGS + ("preset-local",)
+readingDialogs("preset-local")
 
 
 ## The installed chat models of the list `--manager-feature-list` printed, in its order.
@@ -370,7 +369,7 @@ def submitLocalPreset(state, dialog, button):
 
 DIALOG_HANDLERS["preset-local"] = submitLocalPreset
 DIALOG_FILLS["preset-local"] = fillLocalPreset
-CLI_FORM_OPENERS["local"] = openLocalPreset
+registerCliForm("local", "a local preset: one of the chat models installed on this machine", openLocalPreset)
 
 
 ## ---- the agreed set of models: the plan first, one command ----
@@ -386,7 +385,7 @@ DIALOGS["feature-set"] = {"title": "Install the agreed set", "feeds": "featurese
                                        {"name": "profile", "kind": "radios", "label": "Profile"},
                                        {"name": "all", "kind": "checks", "label": "Models"}),
                           "buttons": (("run", "Install"), ("plan", "Show the plan"), ("cancel", "Cancel"))}
-READING_DIALOGS = READING_DIALOGS + ("feature-set",)
+readingDialogs("feature-set")
 
 
 ## The words of the operation for a choice of the profile ("" for the host's own) and of all the chat models.

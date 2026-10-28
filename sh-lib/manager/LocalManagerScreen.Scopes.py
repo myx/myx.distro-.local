@@ -60,7 +60,7 @@ DIALOGS["scope-add-scope"] = {"title": "Add a scope", "feeds": "scopeaddscope", 
                               "controls": ({"name": "about", "kind": "text"},
                                            {"name": "id", "kind": "input", "label": "Its id, <subsystem>:<name>", "required": "nothing is made: the scope has no id yet"}),
                               "buttons": (("ok", "Make"), ("cancel", "Cancel"))}
-READING_DIALOGS = READING_DIALOGS + ("scope-edit", "scope-credential")
+readingDialogs("scope-edit", "scope-credential")
 
 CALLS["scope-set"] = ["--manager-scope-set", "{id}"]
 CALLS["scope-unset"] = ["--manager-scope-unset", "{id}"]
