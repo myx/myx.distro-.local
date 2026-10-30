@@ -52,8 +52,9 @@ fi
 
 	echo "-- using embedded function" >&2
 
-	## Never hang an install on an unreachable host or a credential prompt.
-	GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-ssh} -o ConnectTimeout=${MYX_GIT_CONNECT_TIMEOUT:-15} -o BatchMode=yes"
+	## Never hang an install on an unreachable host or a credential prompt. A command the caller composed
+	## (the sync's ssh wrapper script) is kept as given: options appended after a script break git's ssh.
+	[ -n "${GIT_SSH_COMMAND:-}" ] || GIT_SSH_COMMAND="ssh -o ConnectTimeout=${MYX_GIT_CONNECT_TIMEOUT:-15} -o BatchMode=yes"
 	GIT_HTTP_LOW_SPEED_LIMIT="${MYX_GIT_HTTP_LOW_SPEED_LIMIT:-1000}"
 	GIT_HTTP_LOW_SPEED_TIME="${MYX_GIT_HTTP_LOW_SPEED_TIME:-30}"
 	export GIT_SSH_COMMAND GIT_HTTP_LOW_SPEED_LIMIT GIT_HTTP_LOW_SPEED_TIME
