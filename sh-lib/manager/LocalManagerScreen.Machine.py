@@ -31,6 +31,7 @@ def machineFocus(state, row):
 
 registerPlugin({
     "name": "machine",
+    "apps": ("agents",),
     "root": {"id": "machine", "label": "This Machine", "go": "Th~i~s Machine", "group": "places"},
     "focus": {"machine": "machineFocus"},
     "summaries": {"machine": {"lines": "machineSummary"}},

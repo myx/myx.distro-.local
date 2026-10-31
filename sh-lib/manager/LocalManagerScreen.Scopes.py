@@ -437,6 +437,7 @@ ACTION_ANSWERS["scope"] = scopeAnswer
 
 registerPlugin({
     "name": "scopes",
+    "apps": ("agents",),
     "mount": "settings",
     "root": {"id": "scopes", "label": "Scope Settings"},
     "focus": {"scopes/*": "scopeKeyFocus"},

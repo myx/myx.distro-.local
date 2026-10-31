@@ -367,6 +367,7 @@ def placeCommandsFocus(state, row):
 
 registerPlugin({
     "name": "places",
+    "apps": ("agents",),
     "root": {"id": "places", "label": "Locations (Places)", "go": "Loc~a~tions (Places)", "group": "places"},
     "focus": {"places": "placesFocus", "places/*": "placeCommandsFocus"},
     "summaries": {

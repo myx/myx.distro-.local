@@ -239,6 +239,7 @@ def dashboardGroupSummary(state, path, row, form):
 
 registerPlugin({
     "name": "dashboard",
+    "apps": ("agents", "local", "source", "deploy", "remote"),
     "root": {"id": "dashboard", "label": "Dashboard (Monitor)", "go": "~D~ashboard (Monitor)", "group": "watch"},
     "focus": {"dashboard": "dashboardFocus", "dashboard/*": "dashboardFocus"},
     "summaries": {

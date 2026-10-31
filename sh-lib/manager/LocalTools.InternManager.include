@@ -5,8 +5,10 @@
 ## LocalTools.InternManager.include -- the manager screen start shared by the four sibling
 ## consoles (F12.2): starts sh-lib/manager/AgentsManagerScreen.py of the agents package in this
 ## terminal, as the app the dispatcher names. Sourced by the `--manager` arm of a sibling's
-## dispatcher, with $MDSC_CMD its command name; the app, its package and its tools are derived
-## from it, so no sibling copies the start. The agents console keeps its own start
+## dispatcher, with $MDSC_CMD its command name; the app is derived from it, so no sibling copies
+## the start. The screen reads through the agents dispatcher, which owns every `--manager-*`
+## operation: a sibling answers none of them, so a sibling's own dispatcher would give the screen
+## nothing to draw. The agents console keeps its own start
 ## (AgentsTools.InternManager.include); this one is the siblings', one start, not four.
 ##
 ## It hands the screen the interface style of the start, and the spacers and the mouse of the
@@ -35,10 +37,18 @@ case "$1" in
 
 		set +e
 
-		local managerConsoleApp managerConsolePackage managerScreenFile managerSpacers managerMouse
+		local managerConsoleApp managerScreenFile managerSpacers managerMouse
+
+		## THE STYLE OF THIS START, read as the agents console's start reads it: the settings digest of the
+		## workspace gives the line of MDLT_MANAGER_STYLE and where its value comes from, and `user` there is
+		## the style this user saved, under that name or the one it had before. A name --style gave is already
+		## in managerStyle and is never overridden. Where the digest cannot be read, nothing is added and the
+		## screen starts in its own default.
+		if [ -z "$managerStyle" ] ; then
+			type DistroAgentsTools > /dev/null 2>&1 || . "$MDLT_ORIGIN/myx/myx.distro-agents/sh-scripts/DistroAgentsTools.fn.sh"
+			managerStyle="$( DistroAgentsTools --manager-config-digest interface 2> /dev/null < /dev/null | LC_ALL=C awk -F'\t' '$1 == "line" && $4 == "MDLT_MANAGER_STYLE" && $7 == "user" { print $6 ; exit ; }' )" || managerStyle=""
+		fi
 		managerConsoleApp="$( printf '%s' "${MDSC_CMD#Distro}" | sed 's/Tools$//' | tr '[:upper:]' '[:lower:]' )"
-		managerConsolePackage="myx.distro-$managerConsoleApp"
-		[ "$managerConsoleApp" != "local" ] || managerConsolePackage="myx.distro-.local"
 
 		managerScreenFile="$MDLT_ORIGIN/myx/myx.distro-agents/sh-lib/manager/AgentsManagerScreen.py"
 		if [ ! -r "$managerScreenFile" ] ; then
@@ -67,7 +77,7 @@ case "$1" in
 			[ -z "$managerMouse" ] || local -x MDLT_MANAGER_MOUSE="$managerMouse"
 		fi
 
-		set -- --workspace "$MMDAPP" --tools "$MDLT_ORIGIN/myx/$managerConsolePackage/sh-scripts/$MDSC_CMD.fn.sh" --app "$managerConsoleApp"
+		set -- --workspace "$MMDAPP" --tools "$MDLT_ORIGIN/myx/myx.distro-agents/sh-scripts/DistroAgentsTools.fn.sh" --app "$managerConsoleApp"
 		[ -z "$managerStyle" ] || set -- "$@" --style "$managerStyle"
 
 		## -I: nothing of the caller's own Python setup reaches the screen. -B: no bytecode is written into the source tree.

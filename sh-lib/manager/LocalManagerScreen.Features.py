@@ -477,8 +477,12 @@ ACTION_FITS["featureset"] = lambda state, row: row is not None
 
 registerPlugin({
     "name": "features",
-    "mount": "subsystems",
-    "root": {"id": "features", "label": "Optional Features"},
+    "apps": ("agents", "local"),
+    ## A root of its own, in the setup group: a user looking for an install finds it without being told where it is.
+    ## It stood under `Configuration -> Installed Subsystems`, three levels down, where the owner found no way to
+    ## install or uninstall a feature at all. What a plugin's declarations say is below its root, so moving it is
+    ## this one word and nothing else.
+    "root": {"id": "features", "label": "Optional Features", "go": "Optional ~F~eatures", "group": "setup"},
     "focus": {"features": "featuresFocus"},
     "summaries": {"features": {"lines": "featuresSummary"}},
     "reads": {
@@ -502,6 +506,7 @@ registerPlugin({
 
 registerPlugin({
     "name": "local-ai",
+    "apps": ("agents",),
     "mount": "machine",
     "root": {"id": "local-ai", "label": "Local AI"},
     "focus": {"local-ai": "featuresFocus"},

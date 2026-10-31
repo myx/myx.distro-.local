@@ -407,22 +407,28 @@ LocalToolsPlacesResolve(){ ## workspace, name
 }
 
 ## The registered place holding a path, on stdout as `name:relative` (`name:.` for the place
-## itself): the deepest one, this workspace's first among equals. A relative path is taken
-## from the current directory. rc 1, nothing printed, when no place holds it.
+## itself): the deepest one, this workspace's own first among equals. Places of other workspaces
+## that share that deepest path under different names leave it unnamed: no name is guessed.
+## A relative path is taken from the current directory. rc 1, nothing printed, when no place,
+## or no one place, holds it.
 LocalToolsPlacesOf(){ ## workspace, path
 	local ofPath="$2" ofFound
 	[ -n "$ofPath" ] || return 1
 	case "$ofPath" in /*) ;; *) ofPath="${PWD%/}/$ofPath" ;; esac
 	while [ "$ofPath" != "/" ] && [ "${ofPath%/}" != "$ofPath" ] ; do ofPath="${ofPath%/}" ; done
-	ofFound="$( LocalToolsPlacesMergedText "$1" quiet | LC_ALL=C awk -F'\t' -v want="$ofPath" '
+	ofFound="$( LocalToolsPlacesMergedText "$1" quiet | LC_ALL=C awk -F'\t' -v want="$ofPath" -v ws="${1%/}" '
 		$4 ~ /^\// {
 			if ( want == $4 ) rel = "."
 			else if ( $4 == "/" ) rel = substr( want, 2 )
 			else if ( index( want, $4 "/" ) == 1 ) rel = substr( want, length( $4 ) + 2 )
 			else next
-			if ( length( $4 ) > best ) { best = length( $4 ) ; found = $1 ":" rel ; }
+			if ( length( $4 ) > best ) { best = length( $4 ) ; found = $1 ":" rel ; name = $1 ; own = ( $5 == ws ) ; shared = 0 ; }
+			else if ( length( $4 ) == best && $1 != name && !own ) {
+				if ( $5 == ws ) { found = $1 ":" rel ; name = $1 ; own = 1 ; shared = 0 ; }
+				else shared = 1
+			}
 		}
-		END { if ( found != "" ) print found ; }
+		END { if ( found != "" && !shared ) print found ; }
 	' )"
 	[ -n "$ofFound" ] || return 1
 	printf '%s\n' "$ofFound"

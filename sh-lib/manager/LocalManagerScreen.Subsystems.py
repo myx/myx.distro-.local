@@ -184,6 +184,7 @@ ACTION_FITS["subsystem"] = lambda state, row: bool(row and row.get("subsystemCom
 
 registerPlugin({
     "name": "subsystems",
+    "apps": ("agents",),
     "mount": "configuration",
     "root": {"id": "subsystems", "label": "Installed Subsystems"},
     "focus": {"subsystems": "subsystemsFocus"},

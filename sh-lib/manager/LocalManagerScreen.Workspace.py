@@ -152,6 +152,7 @@ ACTION_FITS["golink"] = lambda state, row: bool(row and row.get("link"))
 
 registerPlugin({
     "name": "workspace",
+    "apps": ("agents",),
     "root": {"id": "workspace", "label": "Workspace (System)", "go": "~W~orkspace (System)", "group": "places"},
     "focus": {"workspace": "workspaceFocus"},
     "summaries": {"workspace": {"lines": "workspaceSummary"}},
