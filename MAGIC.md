@@ -45,3 +45,8 @@ Team-owned notes for the magic-* team. This package installs the others, so what
 - A `$( )` command substitution inherits the function context of the function that forked it. Sourcing the include inside `$( )` from within a function is therefore correct. Sourcing it inside `$( )` at a file's own top level is not.
 - The top-level case fails twice over. Bash 3.2 rejects the `local`, and a rejected `local` never performs its assignment. The lookup key is then empty, nothing matches, and the include returns the caller's default in place of the configured value.
 - Each `console-*-bashrc.rc` reads `MDLT_CONSOLE_HISTORY` from its own top level, so the read is wrapped in a function defined inside the substitution. That function is called with the arguments on the call line.
+
+## `DistroLocalTools.fn.sh` runs bare (owner, 2026-10-31)
+
+- `DistroLocalTools.fn.sh` is the installer. It must run before any context or console exists.
+- It is the one tool that does not follow the `ListDistroDeclares.fn.sh` form. Do not add the standard validator or context block to it.
