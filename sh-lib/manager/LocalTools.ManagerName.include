@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# ^^^ for syntax checking in the editor only
+
+##
+## LocalTools.ManagerName.include -- which console is this: its app and its package, from the
+## dispatcher's own command name ($MDSC_CMD, `Distro<Name>Tools`). Sourced by the manager start
+## and by the --manager-* family, so the two read one naming and neither re-spells the other's.
+##
+
+LocalToolsManagerConsoleApp(){ ## -- prints the app, one word
+	printf '%s' "${MDSC_CMD#Distro}" | sed 's/Tools$//' | tr '[:upper:]' '[:lower:]'
+}
+LocalToolsManagerConsolePackage(){ ## -- prints the package name, one word
+	local packageApp
+	packageApp="$( LocalToolsManagerConsoleApp )"
+	[ "$packageApp" != "local" ] || { printf 'myx.distro-.local' ; return 0 ; }
+	printf 'myx.distro-%s' "$packageApp"
+}

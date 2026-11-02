@@ -1,0 +1,6 @@
+## The changeable settings of myx.distro-.local, declared once, beside their labels: a setting a line,
+## its fields parted by a pipe, read by --manager-config-digest.
+## Form: subject|group|key|kind|places|default|takes.
+interface|style|MDLT_MANAGER_STYLE|choice|environment user|tv-system|nu-system=Magic - System,nu-blue=Magic - Dark/Blue,nu-gray=Magic - Light/Gray,tv-system=Turbo Vision - System,tv-blue=Turbo Vision - Dark/Blue,tv-gray=Turbo Vision - Light/Gray,bw-system=Basic B/W - System,bw-dark=Basic B/W - Dark/Blue,bw-light=Basic B/W - Light/Gray
+interface|mouse|MDLT_MANAGER_MOUSE|choice|user system||=Enabled,disable=Disabled
+interface|spacers|MDLT_MANAGER_SPACERS|choice|user system||=Enabled,disable=Disabled

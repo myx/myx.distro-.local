@@ -3,8 +3,8 @@
 ## processors, the memory, how long it has been up) and Disk Space (the volumes the workspace and the console use). Moved, not rebuilt: the panels are the Dashboard's own (their readers are
 ## `.local`'s, LocalToolsManagerDashboardMachine and LocalToolsManagerDashboardDisk, and --manager-dashboard-read prints them by their names), and the drawing is the one the Dashboard and Team Data
 ## use (blocksView, panelLines); this part only gives them a root of their own, so that they are looked at without the rest of the Dashboard.
-## A part of the manager screen of the agents console (myx.distro-agents, sh-lib/manager/AgentsManagerScreen.py), which executes it, in its own namespace, after `Workspace (System)`
-## (LOCAL_PARTS_BEFORE). It is plain text of the screen and is never run by itself. Looking only.
+## A part of the manager screen (LocalManagerScreen.py of this package, sh-lib/manager), which executes it, in its own namespace, after `Workspace (System)`
+## (the row `AgentsManagerScreen.Settings.py` of `myx.distro-agents` places both). It is plain text of the screen and is never run by itself. Looking only.
 ##
 
 ## The panels of the Dashboard that are about the machine, by their names in the list that registers them.
@@ -16,7 +16,7 @@ def parseMachineRows(readKey, level, text):
     return {level: parseBlockRows(text)}
 
 
-ROW_FORMS["machine"] = parseMachineRows
+ROW_FORMS["machine"] = {"parse": parseMachineRows}
 
 
 ## The root for the left pane while it is selected or open: the two panels as a grid, as the Dashboard draws them.
@@ -31,7 +31,7 @@ def machineFocus(state, row):
 
 registerPlugin({
     "name": "machine",
-    "apps": ("agents",),
+    "apps": ("agents", "local", "source", "deploy", "remote"),
     "root": {"id": "machine", "label": "This Machine", "go": "Th~i~s Machine", "group": "places"},
     "focus": {"machine": "machineFocus"},
     "summaries": {"machine": {"lines": "machineSummary"}},

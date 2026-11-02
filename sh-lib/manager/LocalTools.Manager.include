@@ -6,25 +6,43 @@
 ## the operations a manager screen reads and acts through, shared by source, deploy, remote and
 ## local, so the family's one screen is not copied four times. Sourced by the `--manager-*)`
 ## arm of a sibling's dispatcher, with $MDSC_CMD its command name (DistroLocalTools,
-## DistroSourceTools, ...); the app, its subsystem and its list files are derived from it. The
-## day-one scope (F12.2) is the Dashboard and the Manuals, and nothing else.
+## DistroSourceTools, ...); the app, its subsystem and its list files are derived from it.
+##
+## What this file answers is the family's own: the Dashboard, the Manuals, the Places, the Scope
+## settings, the Subsystems and the Workspace. So a core console reads and acts through its own
+## screen with no dependence on the optional agents subsystem. An operation only the agents console
+## offers is handed to that console itself, run as its own program and only where it is installed,
+## and it is never answered by loading that package here.
 ##
 ## Not member-facing. Whoever can open the console on the machine is its operator; a call from
-## inside a member's session is refused where the family is dispatched, once for every
-## operation, in the same rule the agents console holds, so no arm here asks who calls.
+## inside a member's session is refused below, once for every operation, in the same rule the
+## agents console holds, so no arm here asks who calls.
 ##
 
-## The app and its package, from the dispatcher's own command name: Distro<Name>Tools, so the
-## source console is `source`, the local one `local` (its package myx.distro-.local).
-LocalToolsManagerConsoleApp(){ ## -- prints the app, one word
-	printf '%s' "${MDSC_CMD#Distro}" | sed 's/Tools$//' | tr '[:upper:]' '[:lower:]'
-}
-LocalToolsManagerConsolePackage(){ ## -- prints the package name, one word
-	local packageApp
-	packageApp="$( LocalToolsManagerConsoleApp )"
-	[ "$packageApp" != "local" ] || { printf 'myx.distro-.local' ; return 0 ; }
-	printf 'myx.distro-%s' "$packageApp"
-}
+type LocalToolsManagerConsoleApp > /dev/null 2>&1 || . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.ManagerName.include"
+
+## A --manager-* operation is the console's own, never a member's session's. The member is read as the
+## agents console reads it (MDAT_SPAWN_AGENT, else the harness's own, else the owner of the spawn record
+## its session id names), out of what this workspace holds and with nothing of that package loaded: a
+## workspace with no agents installed holds no member's session to refuse. A person at a console, and a
+## script, name no member and are accepted.
+local managerActingMember="${MDAT_SPAWN_AGENT:-${harnessAgent:-}}" managerActingRecord
+if [ -z "$managerActingMember" ] && [ -n "${MDAT_SPAWN_SESSION_ID:-}" ] ; then
+	case "$MDAT_SPAWN_SESSION_ID" in
+		*/*|.|..) ;;
+		*)
+			for managerActingRecord in "$MMDAPP/.local/agents/spawned"/*/"$MDAT_SPAWN_SESSION_ID.spawn.md" ; do
+				[ -f "$managerActingRecord" ] || continue
+				managerActingMember="$( LC_ALL=C awk '$0 == "---" { if ( ++fm == 2 ) exit ; next ; } fm == 1 && index( $0, "owner: " ) == 1 { print substr( $0, 8 ) ; exit ; }' "$managerActingRecord" 2> /dev/null )" || managerActingMember=""
+				[ -z "$managerActingMember" ] || break
+			done
+		;;
+	esac
+fi
+if [ -n "$managerActingMember" ] ; then
+	echo "$MDSC_CMD: ${1:-}: ⛔ ERROR: this session acts as $managerActingMember, and a --manager-* operation is the console's own, never run from inside a member's session -- nothing was done: run it at the console directly, outside any member's session" >&2
+	set +e ; return 1
+fi
 
 case "$1" in
 
@@ -35,6 +53,7 @@ case "$1" in
 		local managerConsoleSubsystem managerConsoleDashboardList
 		managerConsoleSubsystem="$( LocalToolsManagerConsoleApp )"
 		managerConsoleDashboardList="$MDLT_ORIGIN/myx/$( LocalToolsManagerConsolePackage )/sh-lib/config/dashboard-panels.list"
+		[ -f "$managerConsoleDashboardList" ] || managerConsoleDashboardList=""
 		. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.ManagerDashboard.include"
 		return $?
 	;;
@@ -47,8 +66,59 @@ case "$1" in
 		return $?
 	;;
 
+	## The places of this machine: the workspaces and the directories the tooling knows by name, with
+	## the blocks this console registers for them, in sh-lib/config/place-blocks.list where it has one.
+	--manager-place-*)
+		local managerConsolePlaceList
+		managerConsolePlaceList="$MDLT_ORIGIN/myx/$( LocalToolsManagerConsolePackage )/sh-lib/config/place-blocks.list"
+		[ -f "$managerConsolePlaceList" ] || managerConsolePlaceList=""
+		. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.ManagerPlace.include"
+		return $?
+	;;
+
+	## The settings of every scope this workspace keeps, to see them, edit them and take them out, with
+	## what this console registers, in sh-lib/config/scope-settings.list where it has one.
+	--manager-scope-*)
+		local managerConsoleScopeList
+		managerConsoleScopeList="$MDLT_ORIGIN/myx/$( LocalToolsManagerConsolePackage )/sh-lib/config/scope-settings.list"
+		[ -f "$managerConsoleScopeList" ] || managerConsoleScopeList=""
+		. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.ManagerScope.include"
+		return $?
+	;;
+
+	## The subsystems of the tool family: which are installed and which are not, and installing,
+	## uninstalling or updating one. The console that asks is never uninstalled from itself.
+	--manager-subsystem-*)
+		local managerConsoleSubsystem
+		managerConsoleSubsystem="$( LocalToolsManagerConsoleApp )"
+		[ "$managerConsoleSubsystem" != local ] || managerConsoleSubsystem=".local"
+		. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.ManagerSubsystem.include"
+		return $?
+	;;
+
+	## The workspace this console runs in, as `Workspace (System)` shows it, with the blocks this console
+	## registers, in sh-lib/config/workspace-blocks.list where it has one.
+	--manager-workspace-*)
+		local managerConsoleSubsystem managerConsoleWorkspaceList
+		managerConsoleSubsystem="$( LocalToolsManagerConsoleApp )"
+		[ "$managerConsoleSubsystem" != local ] || managerConsoleSubsystem=".local"
+		managerConsoleWorkspaceList="$MDLT_ORIGIN/myx/$( LocalToolsManagerConsolePackage )/sh-lib/config/workspace-blocks.list"
+		[ -f "$managerConsoleWorkspaceList" ] || managerConsoleWorkspaceList=""
+		. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.ManagerWorkspace.include"
+		return $?
+	;;
+
+	## The settings digest the Scope Settings view reads, from what each package declares in its own
+	## sh-lib/config: settings-labels.list and settings-rows.list.
+	--manager-config-digest)
+		shift
+		. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.ManagerConfig.include"
+		LocalToolsManagerConfigDigest "$@"
+		return $?
+	;;
+
 	*)
-		echo "$MDSC_CMD: ⛔ ERROR: invalid option: $1" >&2
+		echo "$MDSC_CMD: ${1:-}: ⛔ ERROR: invalid option: the manager operations of this console are --manager-dashboard-*, --manager-manual-*, --manager-command-*, --manager-help-*, --manager-place-*, --manager-scope-*, --manager-config-digest, --manager-subsystem-* and --manager-workspace-*" >&2
 		set +e ; return 1
 	;;
 esac

@@ -260,13 +260,17 @@ DistroLocalTools(){
 				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.InternManager.include"
 				return $?
 			;;
+			--manager-*)
+				## The manager operations of the screen this console starts, answered by .local (LocalTools.Manager.include).
+				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.Manager.include"
+				return $?
+			;;
 			--make-*)
 				. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Make.include"
 				return $?
 			;;
 			--init-distro-workspace)
 				shift
-
 				return 0
 			;;
 			--install-distro-*)

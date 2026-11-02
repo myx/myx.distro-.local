@@ -2,8 +2,8 @@
 ## LocalManagerScreen.Scopes.py -- the folder `Scope Settings` of the root Settings: every scope of settings this workspace keeps, each a folder of its
 ## variables, to see, to edit and to take out (F11.7 of the refactorings epic). Moved whole from myx.distro-agents (sh-lib/manager/AgentsManagerScreen.Scopes.py) to `.local`, which
 ## owns Scope Settings and its operations (LocalTools.ManagerScope.include).
-## A part of the manager screen of the agents console (AgentsManagerScreen.py): that file executes it, in its own namespace, after its own parts (LOCAL_PARTS), when this package
-## stands beside it; it is never run by itself. The part is plain text of the screen. The kinds of a variable (choice, number, text, tier, locked) are those the operation names, and the
+## A part of the manager screen (LocalManagerScreen.py of this package, sh-lib/manager): that file executes it, in its own namespace, after the whole of `myx.distro-agents` (the row
+## `AgentsManagerScreen.Terminal.py` there places it), when that package stands beside this one; it is never run by itself. The part is plain text of the screen. The kinds of a variable (choice, number, text, tier, locked) are those the operation names, and the
 ## form of each kind is the screen's (SETTING_KINDS): a subsystem registers its keys and their kinds with the operation (sh-lib/config/scope-settings.list of its package).
 ##
 
@@ -106,9 +106,9 @@ def parseScopeKeyLevels(readKey, level, text):
     return {level: rows}
 
 
-ROW_FORMS["scopes"] = parseScopeLevels
-ROW_FORMS["scope-keys"] = parseScopeKeyLevels
-ROW_FORMS["declared"] = lambda readKey, level, text: (parseDigestLevels("list:settings", text), {})[1]
+ROW_FORMS["scopes"] = {"parse": parseScopeLevels}
+ROW_FORMS["scope-keys"] = {"parse": parseScopeKeyLevels}
+ROW_FORMS["declared"] = {"parse": lambda readKey, level, text: (parseDigestLevels("list:settings", text), {})[1]}
 
 
 ## What a variable shows as in a table: its value as the operation printed it, a variable that holds nothing as that.
@@ -279,7 +279,7 @@ DIALOG_HANDLERS["scope-credential"] = submitScopeEdit
 DIALOG_FILLS["scope-edit"] = fillScopeEdit
 DIALOG_FILLS["scope-credential"] = fillScopeEdit
 DIALOG_KEYS["scope-credential"] = ("CTRL-r", "Reveal", lambda state, dialog: pressButton(state, "reveal"))
-PLAN_FORMS["scope-value"] = lambda text: text.rstrip("\n")
+PLAN_FORMS["scope-value"] = formRow("scope-value", lambda text: text.rstrip("\n"), "reading-dialog")
 
 
 ## ---- a variable taken out, a scope cleared, a scope deleted ----
@@ -437,7 +437,7 @@ ACTION_ANSWERS["scope"] = scopeAnswer
 
 registerPlugin({
     "name": "scopes",
-    "apps": ("agents",),
+    "apps": ("agents", "local", "source", "deploy", "remote"),
     "mount": "settings",
     "root": {"id": "scopes", "label": "Scope Settings"},
     "focus": {"scopes/*": "scopeKeyFocus"},

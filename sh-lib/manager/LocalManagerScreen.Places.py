@@ -1,8 +1,8 @@
 ##
 ## LocalManagerScreen.Places.py -- the root Locations (Places): the places, their commands, and a path by the name of its location (F11.10: moved whole from
 ## myx.distro-agents, sh-lib/manager/AgentsManagerScreen.Places.py).
-## A part of the manager screen of the agents console (AgentsManagerScreen.py): that file executes it, in its own namespace, ahead of the part it is named under in
-## LOCAL_PARTS_BEFORE, and it is never run by itself. The part is plain text of the screen, moved whole.
+## A part of the manager screen (LocalManagerScreen.py of this package, sh-lib/manager): that file executes it, in its own namespace, just ahead of the part it is named under in
+## the row `AgentsManagerScreen.Tokens.py` of `myx.distro-agents`, and it is never run by itself. The part is plain text of the screen, moved whole.
 ##
 
 ## ---- the commands of a workspace in `Locations (Places)` ----
@@ -367,7 +367,7 @@ def placeCommandsFocus(state, row):
 
 registerPlugin({
     "name": "places",
-    "apps": ("agents",),
+    "apps": ("agents", "local", "source", "deploy", "remote"),
     "root": {"id": "places", "label": "Locations (Places)", "go": "Loc~a~tions (Places)", "group": "places"},
     "focus": {"places": "placesFocus", "places/*": "placeCommandsFocus"},
     "summaries": {
@@ -392,3 +392,19 @@ registerPlugin({
          "views": ("places/*",), "for": "a session or a member of this workspace", "on": ("places/*:place-heading", "places/*:place-member"), "only": True, "enters": True, "says": "open", "does": ("action", "golink")},
     ),
 })
+
+
+## The levels of the `places` read: registered with the list, so the list asks the form rather than naming this parser.
+def placesLevels(readKey, level, text):
+    return {level: parsePlaceRows(text)}
+
+
+ROW_FORMS["places"] = {"parse": placesLevels}
+
+
+## The levels of the `place-commands` read: registered with the list, so the list asks the form rather than naming this parser.
+def placeCommandsLevels(readKey, level, text):
+    return {level: parsePlaceCommandRows(text)}
+
+
+ROW_FORMS["place-commands"] = {"parse": placeCommandsLevels}

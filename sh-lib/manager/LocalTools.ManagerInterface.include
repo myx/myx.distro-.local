@@ -20,7 +20,7 @@ interface|spacers|MDLT_MANAGER_SPACERS|List Spacers|settings|Whether the lists o
 
 ## THE CHANGEABLE SETTINGS of the interface, in the order the settings screen offers them,
 ## `<subject>|<group>|<key>|<kind>|<places>|<default>|<takes>`. The style's values are the styles and the
-## colours the screen declares (STYLES and COLOURS in AgentsManagerScreen.py, which AgentsManagerConfigInterfaceCheck
+## colours the screen declares (STYLES and COLOURS in LocalManagerScreen.py, which AgentsManagerConfigInterfaceCheck
 ## holds against this row). A setting's own key is the only name it is saved under now: the names it had before
 ## stand in THE OTHER NAMES below.
 localManagerInterfaceSettings="interface|style|MDLT_MANAGER_STYLE|choice|environment user|tv-system|nu-system=Magic - System,nu-blue=Magic - Dark/Blue,nu-gray=Magic - Light/Gray,tv-system=Turbo Vision - System,tv-blue=Turbo Vision - Dark/Blue,tv-gray=Turbo Vision - Light/Gray,bw-system=Basic B/W - System,bw-dark=Basic B/W - Dark/Blue,bw-light=Basic B/W - Light/Gray
@@ -34,6 +34,7 @@ localManagerInterfaceFormer="MDLT_MANAGER_STYLE|tv=tv-system,bw=bw-system,magic=
 
 ## THE OTHER NAMES of the settings themselves: the key each one was saved under before it took its own, one
 ## `<was>=<now>` a pair. A value a user saved under the old name is still his value: the settings digest reads it
-## and reports it as the user's (AgentsTools.ManagerConfig.include), and the start of a sibling console reads the
-## style through that same digest (LocalTools.InternManager.include). Saved under its own name, nothing is left.
+## and reports it as the user's (AgentsTools.ManagerConfig.include), and so does `.local`'s own setting reader
+## (LocalTools.Config.include), which a sibling console's start reads its screen style through. Saved under its
+## own name, nothing is left.
 localManagerInterfaceFormerKeys="MDAT_MANAGER_STYLE=MDLT_MANAGER_STYLE,MDLT_CONSOLE_MOUSE=MDLT_MANAGER_MOUSE,MDLT_CONSOLE_SPACERS=MDLT_MANAGER_SPACERS"

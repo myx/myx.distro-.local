@@ -1,8 +1,8 @@
 ##
 ## LocalManagerScreen.Workspace.py -- the root `Workspace (System)`: the workspace the console runs in, its own facts, the subsystems installed in it, and the blocks the consoles of
 ## the family add (F11.10 of the refactorings epic).
-## A part of the manager screen of the agents console (myx.distro-agents, sh-lib/manager/AgentsManagerScreen.py), which executes it, in its own namespace, after its own parts
-## (LOCAL_PARTS), when this package stands beside it. It is plain text of the screen and is never run by itself. The root is `.local`'s: the operation is `.local`'s
+## A part of the manager screen (LocalManagerScreen.py of this package, sh-lib/manager), which executes it, in its own namespace, after `Workspace (System)`
+## and after `Machine (System)` (the row `AgentsManagerScreen.Settings.py` of `myx.distro-agents` places all three), when that package stands beside this one. It is plain text of the screen and is never run by itself. The root is `.local`'s: the operation is `.local`'s
 ## (--manager-workspace-read, which the dispatcher of any console of the family offers), and the screen only draws its rows and takes the keys. It renders and does not compute: the
 ## blocks a console adds (the agents' mode of the workspace, the members that belong to it) are written by that console's readers, never by this part; a block it knows nothing of is
 ## drawn as every other, by its label, its facts and its items. Looking only: nothing here changes the workspace.
@@ -76,7 +76,7 @@ def parseWorkspaceRows(readKey, level, text):
     return {level: rows}
 
 
-ROW_FORMS["workspace"] = parseWorkspaceRows
+ROW_FORMS["workspace"] = {"parse": parseWorkspaceRows}
 
 
 ## The items of a block as one table of the left pane: the name, its kind, its state in its colour, and where it is.
@@ -152,7 +152,7 @@ ACTION_FITS["golink"] = lambda state, row: bool(row and row.get("link"))
 
 registerPlugin({
     "name": "workspace",
-    "apps": ("agents",),
+    "apps": ("agents", "local", "source", "deploy", "remote"),
     "root": {"id": "workspace", "label": "Workspace (System)", "go": "~W~orkspace (System)", "group": "places"},
     "focus": {"workspace": "workspaceFocus"},
     "summaries": {"workspace": {"lines": "workspaceSummary"}},

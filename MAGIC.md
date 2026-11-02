@@ -11,7 +11,7 @@ Team-owned notes for the magic-* team. This package installs the others, so what
 - `sh-lib/LocalTools.Make*.include` hold the `--make-*` operations. `sh-lib/console-.local-bashrc.rc` is this package's console.
 - `sh-lib/manager/LocalTools.ManagerInterface.include` is the one declaration of the console interface settings of the manager screen. Those settings are its style (`MDLT_MANAGER_STYLE`), its mouse and the spacers of its lists. The agents settings digest expands them into its `interface` subject.
 - `sh-lib/help/Man.Project.Inf.file.help.md` is the `project.inf` grammar for the whole family.
-- `sh-lib/manager/LocalManagerScreen.*.py` are parts of the agents manager screen (`myx.distro-agents`), which runs them in its own namespace (`LOCAL_PARTS` in `AgentsManagerScreen.py`). `LocalManagerScreen.Features.py` draws `Optional Features` (in `Installed Subsystems`) and `Local AI` (in `This Machine`). It decides nothing: every row and action is a `--manager-feature-*` operation of `myx.distro-agents`.
+- `sh-lib/manager/LocalManagerScreen.py` is the manager screen's entry, and this package's own parts are the `sh-lib/manager/LocalManagerScreen.*.py` beside it. Each package declares its own parts in its `sh-lib/config/screen-parts.list`, and the entry runs them in its own namespace. The parts of `myx.distro-agents`, and that package's own rows, load beside these, so no package names another's entry. `LocalManagerScreen.Features.py` draws `Optional Features` (in `Installed Subsystems`) and `Local AI` (in `This Machine`). It decides nothing: every row and action is a `--manager-feature-*` operation of `myx.distro-agents`.
 
 ## Installed copies are distributions
 

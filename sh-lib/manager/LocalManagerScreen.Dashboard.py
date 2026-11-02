@@ -4,10 +4,27 @@
 ## of its console, and `--manager-dashboard-read` (LocalTools.ManagerDashboard.include) prints them with no python. This part draws them and takes the keys: the
 ## panels, the blocks of figures with their levels and gauges, drawn for the Dashboard and for the root `Team Data` of the agents (which calls this drawing), and
 ## the root `Dashboard (Monitor)` with its submenus.
-## A part of the manager screen of the agents console (myx.distro-agents, sh-lib/manager/AgentsManagerScreen.py), which executes it, in its own namespace, ahead
-## of the part of the sessions (LOCAL_PARTS_BEFORE) so that the Dashboard stands first in the list, when this package stands beside it. It is plain text of
+## A part of the manager screen (LocalManagerScreen.py of this package, sh-lib/manager), which executes it, in its own namespace, ahead
+## of the part of the sessions: the row `AgentsManagerScreen.Pending.py` of `myx.distro-agents` places it, so the Dashboard stands first in the list, when that package stands beside this one. It is plain text of
 ## the screen and is never run by itself.
 ##
+
+## ---- the list filter ----
+
+## `/`: the line of the filter of the list opens, on the last line of the right window, with what is typed there already.
+def listFilterOpen(state):
+    state.listFilterOpen = True
+
+
+## Whether the line of the filter stands in the right window: open, or holding a filter that narrows the rows.
+def listFilterLineShown(state):
+    return state.listFilterOpen or bool(state.listFilter)
+
+
+## The line of the filter as the right window draws it, or "".
+def listFilterLine(state):
+    return "/" + state.listFilter if listFilterLineShown(state) else ""
+
 
 ## ---- the drawing of panels: blocks of figures ----
 
@@ -226,8 +243,8 @@ def parseDashboardPanelLevels(readKey, level, text):
     return {level: parseBlockRows(text)}
 
 
-ROW_FORMS["dashboard"] = parseDashboardLevels
-ROW_FORMS["dashboard-panels"] = parseDashboardPanelLevels
+ROW_FORMS["dashboard"] = {"parse": parseDashboardLevels}
+ROW_FORMS["dashboard-panels"] = {"parse": parseDashboardPanelLevels}
 
 
 ## What the left pane shows of a submenu, selected at the Dashboard or opened: all its panels, as a grid.

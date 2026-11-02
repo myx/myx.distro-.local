@@ -11,22 +11,32 @@ while true ; do case "$1" in
 	--.local-config-option-select-default)
 		# key=$2; val=$3; shift 3
 		local cfgSelectKey="$2" cfgSelectFile cfgSelectLine cfgSelectFound=''
-		local cfgSelectUserFile=''
+		local cfgSelectUserFile='' cfgSelectPair cfgSelectKeys="$2"
 		if [ -d "$MMDAPP/.local/home" ] ; then
 			cfgSelectUserFile="$MMDAPP/.local/home/${USER:=$( id -un )}/MDLT.settings.env"
 		fi
-		for cfgSelectFile in "$cfgSelectUserFile" "$MMDAPP/.local/MDLT.settings.env" ; do
-			[ -n "$cfgSelectFile" ] || continue
-			[ -f "$cfgSelectFile" ] || continue
-			while IFS= read -r cfgSelectLine || [ -n "$cfgSelectLine" ] ; do
-				case "$cfgSelectLine" in
-					"$cfgSelectKey="*)
-						printf '%s\n' "${cfgSelectLine#*=}"
-						cfgSelectFound=1
-						break
-					;;
-				esac
-			done < "$cfgSelectFile"
+		# A key saved under the name it had before still reads as its own: the former names are declared beside the settings.
+		if [ -f "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.ManagerInterface.include" ] ; then
+			. "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalTools.ManagerInterface.include"
+			for cfgSelectPair in ${localManagerInterfaceFormerKeys//,/ } ; do
+				[ "${cfgSelectPair#*=}" != "$2" ] || cfgSelectKeys="$cfgSelectKeys ${cfgSelectPair%%=*}"
+			done
+		fi
+		for cfgSelectKey in $cfgSelectKeys ; do
+			for cfgSelectFile in "$cfgSelectUserFile" "$MMDAPP/.local/MDLT.settings.env" ; do
+				[ -n "$cfgSelectFile" ] || continue
+				[ -f "$cfgSelectFile" ] || continue
+				while IFS= read -r cfgSelectLine || [ -n "$cfgSelectLine" ] ; do
+					case "$cfgSelectLine" in
+						"$cfgSelectKey="*)
+							printf '%s\n' "${cfgSelectLine#*=}"
+							cfgSelectFound=1
+							break
+						;;
+					esac
+				done < "$cfgSelectFile"
+				[ -z "$cfgSelectFound" ] || break
+			done
 			[ -z "$cfgSelectFound" ] || break
 		done
 		[ -n "$cfgSelectFound" ] || printf '%s\n' "$3"

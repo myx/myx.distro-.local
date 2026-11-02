@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+# ^^^ for syntax checking in the editor only
+
+##
+## LocalTools.ManagerConfig.include -- the settings digest of the manager consoles: the rows of the
+## settings each installed package declares, given the label of the same declaration. A package
+## declares both in its own sh-lib/config: settings-labels.list and settings-rows.list. Sourced by
+## the `--manager-config-digest` arm of LocalTools.ManagerScope.include.
+##
+## No subject is named here. What is declared is what is printed. A subject with changeable rows and
+## no label row of its own is malformed, so it prints as `subject <name> 0` and none of its rows: the
+## count reads zero and the label reads `-`, which is the shape the labeller already gives a row that
+## no declaration fits. An asked subject that nothing declares prints the same row.
+##
+## The plain form belongs to the agents console. Asked without `--full`, this answers nothing and
+## says so in one line on stderr, so stdout stays the rows the Scope Settings view parses.
+##
+## A declared row carries its places, so its value is read by `.local`'s own reader, and no package's
+## reader is reached. That reader is sourced once for each row printed, so the cost of a digest is
+## the number of rows it prints times one source of LocalTools.Config.include. The scan reads every
+## declared row once for each subject asked.
+##
+## Landed: the owner approved the names on 2026-11-02.
+##
+
+LocalToolsManagerConfigLine(){ ## subject, group, key, state, value, where it came from, what it takes, its kind, its scope, its file
+	local lineField lineRow="line"
+	for lineField in "$@" ; do
+		while : ; do
+			case "$lineField" in
+				*[[:space:]][[:space:]]*) lineField="${lineField//[[:space:]][[:space:]]/ }" ;;
+				*) break ;;
+			esac
+		done
+		lineField="${lineField//[[:space:]]/_}"
+		lineRow="$lineRow"$'\t'"${lineField:--}"
+	done
+	printf '%s\n' "$lineRow"
+}
+
+## `--full`, then the subjects asked, and none asked means every declared one.
+LocalToolsManagerConfigDigest(){ ## --
+	local digestFull="" digestPackage digestFile digestLine digestFields digestRows="" digestLabels=""
+	local digestSubjects digestLabelled digestAsked digestSubject digestLines digestCount digestDeclared
+	local digestValue digestWhere digestScope digestSaveFile digestSaved
+	if [ "${1:-}" = "--full" ] ; then
+		digestFull="full" ; shift
+	else
+		printf '# %s: the plain form of the settings digest belongs to the agents console. This console answers --full, which is what its own screens read.\n' "$MDSC_CMD" >&2
+		return 0
+	fi
+
+	## What each installed package declares, from its own two lists: its labels, and its settings.
+	for digestPackage in "$MDLT_ORIGIN/myx"/*/sh-lib/config ; do
+		for digestFile in "$digestPackage/settings-labels.list" "$digestPackage/settings-rows.list" ; do
+			[ -f "$digestFile" ] || continue
+			while IFS= read -r digestLine || [ -n "$digestLine" ] ; do
+				case "$digestLine" in ''|'#'*) continue ;; esac
+				case "$digestFile" in
+					*/settings-labels.list) digestLabels="$digestLabels$digestLine"$'\n' ;;
+					*) digestRows="$digestRows$digestLine"$'\n' ;;
+				esac
+			done < "$digestFile"
+		done
+	done
+
+	## What is declared, in declaration order: its labels, then the subjects its settings name.
+	digestLabelled=" $( printf '%s' "$digestLabels" | LC_ALL=C awk -F'|' '$1 != "" && !( $1 in seen ) { seen[$1] = 1 ; printf "%s ", $1 }' ) "
+	digestSubjects=" $( printf '%s' "$digestRows" | LC_ALL=C awk -F'|' 'NF >= 4 && $1 != "" && !( $1 in seen ) { seen[$1] = 1 ; printf "%s ", $1 }' ) "
+	digestAsked="$*"
+	[ -n "$digestAsked" ] || digestAsked="$digestSubjects"
+
+	for digestSubject in $digestAsked ; do
+		digestCount=0
+		digestLines=""
+		## a subject counts as declared when its settings are declared and it has a label row of its own
+		digestDeclared=""
+		case "$digestSubjects" in *" $digestSubject "*) digestDeclared="yes" ;; esac
+		[ -z "$digestDeclared" ] || case "$digestLabelled" in *" $digestSubject "*) ;; *) digestDeclared="" ;; esac
+		if [ -n "$digestDeclared" ] ; then
+			while IFS= read -r digestLine ; do
+				[ -n "$digestLine" ] || continue
+				IFS='|' read -r -a digestFields <<< "$digestLine"
+				[ "${digestFields[0]}" = "$digestSubject" ] || continue
+				## its value, from the reader of the scope it is saved in, else its declared default
+				digestValue="$( set -- --.local-config-option-select-default "${digestFields[2]}" "" ; . "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/LocalTools.Config.include" 2> /dev/null < /dev/null )" || digestValue=""
+				[ -n "$digestValue" ] || digestValue="${digestFields[5]}"
+				## where that value came from, and the file its places save it in
+				digestWhere="default" ; digestSaveFile="$MMDAPP/.local/MDLT.settings.env" ; digestScope="system"
+				case " ${digestFields[4]} " in
+					*" user "*) digestSaveFile="$MMDAPP/.local/home/$( id -un )/MDLT.settings.env" ; digestScope="user" ;;
+					*" team "*) digestSaveFile="$MMDAPP/.local/MDLT.settings.env" ; digestScope="team" ;;
+				esac
+				digestSaved="$( LC_ALL=C awk -v key="${digestFields[2]}=" 'index( $0, key ) == 1 { print "yes" ; exit }' "$digestSaveFile" 2> /dev/null )" || digestSaved=""
+				[ -z "$digestSaved" ] || digestWhere="$digestScope"
+				digestLines="$digestLines$( LocalToolsManagerConfigLine "$digestSubject" "${digestFields[1]}" "${digestFields[2]}" set "$digestValue" "$digestWhere" "${digestFields[6]}" "${digestFields[3]}" "$digestScope" "$digestSaveFile" )"$'\n'
+				digestCount=$(( digestCount + 1 ))
+			done <<< "$digestRows"
+		fi
+		{
+			printf 'subject\t%s\t%s\n' "$digestSubject" "$digestCount"
+			[ -z "$digestLines" ] || printf '%s' "$digestLines"
+		} | {
+			printf '%s' "$digestLabels"
+			printf '\034\n'
+			cat
+		} | LC_ALL=C awk -v capitals="API CLI ID IMAP SMTP URL UTC XAI" -v full=1 -v deployed="${localManagerConfigDeployed:-}" \
+			-f "$MDLT_ORIGIN/myx/myx.distro-.local/sh-lib/manager/LocalManagerConfigLabels.awk"
+	done
+	return 0
+}

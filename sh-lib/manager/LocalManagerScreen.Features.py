@@ -3,8 +3,8 @@
 ## `Optional Features`, a folder of `Installed Subsystems`, which lists them with their parts and installs, updates and uninstalls a part; and `Local AI`, a folder of
 ## `This Machine`, which lists the parts of the local AI with their size and state, and uses them: a free prompt to a chat model, a voice test, and a `local` preset made
 ## from a model.
-## A part of the manager screen of the agents console (myx.distro-agents, sh-lib/manager/AgentsManagerScreen.py), which executes it, in its own namespace, after its own parts
-## (LOCAL_PARTS). It is plain text of the screen and is never run by itself.
+## A part of the manager screen (LocalManagerScreen.py of this package, sh-lib/manager), which executes it, in its own namespace, after the whole of `myx.distro-agents`
+## (the row `AgentsManagerScreen.Terminal.py` there places it). It is plain text of the screen and is never run by itself.
 ##
 ## IT RENDERS AND DECIDES NOTHING. What a feature is, how big, whether it runs and which command applies to it is what `--manager-feature-list` prints (AgentsTools.ManagerFeature.include,
 ## which asks each feature's own check fragment); the plan of a part, its needs and its space, is what `--manager-feature-part` prints without `--yes`, and the run is the same
@@ -26,7 +26,7 @@ FEATURE_PLAN_READ = "full:feature-part"
 CALLS["feature-ask"] = ["--manager-feature-ask", "{id}"]
 CALLS["feature-preset"] = ["--manager-feature-preset", "{id}"]
 CALLS["feature-stt"] = ["--manager-feature-stt-test"]
-PLAN_FORMS["feature-plan"] = lambda text: text
+PLAN_FORMS["feature-plan"] = formRow("feature-plan", lambda text: text, "reading-dialog")
 
 
 def featureStateWords(state):
@@ -88,8 +88,8 @@ def parseFeatureLevels(readKey, level, text, only=None, uses=False):
     return {level: rows}
 
 
-ROW_FORMS["features"] = parseFeatureLevels
-ROW_FORMS["features-ai"] = lambda readKey, level, text: parseFeatureLevels(readKey, level, text, "setup.feature-local-ai", True)
+ROW_FORMS["features"] = {"parse": parseFeatureLevels}
+ROW_FORMS["features-ai"] = {"parse": lambda readKey, level, text: parseFeatureLevels(readKey, level, text, "setup.feature-local-ai", True)}
 
 
 ## The facts of a feature or a part, for the left pane.

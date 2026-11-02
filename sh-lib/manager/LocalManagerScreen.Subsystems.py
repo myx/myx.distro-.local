@@ -1,8 +1,8 @@
 ##
 ## LocalManagerScreen.Subsystems.py -- the folder `Installed Subsystems` of the root Configuration: the subsystems of the tool family, which are installed
 ## here and which are not, and the commands to install and to uninstall one.
-## A part of the manager screen of the agents console (myx.distro-agents, sh-lib/manager/AgentsManagerScreen.py), which executes it, in its own namespace,
-## after its own parts (LOCAL_PARTS), when this package stands beside it: the first python of `.local` (F11.7 of the refactorings epic). It is plain text of the
+## A part of the manager screen (LocalManagerScreen.py of this package, sh-lib/manager), which executes it, in its own namespace,
+## after the whole of `myx.distro-agents` (the row `AgentsManagerScreen.Terminal.py` there places it), when that package stands beside this one: the first python of `.local` (F11.7 of the refactorings epic). It is plain text of the
 ## screen and is never run by itself. The folder is `.local`'s: the operations are `.local`'s (--manager-subsystem-list, --manager-subsystem-run, which the
 ## dispatcher of any console of the family offers), and the screen only draws them and takes the keys.
 ##
@@ -82,7 +82,7 @@ def parseSubsystemLevels(readKey, level, text):
     return {level: rows}
 
 
-ROW_FORMS["subsystems"] = parseSubsystemLevels
+ROW_FORMS["subsystems"] = {"parse": parseSubsystemLevels}
 
 
 ## What `--manager-subsystem-read` printed of one subsystem, after its two rows: the repository
@@ -184,7 +184,7 @@ ACTION_FITS["subsystem"] = lambda state, row: bool(row and row.get("subsystemCom
 
 registerPlugin({
     "name": "subsystems",
-    "apps": ("agents",),
+    "apps": ("agents", "local", "source", "deploy", "remote"),
     "mount": "configuration",
     "root": {"id": "subsystems", "label": "Installed Subsystems"},
     "focus": {"subsystems": "subsystemsFocus"},

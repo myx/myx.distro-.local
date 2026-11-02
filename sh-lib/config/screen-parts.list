@@ -1,0 +1,12 @@
+## The parts of the manager screen this package contributes, in the order they load, one file name on a line.
+## `LocalManagerScreen.Constants.py` is the screen's vocabulary and is required: a screen without it refuses to start.
+## A comment starts with `#`.
+
+LocalManagerScreen.Constants.py
+LocalManagerScreen.Dashboard.py
+LocalManagerScreen.Places.py
+LocalManagerScreen.Workspace.py
+LocalManagerScreen.Machine.py
+LocalManagerScreen.Subsystems.py
+LocalManagerScreen.Scopes.py
+LocalManagerScreen.Features.py
