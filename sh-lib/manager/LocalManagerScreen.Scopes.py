@@ -297,10 +297,13 @@ def scopeDeleteFits(state, row):
 
 
 ## `d` on a variable: asked first, in a box that names it and its scope. OK takes it out, through the operation, with the scope and the name as its words.
+## A variable the scope does not hold is refused here, in the status line, as the operation would refuse it: there is nothing to take out.
 def askScopeUnset(state, row):
     held = row.get("scopeKey") if row else None
     if held is None:
         return ""
+    if held["state"] == "missing":
+        return "the key holds nothing"
     state.answer = None
     openDialog(state, "scope-unset", {"about": {"lines": [("scope", held["scopeLabel"]), ("variable", held["name"]), SCOPE_SAYS["unset"]]}},
                {"scope": held["scope"], "name": held["name"], "label": held["scopeLabel"], "viewKey": viewKeyOf(state)}, "Delete: %s" % held["name"])

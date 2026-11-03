@@ -79,6 +79,8 @@ def parseSubsystemLevels(readKey, level, text):
                 command["indent"] = 2
                 command["subsystemCommand"] = {"name": held["name"], "what": what}
                 rows.append(command)
+                ## the subsystem's own way into an installer: the first command it is offered, as the level lists them
+                row.setdefault("offeredCommand", command["subsystemCommand"])
     return {level: rows}
 
 
@@ -153,9 +155,9 @@ def subsystemsFocus(state, row):
     return None
 
 
-## Enter on a command of a subsystem: asked first, by what will run and what it does; the screen writes no command of its own: the tooling runs it.
+## Enter on a command of a subsystem, or on the subsystem itself: asked first, by what will run and what it does; the screen writes no command of its own: the tooling runs it.
 def askSubsystem(state, row):
-    command = row.get("subsystemCommand") if row else None
+    command = (row.get("subsystemCommand") or row.get("offeredCommand")) if row else None
     if command is None:
         return ""
     openDialog(state, "subsystem", {"about": {"lines": [
@@ -177,7 +179,7 @@ DIALOGS["subsystem"] = {"title": "Run", "feeds": "subsystem",
                         "buttons": (("run", "Run"), ("cancel", "Cancel"))}
 DIALOG_HANDLERS["subsystem"] = submitSubsystem
 ACTION_HANDLERS["subsystem"] = askSubsystem
-ACTION_FITS["subsystem"] = lambda state, row: bool(row and row.get("subsystemCommand"))
+ACTION_FITS["subsystem"] = lambda state, row: bool(row and (row.get("subsystemCommand") or row.get("offeredCommand")))
 
 
 ## ---- the plugin: `Installed Subsystems` ----
@@ -199,7 +201,7 @@ registerPlugin({
     },
     "commands": (
         {"name": "subsystem", "keys": ("ENTER",), "menu": ("view", 3), "label": "R~u~n the command", "status": "Run",
-         "views": ("subsystems",), "for": "a command of a subsystem", "on": ("subsystems:subsystem-command",), "only": True, "enters": True, "says": "run",
+         "views": ("subsystems",), "for": "a subsystem, or a command of one", "on": ("subsystems:subsystem-command", "subsystems:subsystem"), "only": True, "enters": True, "says": "run",
          "does": ("action", "subsystem")},
     ),
 })

@@ -79,6 +79,9 @@ def parseFeatureLevels(readKey, level, text, only=None, uses=False):
             command["indent"] = 2
             command["featureCommand"] = {"what": what, "words": words[at:at + 4], "feature": words[at + 2], "part": words[at + 3], "state": held["state"]}
             rows.append(command)
+            ## the row's own way into an installer: the first command the tooling offers it. Kept apart from a command
+            ## row's `featureCommand`, so the feature or part keeps its own facts in the left pane.
+            row.setdefault("offeredCommand", command["featureCommand"])
         if uses and isPart and held["state"] == "installed":
             for use, label in FEATURE_USES.get(featureDetail(held, "part"), ()):
                 useRow = newRow("%s:%s" % (row["id"], use), label, "feature-use", False, fields)
@@ -174,9 +177,9 @@ def featurePlanLines(text):
     return facts, needs, blocked
 
 
-## Enter on a command of a part: its dialog opens and asks for the plan; the plan is the dialog's own.
+## Enter on a command of a part, or on a feature or a part that is offered one: its dialog opens and asks for that command's plan.
 def askFeature(state, row):
-    command = row.get("featureCommand") if row else None
+    command = (row.get("featureCommand") or row.get("offeredCommand")) if row else None
     if command is None:
         return ""
     state.answer = None
@@ -228,7 +231,7 @@ def submitFeature(state, dialog, button):
 DIALOG_HANDLERS["feature-part"] = submitFeature
 DIALOG_FILLS["feature-part"] = fillFeature
 ACTION_HANDLERS["feature"] = askFeature
-ACTION_FITS["feature"] = lambda state, row: bool(row and row.get("featureCommand"))
+ACTION_FITS["feature"] = lambda state, row: bool(row and (row.get("featureCommand") or row.get("offeredCommand")))
 
 
 ## ---- the uses of a part of the local AI: a prompt, a voice test, a preset ----
@@ -495,11 +498,13 @@ registerPlugin({
     },
     "commands": (
         {"name": "feature", "keys": ("ENTER",), "menu": ("view", 3), "label": "R~u~n the command", "status": "Run",
-         "views": ("features", "local-ai"), "for": "a command of a part", "on": ("features:feature-command", "local-ai:feature-command"), "only": True, "enters": True, "says": "run",
+         "views": ("features", "@local-ai"), "for": "a command of a part, or a feature or part that is offered one",
+         "on": ("features:feature-command", "features:feature", "features:feature-part",
+                "@local-ai:feature-command", "@local-ai:feature", "@local-ai:feature-part"), "only": True, "enters": True, "says": "run",
          "does": ("action", "feature")},
         {"name": "featureset", "keys": ("i",), "menu": ("view", 3), "label": "~I~nstall the agreed set", "status": "Install", "window": "list",
-         "views": ("features", "local-ai"), "for": "the agreed set of models", "on": ("features:feature", "features:feature-part", "features:feature-command", "features:up",
-                                                                                    "local-ai:feature", "local-ai:feature-part", "local-ai:feature-command", "local-ai:feature-use", "local-ai:up"),
+         "views": ("features", "@local-ai"), "for": "the agreed set of models", "on": ("features:feature", "features:feature-part", "features:feature-command", "features:up",
+                                                                                    "@local-ai:feature", "@local-ai:feature-part", "@local-ai:feature-command", "@local-ai:feature-use", "@local-ai:up"),
          "only": True, "says": "install", "does": ("action", "featureset")},
     ),
 })
