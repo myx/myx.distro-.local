@@ -13,8 +13,13 @@
 ## THE DEPTHS. A file's own heading levels are never kept blindly: each heading's depth is its
 ## place among the headings open above it, so a level the file skips closes up, and a file that
 ## starts at `###` starts one level under its mixin. A heading of depth d is written at level
-## prefix + d. A `#` line inside a code fence (``` or ~~~) is no heading. A file's leading front
-## matter, a first line `---` down to the next, is left out.
+## prefix + d. A `#` line inside a code fence is no heading: the fence opens on its run of
+## backticks or tildes and closes on a run of the same character at least as long, so a
+## three-backtick line inside a four-backtick block is no closer.
+##
+## A file's leading front matter is left out: a first line `---` whose first line after it is a
+## `key:` line, down to the next `---`. A first `---` followed by anything else is a thematic
+## break, and is content like any other line -- nothing after it is dropped.
 ##
 ## THE LIMIT. The deepest level written is prefix + limit - 1. A section deeper than that is
 ## replaced, with everything under it, by one line naming its heading and its file.
@@ -62,6 +67,14 @@ function matchesAny(caption, kind, mixin,    k) {
 
 function emit(line) { outCount++ ; outLines[outCount] = line ; } ;
 
+## A line of a file's own text, written unless a run of leaving out covers it: the same guard every
+## line of a file passes at the end of the read, for the one line the read has held aside.
+function writeLine(line) {
+	if (dropDepth > 0) { return ; } ;
+	if (including && keepDepth == 0) { return ; } ;
+	emit(line) ;
+} ;
+
 ## A heading as written: its level, its caption, and its entry of the index.
 function emitHeading(level, caption) {
 	emit(repeatText("#", level) " " caption) ;
@@ -93,18 +106,33 @@ BEGIN {
 		including = (filterCount[m, "include"] > 0) ;
 		## the open headings: their levels, captions, and whether each is written yet
 		stackSize = 0 ; split("", stackLevel) ; split("", stackCaption) ; split("", stackWritten) ;
-		dropDepth = 0 ; keepDepth = 0 ; inFence = 0 ; fenceMark = "" ; lineNo = 0 ; inFront = 0 ;
+		dropDepth = 0 ; keepDepth = 0 ; inFence = 0 ; fenceChar = "" ; fenceLen = 0 ; lineNo = 0 ;
+		inFront = 0 ; frontOpen = 0 ; heldCount = 0 ;
 		file = mixinFile[m] ;
 		while ((getline line < file) > 0) {
 			lineNo++ ;
 			sub(/\r$/, "", line) ;
-			if (lineNo == 1 && line == "---") { inFront = 1 ; continue ; } ;
-			if (inFront) { if (line == "---") { inFront = 0 ; } ; continue ; } ;
-			## a code fence opens and closes on the same mark; nothing inside is a heading
-			if (match(line, /^[ \t]*(```|~~~)/)) {
-				mark = substr(line, RSTART + RLENGTH - 3, 3) ;
-				if (!inFence) { inFence = 1 ; fenceMark = mark ; }
-				else if (mark == fenceMark) { inFence = 0 ; } ;
+			## A first `---` is front matter only where a `key:` line follows it before any other kind of line: the block then runs to
+			## the next `---`, and is left out. Any other first `---` is a thematic break, and is content like the lines after it.
+			if (lineNo == 1 && line == "---") { inFront = 1 ; heldCount = 1 ; held[heldCount] = line ; frontKeys = 0 ; continue ; } ;
+			if (inFront) {
+				if (line == "---") { inFront = 0 ; heldCount = 0 ; continue ; } ;
+				if (line ~ /^[ \t]*$/ || line ~ /^[A-Za-z0-9_.-]+[ \t]*:/) {
+					if (line ~ /^[A-Za-z0-9_.-]+[ \t]*:/) { frontKeys = 1 ; } ;
+					held[++heldCount] = line ; continue ;
+				} ;
+				if (frontKeys) { continue ; } ;
+				inFront = 0 ;
+				for (h = 1 ; h <= heldCount ; h++) { writeLine(held[h]) ; } ;
+				heldCount = 0 ;
+			} ;
+			## a code fence opens on its run of backticks or tildes, and closes on a run of that same character no shorter
+			fenceRun = line ; sub(/^[ \t]*/, "", fenceRun) ;
+			if (substr(fenceRun, 1, 3) == "```" || substr(fenceRun, 1, 3) == "~~~") {
+				fenceAt = substr(fenceRun, 1, 1) ; fenceRunLen = 0 ;
+				while (substr(fenceRun, fenceRunLen + 1, 1) == fenceAt) { fenceRunLen++ ; } ;
+				if (!inFence) { inFence = 1 ; fenceChar = fenceAt ; fenceLen = fenceRunLen ; }
+				else if (fenceAt == fenceChar && fenceRunLen >= fenceLen) { inFence = 0 ; } ;
 			} else if (!inFence && match(line, /^#+[ \t]/) && RLENGTH <= 7) {
 				level = RLENGTH - 1 ;
 				caption = substr(line, RLENGTH + 1) ;
@@ -136,10 +164,10 @@ BEGIN {
 				stackWritten[depth] = 1 ;
 				continue ;
 			} ;
-			if (dropDepth > 0) { continue ; } ;
-			if (including && keepDepth == 0) { continue ; } ;
-			emit(line) ;
+			writeLine(line) ;
 		} ;
+		## a leading `---` that no `key:` line followed is a thematic break, and the lines held with it are content
+		if (!frontKeys) { for (h = 1 ; h <= heldCount ; h++) { writeLine(held[h]) ; } ; } ;
 		close(file) ;
 	} ;
 
