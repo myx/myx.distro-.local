@@ -108,6 +108,17 @@ case "$1" in
 		return $?
 	;;
 
+	## The optional features of mdci-packages-myx (setup.feature-*), as `Optional Features` lists and works them (S7.25). The operations
+	## are the agents package's, which owns the features' tooling, so a console without that package beside it says so and does nothing.
+	--manager-feature-*)
+		if [ ! -f "$MDLT_ORIGIN/myx/myx.distro-agents/sh-lib/manager/AgentsTools.ManagerFeature.include" ] ; then
+			echo "$MDSC_CMD: $1: ⛔ ERROR: the feature operations need myx.distro-agents installed beside this package, and it is not -- nothing is shown" >&2
+			set +e ; return 1
+		fi
+		. "$MDLT_ORIGIN/myx/myx.distro-agents/sh-lib/manager/AgentsTools.ManagerFeature.include"
+		return $?
+	;;
+
 	## The settings digest the Scope Settings view reads, from what each package declares in its own
 	## sh-lib/config: settings-labels.list and settings-rows.list.
 	--manager-config-digest)
@@ -118,7 +129,7 @@ case "$1" in
 	;;
 
 	*)
-		echo "$MDSC_CMD: ${1:-}: ⛔ ERROR: invalid option: the manager operations of this console are --manager-dashboard-*, --manager-manual-*, --manager-command-*, --manager-help-*, --manager-place-*, --manager-scope-*, --manager-config-digest, --manager-subsystem-* and --manager-workspace-*" >&2
+		echo "$MDSC_CMD: ${1:-}: ⛔ ERROR: invalid option: the manager operations of this console are --manager-dashboard-*, --manager-manual-*, --manager-command-*, --manager-help-*, --manager-place-*, --manager-scope-*, --manager-config-digest, --manager-subsystem-*, --manager-feature-* and --manager-workspace-*" >&2
 		set +e ; return 1
 	;;
 esac

@@ -61,6 +61,15 @@ CALLS = {
     "kill:session": ["--manager-session-kill", "--session-id", "{id}"],
     "kill:run": ["--manager-session-kill", "--session-id", "{id}", "--run"],
     "control": ["--manager-session-control-start", "--session-id", "{id}"],
+    ## a session is paused, and resumed, by its id: its runs hold at their next pause point, and nothing of them ends (S19.1)
+    "pause": ["--manager-session-pause", "--session-id", "{id}"],
+    "resume": ["--manager-session-resume", "--session-id", "{id}"],
+    ## the soft stop: the runs are dismissed and end themselves at their next Wait; the hard one is the kill
+    "stop:session": ["--manager-session-stop", "--session-id", "{id}"],
+    "stop:run": ["--manager-session-stop", "--session-id", "{id}", "--run"],
+    ## the restart: a start again of what has stopped or finished, never of what runs
+    "restart:session": ["--manager-session-restart", "--session-id", "{id}"],
+    "restart:run": ["--manager-session-restart", "--session-id", "{id}", "--run"],
     "launch": ["--spawn-session", "--routine", "{id}"],
     "prompt": ["--spawn-session", "--routine-default"],
     "start": ["--manager-spawn-member", "{id}"],

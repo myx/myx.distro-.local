@@ -7,6 +7,7 @@ LocalManagerScreen.Dashboard.py
 LocalManagerScreen.Places.py
 LocalManagerScreen.Workspace.py
 LocalManagerScreen.Machine.py
+LocalManagerScreen.SiblingRoots.py
 LocalManagerScreen.Subsystems.py
 LocalManagerScreen.Scopes.py
 LocalManagerScreen.Features.py
