@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# ^^^ for syntax checking in the editor only
+
+##
+## console-.local-path.include -- the command path of the agents' execute (DistroAgentsTools --intern-mcp-execute) and of the
+## harness Bash tool: myx.common first, the family's own sh-scripts, then every command folder the prepared index names. The
+## consoles keep their own path lines in their rc files, as they always had: this include is the two readers' and nobody else's.
+##
+## ON A CALL PATH, SO: no process is started, no folder and no file is tested. A folder that is not there costs a PATH lookup
+## nothing, so every folder is appended as it is. The project commands come from the prepared index,
+## $MMDAPP/.local/distro-commands.txt (`<project> <command> <sh-scripts folder>`, one a command, written by the source-prepare
+## builder), read by the shell alone, each folder once; an index that is not there reads as empty. One string match keeps a
+## second sourcing (a prompt, a harness process) from appending the same folders again.
+##
+
+export MYXROOT="$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/share/myx.common"
+case ":$PATH:" in
+	*":$MDLT_ORIGIN/myx/myx.distro-.local/sh-scripts:"*) ;;
+	*)
+		PATH="$MDLT_ORIGIN/myx/myx.common/os-myx.common/host/tarball/bin:$PATH:$MDLT_ORIGIN/myx/myx.distro-.local/sh-scripts:$MDLT_ORIGIN/myx/myx.distro-system/sh-scripts:$MDLT_ORIGIN/myx/myx.distro-agents/sh-scripts:$MDLT_ORIGIN/myx/myx.distro-deploy/sh-scripts:$MDLT_ORIGIN/myx/myx.distro-source/sh-scripts:$MDLT_ORIGIN/myx/myx.distro-remote/sh-scripts"
+	;;
+esac
+## The project commands: the derived line beside the index, the distinct sh-scripts folders colon-joined. One -nt test and one read a call.
+## The line is rebuilt by one awk where it is absent or older than the index, and an index that is not there is nothing.
+consolePathIndex="${MMDAPP:-/nonexistent}/.local/distro-commands.txt" consolePathKept="${MMDAPP:-/nonexistent}/.local/distro-command-path.txt"
+[ ! -f "$consolePathIndex" ] || {
+	{ [ -f "$consolePathKept" ] && [ ! "$consolePathIndex" -nt "$consolePathKept" ] ; } \
+		|| { awk '!seenScriptsDir[$3]++ && $3 != "" { printf "%s%s", sep, $3 ; sep = ":" } END { print "" }' "$consolePathIndex" > "$consolePathKept.$$" 2> /dev/null && mv -f "$consolePathKept.$$" "$consolePathKept" ; } 2> /dev/null || :
+	IFS=: read -r -a consolePathFolders < "$consolePathKept" 2> /dev/null || consolePathFolders=()
+	for consolePathFolder in ${consolePathFolders[@]+"${consolePathFolders[@]}"} ; do
+		case "$consolePathFolder" in ''|*[[:space:]]*) continue ;; esac
+		case ":$PATH:" in *":$consolePathFolder:"*) ;; *) PATH="$PATH:$consolePathFolder" ;; esac
+	done
+}
+unset consolePathIndex consolePathKept consolePathFolders consolePathFolder
+export PATH
