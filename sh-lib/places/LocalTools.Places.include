@@ -375,7 +375,9 @@ LocalToolsPlacesWorkspaceRoots(){ ## [workspace]
 		[ -z "$rootsFirst" ] || printf '%s\n' "$rootsFirst"
 		LocalToolsPlacesMergedText "${rootsFirst:-${MMDAPP:-}}" quiet | LC_ALL=C awk -F'\t' '$2 == "workspace" && $4 ~ /^\// { print $4 ; }'
 		[ ! -r "$rootsShared" ] || LC_ALL=C awk -F'\t' 'NF >= 2 && $2 ~ /^\// { print $2 ; }' "$rootsShared"
-	} | LC_ALL=C awk '{ sub( /\/+$/, "" ) ; } $0 != "" && !( $0 in seen ) { seen[$0] = 1 ; print ; }'
+	## A RUN'S SANDBOX OR A CHECK'S RIG IS NEVER A WORKSPACE: a tool or a check installed inside one may have registered it, and
+	## every reader of this list would then walk that folder as a workspace of the machine.
+	} | LC_ALL=C awk '{ sub( /\/+$/, "" ) ; } $0 != "" && index( $0, "/.local/agents/spawned/" ) == 0 && index( $0, "/.local/agents/scratch/" ) == 0 && !( $0 in seen ) { seen[$0] = 1 ; print ; }'
 }
 
 ## A place's path on stdout, by name, or name@workspace as the merged list writes it (a bare
