@@ -3,7 +3,7 @@
 
 ### in your scripts you can pull in user overrides via:
 ###   if [ -f "$MMDAPP/.local/home/$(id -un)/MDLT.settings.env" ]; then
-###	 . "$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
+###		. "$MMDAPP/.local/home/$(id -un)/MDLT.settings.env"
 ###   fi
 ###
 

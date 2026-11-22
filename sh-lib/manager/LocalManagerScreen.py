@@ -60,7 +60,8 @@ IDLE_TURN_SECONDS = 1.0
 REFRESH_SECONDS = 10.0
 ## How long the selection rests on an item before the reads of that one item start: while
 ## a key is held and the selection runs down a list, nothing is read for the rows it passes.
-REST_SECONDS = 1.0 / 3
+## 250 ms, and only the last item's read starts: every selection change before it is skipped.
+REST_SECONDS = 0.25
 
 ## The apps the manager screen starts as (F12.2 of the refactorings epic): the agents console
 ## and the four sibling consoles. The app is read from `--app <name>` of the start, before the

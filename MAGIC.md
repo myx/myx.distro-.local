@@ -27,7 +27,7 @@ Team-owned notes for the magic-* team. This package installs the others, so what
 
 ## The prompt hook announces a change it cannot apply
 
-- `SourceConsole.include` and `DeployConsole.include` each carry a `--shell-prompt` arm. That arm applies a pending working-directory change from `MDSC_INT_CD`, `cd`s to it, clears it, then prints the prompt string. It reaches the interactive shell through two nested subshells, and therefore changes nothing in it. The console's own `Source()`/`Deploy()` wrapper sources the include inside `( … )`. `PROMPT_COMMAND` calls that wrapper inside a `$( … )` substitution to build `PS1`.
+- `SourceConsole.include` and `DeployConsole.include` each carry a `--shell-prompt` arm. That arm applies a pending working-directory change from `MDSC_INT_CD`, `cd`s to it, clears it, then prints the prompt string. It reaches the interactive shell through two nested subshells, and therefore changes nothing in it. The console's own `Source`/`Deploy` wrapper sources the include inside `(…)`. `PROMPT_COMMAND` calls that wrapper inside a `$(…)` substitution to build `PS1`.
 - The `cd` and the `export -n` both land in the innermost subshell. The working directory is unchanged on return and `MDSC_INT_CD` is still set, so the arm re-fires on every prompt.
 - **The arm prints `⤵️ <Console>: Changing directory: <path>` on stderr before applying nothing.** So the hook reports success on every invocation, and reads as working.
 - With `MDSC_INT_CD` unset, the announcement does not appear.
@@ -42,11 +42,11 @@ Team-owned notes for the magic-* team. This package installs the others, so what
 ## `local` in the config include needs a function on the stack
 
 - `LocalTools.Config.include` declares `local` in its dispatcher arms, so every caller must reach it with a function on the stack.
-- A `$( )` command substitution inherits the function context of the function that forked it. Sourcing the include inside `$( )` from within a function is therefore correct. Sourcing it inside `$( )` at a file's own top level is not.
+- A `$` command substitution inherits the function context of the function that forked it. Sourcing the include inside `$` from within a function is therefore correct. Sourcing it inside `$` at a file's own top level is not.
 - The top-level case fails twice over. Bash 3.2 rejects the `local`, and a rejected `local` never performs its assignment. The lookup key is then empty, nothing matches, and the include returns the caller's default in place of the configured value.
 - Each `console-*-bashrc.rc` reads `MDLT_CONSOLE_HISTORY` from its own top level, so the read is wrapped in a function defined inside the substitution. That function is called with the arguments on the call line.
 
-## `DistroLocalTools.fn.sh` runs bare (owner, 2026-10-31)
+## `DistroLocalTools.fn.sh` runs bare 
 
 - `DistroLocalTools.fn.sh` is the installer. It must run before any context or console exists.
 - It is the one tool that does not follow the `ListDistroDeclares.fn.sh` form. Do not add the standard validator or context block to it.

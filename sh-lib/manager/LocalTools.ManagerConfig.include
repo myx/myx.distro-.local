@@ -20,7 +20,6 @@
 ## the number of rows it prints times one source of LocalTools.Config.include. The scan reads every
 ## declared row once for each subject asked.
 ##
-## Landed: the owner approved the names on 2026-11-02.
 ##
 
 LocalToolsManagerConfigLine(){ ## subject, group, key, state, value, where it came from, what it takes, its kind, its scope, its file
