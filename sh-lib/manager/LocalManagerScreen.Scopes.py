@@ -28,6 +28,7 @@ SCOPE_SAYS = {
     "wait": "nothing is saved yet: its value is still being read",
     "unset": "The variable is taken out of the file of its scope; the other variables stay. It is the setting reader of the scope that takes it out.",
     "clear": "Every variable of the scope is taken out of its file, one by one; the file and the other scopes stay.",
+    "reset": "Every variable of the scope that a declaration gives a default is taken out of its file, so it reads that default again; the file and the other scopes stay. A scope holding a variable that declares no default is refused whole.",
     "delete": "The scope is deleted: its file is removed, and every variable of it with it.",
 }
 ## The dialogs: a variable edited, a credential edited, a variable taken out, a scope cleared, a scope deleted.
@@ -52,6 +53,11 @@ DIALOGS["scope-delete"] = {"title": "Delete", "feeds": "scopedelete",
                                         {"name": "word", "kind": "input", "label": "Type %s to delete" % KILL_WORD, "exactly": KILL_WORD,
                                          "required": "nothing is deleted: the word typed is not %s" % KILL_WORD}),
                            "buttons": (("ok", "Delete"), ("cancel", "Cancel"))}
+DIALOGS["scope-reset"] = {"title": "Reset", "feeds": "scopereset",
+                          "controls": ({"name": "about", "kind": "text"},
+                                       {"name": "word", "kind": "input", "label": "Type %s to reset" % KILL_WORD, "exactly": KILL_WORD,
+                                        "required": "nothing is reset: the word typed is not %s" % KILL_WORD}),
+                          "buttons": (("ok", "Reset"), ("cancel", "Cancel"))}
 DIALOGS["scope-add-var"] = {"title": "Add a variable", "feeds": "scopeaddvar", "first": "name",
                             "controls": ({"name": "about", "kind": "text"},
                                          {"name": "name", "kind": "input", "label": "Its name (letters, digits and _)", "required": "nothing is added: the variable has no name yet"}),
@@ -65,6 +71,7 @@ readingDialogs("scope-edit", "scope-credential")
 CALLS["scope-set"] = ["--manager-scope-set", "{id}"]
 CALLS["scope-unset"] = ["--manager-scope-unset", "{id}"]
 CALLS["scope-clear"] = ["--manager-scope-clear", "{id}"]
+CALLS["scope-reset"] = ["--manager-scope-reset", "{id}"]
 CALLS["scope-delete"] = ["--manager-scope-delete", "{id}"]
 CALLS["scope-new"] = ["--manager-scope-new"]
 
@@ -319,7 +326,7 @@ def submitScopeUnset(state, dialog, button):
     return None
 
 
-## `c` and `D` on a scope: asked first, by the word typed whole, as a kill is. OK clears the scope of every variable, or deletes it, through the operation.
+## `R` and `c` on a scope: asked first, by the word typed whole, as a kill is. OK resets the scope so each of its declared variables reads its default again, or clears it of every variable, through the operation.
 def askScopeWhole(state, row, what):
     held = row.get("scope") if row else None
     if held is None:
@@ -334,7 +341,7 @@ def askScopeWhole(state, row, what):
 def submitScopeWhole(state, dialog, button):
     about = dialog["about"]
     askCall(state, "scope", about["scope"], callWords("scope-" + about["what"], about["scope"]), None,
-            {"viewKey": about["viewKey"], "says": "%s %s" % ("cleared" if about["what"] == "clear" else "deleted", about["label"])})
+            {"viewKey": about["viewKey"], "says": "%s %s" % ({"clear": "cleared", "reset": "reset", "delete": "deleted"}.get(about["what"], about["what"]), about["label"])})
     state.notice = "%s asked of the tooling: %s" % (about["what"], about["label"])
     state.noticeOf = None
     if about["what"] == "delete":
@@ -419,8 +426,12 @@ ACTION_HANDLERS["scopedelete"] = lambda state, row: askScopeWhole(state, row, "d
 ACTION_FITS["scopedelete"] = scopeDeleteFits
 ACTION_REFUSALS["scopedelete"] = lambda state, row: ("it is the workspace's own or the user's own, one of each: it is cleared, never deleted" if scopeFits(state, row)
                                                        else "that is no scope")
+ACTION_HANDLERS["scopereset"] = lambda state, row: askScopeWhole(state, row, "reset")
+ACTION_FITS["scopereset"] = scopeClearFits
+ACTION_REFUSALS["scopereset"] = lambda state, row: "it holds no variable to reset" if scopeFits(state, row) else "that is no scope"
 DIALOG_HANDLERS["scope-unset"] = submitScopeUnset
 DIALOG_HANDLERS["scope-clear"] = submitScopeWhole
+DIALOG_HANDLERS["scope-reset"] = submitScopeWhole
 DIALOG_HANDLERS["scope-delete"] = submitScopeWhole
 
 
@@ -428,7 +439,7 @@ DIALOG_HANDLERS["scope-delete"] = submitScopeWhole
 def scopeAnswer(text, about, width):
     for printed in text.splitlines():
         fields = printed.split("\t")
-        if fields[0] in ("saved", "removed", "cleared", "deleted", "created") and len(fields) >= 2:
+        if fields[0] in ("saved", "removed", "cleared", "reset", "deleted", "created") and len(fields) >= 2:
             return "the change", fieldLines([(fields[0], " ".join(fields[1:]))], width), about.get("says", fields[0])
     return "the change", [line for line in text.splitlines() if line.strip()], "the operation printed no row of what it did"
 
@@ -475,6 +486,9 @@ registerPlugin({
         {"name": "scopeclear", "keys": ("c",), "menu": ("view", 3), "label": "~C~lear the scope", "status": "Clear", "window": "list",
          "views": ("scopes",), "for": "a scope", "on": ("scopes:scope",), "only": True, "says": "clear",
          "does": ("action", "scopeclear"), "calls": ("scope-clear",)},
+        {"name": "scopereset", "keys": ("R",), "menu": ("view", 3), "label": "~R~eset the scope", "status": "Reset", "window": "list",
+         "views": ("scopes",), "for": "a scope", "on": ("scopes:scope",), "only": True, "says": "reset",
+         "does": ("action", "scopereset"), "calls": ("scope-reset",)},
         {"name": "scopedelete", "keys": ("D",), "menu": ("view", 3), "label": "~D~elete the scope", "status": "Delete", "window": "list",
          "views": ("scopes",), "for": "a scope", "on": ("scopes:scope",), "only": True, "says": "delete",
          "does": ("action", "scopedelete"), "calls": ("scope-delete",)},

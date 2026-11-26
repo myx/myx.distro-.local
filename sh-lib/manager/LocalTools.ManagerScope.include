@@ -239,6 +239,65 @@ LocalToolsManagerScopeRow(){
 		"$rowCount" "$( [ "$rowCount" -gt 0 ] && echo yes || echo no )" "$scopeDeletable" "${scopeFile//[[:space:]]/_}"
 }
 
+## The keys of one scope that no declaration gives a default, one a line: the keys are the standard input. A declaration
+## is a row of an installed package's settings-rows.list, whose form is subject|group|key|kind|places|default|takes and
+## whose sixth and seventh fields may both be empty, or a `settings` line of the agents console's own settings digest,
+## which is where myx.distro-agents declares its seven. A line of the configuration is no declaration: it is deployed,
+## and a reset never takes one out. The files are read first, and the digest, a child program of about a second, only
+## where a key is none of them.
+LocalToolsManagerScopeUndeclaredKeys(){
+	local undeclaredKey undeclaredFileKeys undeclaredAgentKeys undeclaredTools undeclaredRest=""
+	undeclaredFileKeys=" $( LocalToolsManagerScopeFileDeclaredKeys | LC_ALL=C tr '\n' ' ' ) "
+	while IFS= read -r undeclaredKey ; do
+		[ -n "$undeclaredKey" ] || continue
+		case "$undeclaredFileKeys" in *" $undeclaredKey "*) continue ;; esac
+		undeclaredRest="$undeclaredRest$undeclaredKey"$'\n'
+	done
+	[ -n "$undeclaredRest" ] || return 0
+	undeclaredTools="$MDLT_ORIGIN/myx/myx.distro-agents/sh-scripts/DistroAgentsTools.fn.sh"
+	[ -f "$undeclaredTools" ] || { printf '%s' "$undeclaredRest" ; return 0 ; }
+	undeclaredAgentKeys=" $( "${BASH:-bash}" "$undeclaredTools" --manager-config-digest --full 2> /dev/null | LC_ALL=C awk -F'\t' '$1 == "line" && $15 == "settings" && $4 != "" { print $4 ; }' | LC_ALL=C tr '\n' ' ' ) "
+	printf '%s' "$undeclaredRest" | while IFS= read -r undeclaredKey ; do
+		[ -n "$undeclaredKey" ] || continue
+		case "$undeclaredAgentKeys" in *" $undeclaredKey "*) continue ;; esac
+		printf '%s\n' "$undeclaredKey"
+	done
+	return 0
+}
+
+## The keys the installed packages declare in their own sh-lib/config, one a line. A row is read by the form its own file
+## names, never by a count written here: the line beginning `## Form:` gives that file's fields and their order, and a row
+## is a declaration when it splits into exactly that many fields and the field the form calls `key` is not empty. The count
+## is awk's, because a trailing empty field is a field: `subject|group|key|kind|places|default|takes.` names seven, and a
+## row ending in a pipe carries seven whether or not `takes` holds a value. The sixth field is the declared default and it
+## may be empty, which declares the empty default. A row of another count declares nothing, and says so with its file, its
+## line and both counts. A file naming no form line declares nothing, and one line names that file, however many rows it
+## holds.
+LocalToolsManagerScopeFileDeclaredKeys(){
+	local declaredPackage declaredFile
+	for declaredPackage in "${MDLT_ORIGIN:?}/myx"/*/sh-lib/config ; do
+		declaredFile="$declaredPackage/settings-rows.list"
+		[ -f "$declaredFile" ] || continue
+		LC_ALL=C awk -F'|' '
+			/^## Form:/ {
+				form = substr( $0, 9 )
+				sub( /^[[:space:]]+/, "", form ) ; sub( /[.][[:space:]]*$/, "", form )
+				formFields = split( form, formField, "|" )
+				keyAt = 0
+				for ( f = 1 ; f <= formFields ; f++ ) { if ( formField[f] == "key" ) keyAt = f ; }
+				if ( keyAt == 0 ) { printf( "🙋 WARNING: %s:%d: the form names no key field, so no row of this file declares one\n", FILENAME, FNR ) > "/dev/stderr" }
+				next
+			}
+			/^#/ { next }
+			NF == 0 { next }
+			formFields == 0 { if ( ! noForm ) { printf( "🙋 WARNING: %s: the file names no form line, so its rows declare nothing\n", FILENAME ) > "/dev/stderr" ; noForm = 1 ; } next }
+			NF != formFields { printf( "🙋 WARNING: %s:%d: the row has %d fields and the form names %d, so it declares nothing\n", FILENAME, FNR, NF, formFields ) > "/dev/stderr" ; next }
+			keyAt > 0 && $keyAt != "" { print $keyAt ; }
+		' "$declaredFile"
+	done
+	return 0
+}
+
 ## Whether a name is the name of a setting: rc 0 when it is.
 LocalToolsManagerScopeKeyOk(){ ## key
 	case "$1" in ''|[!A-Za-z_]*|*[!A-Za-z0-9_]*) return 1 ;; esac
@@ -344,6 +403,35 @@ case "$1" in
 			set +e ; return 1
 		fi
 		printf 'cleared\t%s\t%s\n' "$2" "$clearCount"
+		return 0
+	;;
+
+	## Takes out of one scope every key the declarations give a default, as --manager-scope-unset does, so each reads that
+	## default again; the file, its comments and the other scopes stay. A scope holding any key that no declaration gives a
+	## default is refused, and nothing is taken out. Its row `reset` says how many keys were taken out.
+	--manager-scope-reset)
+		local scopeHook scopeId scopeSubsystem scopeName scopeFile scopeDeletable resetKey resetCount=0 resetLeft=0
+		local resetUndeclared=""
+		[ $# -eq 2 ] || { echo "⛔ ERROR: $MDSC_CMD $1: syntax is $1 <scope-id>, got $(( $# - 1 )) argument(s) -- nothing was reset" >&2 ; set +e ; return 1 ; }
+		LocalToolsManagerScopeFind "$1" "$2" || { set +e ; return 1 ; }
+		resetUndeclared="$( LocalToolsManagerScopeKeyNames "$scopeFile" | LocalToolsManagerScopeUndeclaredKeys | LC_ALL=C tr '\n' ',' | LC_ALL=C sed 's/,$//' )"
+		if [ -n "$resetUndeclared" ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $1: $2 holds ${resetUndeclared} and no declaration gives them a default -- nothing was reset. A declaration is a settings-rows.list row of an installed package, or a settings line of the agents console's digest" >&2
+			set +e ; return 1
+		fi
+		while IFS= read -r resetKey ; do
+			[ -n "$resetKey" ] || continue
+			if LocalToolsManagerScopeCall write --delete "$resetKey" > /dev/null 2>&1 ; then resetCount=$(( resetCount + 1 )) ; fi
+		done <<< "$( LocalToolsManagerScopeKeyNames "$scopeFile" )"
+		while IFS= read -r resetKey ; do
+			[ -n "$resetKey" ] || continue
+			resetLeft=$(( resetLeft + 1 ))
+		done <<< "$( LocalToolsManagerScopeKeyNames "$scopeFile" )"
+		if [ "$resetLeft" -gt 0 ] ; then
+			echo "⛔ ERROR: $MDSC_CMD $1: $resetLeft key(s) of $2 could not be taken out -- nothing was reset" >&2
+			set +e ; return 1
+		fi
+		printf 'reset\t%s\t%s\n' "$2" "$resetCount"
 		return 0
 	;;
 

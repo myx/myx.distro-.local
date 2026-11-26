@@ -1,6 +1,7 @@
 ## The settings labels of myx.distro-.local, declared once (F12.2 of the refactorings epic): a label a line,
 ## its fields parted by a pipe, read as plain text by --manager-config-digest (LocalTools.ManagerConfig.include),
-## so what this console offers is known with no python. Form: subject|group|key|label|belongs|description.
+## so what this console offers is known with no python.
+## Form: subject|group|key|label|belongs|description.
 interface|||Interface Settings||
 interface|style||Screen Style||
 interface|style|MDLT_MANAGER_STYLE|Interface Style|settings|How the manager screen is drawn: its windows, its frames and its colours. A change is the look of the screen at its next start, for this user in this workspace.
